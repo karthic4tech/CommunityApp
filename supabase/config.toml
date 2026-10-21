@@ -1,0 +1,6 @@
+project_id = "nam-chidambaram"
+
+[functions.ai-service-search]
+# Public discovery supports publishable keys. index.ts verifies any supplied
+# user JWT with Auth before constructing the caller-scoped database client.
+verify_jwt = false

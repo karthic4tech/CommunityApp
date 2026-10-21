@@ -1,0 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root { color-scheme: light; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+html { scroll-behavior: smooth; background: #fbfaf6; }
+body { margin: 0; background: #fbfaf6; color: #203c30; font-family: 'Noto Sans Tamil', Inter, system-ui, sans-serif; }
+* { box-sizing: border-box; }
+:focus-visible { outline: 3px solid #17583f; outline-offset: 3px; }
+button, input { font: inherit; }
+::selection { background: #cde8d5; color: #123f30; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
