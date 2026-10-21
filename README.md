@@ -12,16 +12,28 @@ AI configuration has been changed automatically.
 
 ### Setup and behaviour
 
-Apply `supabase/migrations/nam_chidambaram_migration_004_public_directory.sql`
-after core 001, seed 002 and category-read fix 003. **This change has not been
-applied to your Supabase project automatically.** The original 001/002 files
-were inspected from the supplied Downloads paths; they are not duplicated here.
+Apply the local migrations `20261020170000_category_public_read.sql`,
+`20261021080000_public_directory.sql` and `20261021090000_ai_search.sql` after
+core 001 and seed 002. **No migration is applied automatically by the
+application.** A read-only linked migration-list check reports these three
+local versions with no matching remote history, so reconcile that history with
+the project owner before applying anything. Do not use `supabase db push` or
+reset as part of a normal release.
+
 Seed 002 contains locations/categories only, not provider listings: an empty
 directory is expected until real providers are verified and their listings published.
 
-- `/services/:slug` keeps the existing category page and subcategory cards and
-  now displays matching listings. Leaf cards are links too. Selecting a parent
-  includes listings assigned directly to it and all active descendants.
+- `/services` is the root category directory.
+- `/services/:categorySlug` is the subcategory directory for the selected active
+  category and displays only direct active children.
+- `/services/:categorySlug/:subcategorySlug` is the provider listing directory.
+  The route validates the direct parent-child relationship before querying.
+- `/providers/:id` is the permanent listing-detail route. The inspected schema
+  has no listing slug, so the UUID listing id is used consistently.
+- The existing RPC includes a selected category and all active descendants, so
+  a subcategory with deeper descendants follows the repository's established
+  inclusive behaviour. The UI still has exactly three browsing levels and only
+  renders direct children at level 2.
 - Keyword search matches literal, case-insensitive substrings of listing title,
   description and provider display name. Location options show the existing
   parent hierarchy; a selected district/town includes its active descendants.
@@ -30,9 +42,9 @@ directory is expected until real providers are verified and their listings publi
 - Filters persist in `?q=...&location=<uuid>&page=...`, support browser Back and
   direct links, and reset pagination when submitted. Results use stable ordering
   and 12-row pages with a lookahead row; locations are fetched in 500-row batches.
-- `/providers/:id` is the permanent detail route. The real schema has no listing
-  slug. Both reads explicitly require `published` listings and verified providers,
-  even for signed-in owners/admins who have wider database access.
+- Both listing and detail reads explicitly require `published` listings, active
+  categories and verified providers, even for signed-in owners/admins who have
+  wider database access.
 - Public contacts supply validated `tel:`, email enquiry, WhatsApp enquiry and
   HTTP(S) website links. Provider `public_email` / `website_url` are fallbacks.
   This does not insert anonymous enquiries: `service_enquiries` requires an
@@ -43,12 +55,24 @@ directory is expected until real providers are verified and their listings publi
   bucket/object images require an already configured public Storage bucket and
   appropriate Storage policies. No bucket name is guessed or created, and no
   private asset is signed. Object-only paths without a bucket cannot be rendered.
+- The existing `directory_listings` RPC returns `SETOF service_listings`, not an
+  enriched object graph. `ServiceDirectoryService` therefore uses Option A:
+  fetch the paginated RPC ids, fetch a public-only enriched projection for those
+  ids, then restore the RPC order. The second query applies database filters for
+  publication, provider verification, active categories, public contacts and
+  public image media; Angular filtering is only defensive.
 - Signals, reactive forms, OnPush components and the existing Supabase client /
-  language service are reused. Home layout/styles are unchanged; only a redundant
-  brand ARIA label was removed to let its visible bilingual name be announced.
+  language service are reused. Home layout/styles are unchanged.
   Loading, empty,
   error, retry, invalid-location and not-found states are implemented; stale
   responses cannot overwrite a newer route/filter request.
+
+The inspected core schema has no provider address, latitude/longitude, social
+media columns or English category-description column. The UI therefore shows
+the stored location hierarchy/service coverage, validated public website links,
+and Tamil descriptions where supplied; it does not invent map directions,
+addresses, social accounts or translated descriptions. A future schema addition
+can add a validated coordinates projection without changing the route contract.
 
 ### Confirmed relationships and security
 
@@ -58,7 +82,7 @@ directory is expected until real providers are verified and their listings publi
 listing through `listing_id`. Location links reference `locations.id`; media
 links reference `media_assets.id`. Both categories and locations use `parent_id`.
 
-Migration 004 changes only SELECT policies/grants and adds the **security invoker**
+Migration `20261021080000` changes only SELECT policies/grants and adds the **security invoker**
 `directory_listings(category uuid, location uuid, keyword text)` function. It
 moves the original mixed public/owner/admin SELECT policies to `authenticated`
 and adds anonymous policies with no `is_admin()` calls (anon lacks EXECUTE on
@@ -77,32 +101,30 @@ npm run build
 npm start
 ```
 
-The directory implementation passed **36 tests in 8 files** and the production
-build. Coverage includes parent/leaf route selection, location and keyword query
-parameters, publication filters, pagination, contact validation, errors/retries,
-detail not-found and stale responses. Two outdated Home assertions were updated
-to match the pre-existing linked-card UI and current image alt text.
+The current implementation passes **48 tests in 10 files** and the production
+build. Coverage includes the three route levels, direct parent validation,
+location and keyword query parameters, public enrichment ordering, publication
+filters, pagination, contact validation, errors/retries, detail not-found,
+related services and stale responses. These are mocked Supabase/unit checks;
+they do not verify a deployed database or Storage bucket.
 
 `supabase/tests/public_directory.sql` is a transactional database regression test:
-run it as postgres in a **development** Supabase SQL editor after applying 001–004.
-It adds fixtures, checks anonymous hierarchy/search/publication/privacy reads and
-authenticated owner access, and rolls everything back. It passed in a temporary
-embedded PostgreSQL (PGlite) harness with a focused fixture of the inspected core
-tables/SELECT policies and an `auth.uid()` stub. This is not a full Supabase or
-PostgREST integration test; re-run against your actual development database.
-The temporary verification packages were installed outside this application;
-no application dependencies or lockfile changes were made.
+run it as postgres in a **development** Supabase SQL editor after applying the
+core/seed migrations and the three timestamped public-directory migrations. It
+adds fixtures, checks anonymous hierarchy/search/publication/privacy reads and
+authenticated owner access, and rolls everything back. It was not executed as
+part of this UI change; it is not a full Supabase or PostgREST integration test
+until it is run against the actual development database.
 
-Headless Edge checks against the production build, with mocked Supabase responses,
-passed 18 scenarios: parent category, leaf category and detail pages in Tamil and
-English at 1280, 390 and 320 pixels. The default AXE audit reported zero violations,
-with no horizontal overflow or page JavaScript errors. This is automated
-coverage of populated pages, not a claim of complete manual accessibility certification.
+Prior repository notes include headless checks against an earlier production
+build. They are not a substitute for rerunning the browser/AXE checks after this
+three-level route change.
 
 Manual release checks:
 
-1. Configure the existing public Supabase URL/key and apply migration 004.
-2. In a signed-out browser, select a parent category, then a leaf. Check business
+1. Configure the existing public Supabase URL/key and reconcile/apply the
+   migrations only after confirming the remote migration history.
+2. In a signed-out browser, select a root category, then a subcategory. Check business
    names/descriptions, locations, valid contacts and stable detail links.
 3. Search by a business name, then select a district/town/locality. Check the URL,
    pagination and browser Back. Confirm unknown locations do not broaden results.
@@ -121,23 +143,23 @@ Modified existing files:
 
 - `README.md`
 - `src/app/app.routes.ts`
-- `src/app/services/service-category-page.component.ts`
-- `src/app/home/home.component.ts` (brand accessible name only; no design change)
-- `src/app/home/home.component.spec.ts`
-
-Added files:
-
+- `src/app/core/models/service-category.ts`
 - `src/app/core/models/service-listing.ts`
-- `src/app/core/models/service-listing.spec.ts`
 - `src/app/core/models/listing-test-fixtures.ts`
+- `src/app/core/models/service-category.spec.ts`
 - `src/app/core/services/service-directory.service.ts`
 - `src/app/core/services/service-directory.service.spec.ts`
+- `src/app/home/category-card.component.ts`
+- `src/app/services/service-category-page.component.ts`
 - `src/app/services/listing-directory/listing-directory.component.ts`
 - `src/app/services/listing-summary/listing-summary.component.ts`
 - `src/app/services/provider-detail/provider-detail.component.ts`
 - `src/app/services/directory.scss`
 - `src/app/services/directory-routes.spec.ts`
-- `supabase/migrations/nam_chidambaram_migration_004_public_directory.sql`
+
+Added files:
+
+- `src/app/services/service-listings-page.component.ts`
 - `supabase/tests/public_directory.sql`
 
 The production build regenerates `dist/community-app`. Temporary SQL/browser
@@ -153,7 +175,7 @@ The historical category-only implementation notes below predate this directory.
 1. In a development Supabase project, apply the original core migration 001 and
    seed migration 002 (provided separately). Do not re-run the core migration on
    an already initialized project: its policy creation is not idempotent.
-2. Apply `supabase/migrations/nam_chidambaram_migration_003_category_public_read.sql`.
+2. Apply `supabase/migrations/20261020170000_category_public_read.sql`.
    Migration 001's public category policy calls `is_admin()`, whose EXECUTE
    privilege is revoked from anonymous users. Migration 003 removes that call
    from the public category policy. Authenticated administrator access remains

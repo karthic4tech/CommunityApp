@@ -61,15 +61,6 @@ export function findCategory(categories: readonly ServiceCategory[], slug: strin
   return undefined;
 }
 
-export function findCategoryById(categories: readonly ServiceCategory[], id: string): ServiceCategory | undefined {
-  for (const category of categories) {
-    if (category.id === id) return category;
-    const child = findCategoryById(category.subcategories, id);
-    if (child) return child;
-  }
-  return undefined;
-}
-
 export function locationOptions(locations: readonly DirectoryLocation[], language: 'ta' | 'en') {
   const byParent = new Map<string | null, DirectoryLocation[]>();
   for (const place of locations) byParent.set(place.parent_id, [...(byParent.get(place.parent_id) ?? []), place]);

@@ -1,4 +1,4 @@
-import { buildCategoryHierarchy } from './service-category';
+import { buildCategoryHierarchy, findCategoryPathById } from './service-category';
 import { row } from './category-test-fixtures';
 
 describe('buildCategoryHierarchy', () => {
@@ -22,5 +22,13 @@ describe('buildCategoryHierarchy', () => {
   it('handles empty results and disconnected cycles', () => {
     expect(buildCategoryHierarchy([])).toEqual([]);
     expect(buildCategoryHierarchy([row('a', { parent_id: 'b' }), row('b', { parent_id: 'a' })])).toEqual([]);
+  });
+
+  it('returns the active root-to-leaf path for detail breadcrumbs', () => {
+    const categories = buildCategoryHierarchy([
+      row('root'), row('child', { parent_id: 'root' }), row('leaf', { parent_id: 'child' }),
+    ]);
+    expect(findCategoryPathById(categories, 'leaf')?.map(category => category.slug)).toEqual(['root', 'child', 'leaf']);
+    expect(findCategoryPathById(categories, 'missing')).toBeUndefined();
   });
 });

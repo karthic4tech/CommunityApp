@@ -46,6 +46,8 @@ describe('ServiceDirectoryService', () => {
     expect(eq).toHaveBeenCalledWith('listing_contacts.is_public', true);
     expect(eq).toHaveBeenCalledWith('listing_media.media_assets.visibility', 'public');
     expect(select.mock.calls[0][0]).not.toContain('owner_user_id');
+    expect(select.mock.calls[0][0]).toContain('listing_contacts(contact_type,contact_value,is_public,sort_order)');
+    expect(select.mock.calls[0][0]).not.toContain('listing_contacts!inner');
     expect(result.listings).toEqual([listing()]);
   });
 

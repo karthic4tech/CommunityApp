@@ -72,6 +72,9 @@ export class ServiceDirectoryService {
       .eq('status', 'published')
       .eq('service_providers.verification_status', 'verified')
       .eq('service_categories.is_active', true)
+      // Contacts, locations and media are optional embeds. They are filtered
+      // at the database layer without !inner on the optional parent relation,
+      // so a valid listing is not dropped for lacking a public contact/image.
       .eq('listing_contacts.is_public', true)
       .eq('listing_locations.locations.is_active', true)
       .eq('listing_media.media_assets.visibility', 'public')
