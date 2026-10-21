@@ -160,7 +160,6 @@ Modified existing files:
 Added files:
 
 - `src/app/services/service-listings-page.component.ts`
-- `supabase/tests/public_directory.sql`
 
 The production build regenerates `dist/community-app`. Temporary SQL/browser
 verification scripts and their packages live outside the app at

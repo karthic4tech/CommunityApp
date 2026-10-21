@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ServiceCategory } from '../../core/models/service-category';
 import { DirectoryLocation, DirectoryPage, locationOptions } from '../../core/models/service-listing';
 import { LanguageService } from '../../core/services/language.service';
@@ -10,7 +10,7 @@ import { ListingSummaryComponent } from '../listing-summary/listing-summary.comp
 
 @Component({
   selector: 'app-listing-directory',
-  imports: [ReactiveFormsModule, ListingSummaryComponent],
+  imports: [ReactiveFormsModule, RouterLink, ListingSummaryComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section aria-labelledby="directory-title" [attr.aria-busy]="loading()">
@@ -34,7 +34,9 @@ import { ListingSummaryComponent } from '../listing-summary/listing-summary.comp
         <div class="state"><p role="alert">{{ i18n.language() === 'ta' ? 'சேவைகளை ஏற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்.' : 'Unable to load services. Please try again.' }}</p>
           <button type="button" (click)="retry()">{{ i18n.text().retry }}</button></div>
       } @else if (!result().listings.length) {
-        <p class="state" role="status">{{ i18n.language() === 'ta' ? 'பொருத்தமான வெளியிடப்பட்ட சேவைகள் இல்லை. வேறு தேடல் அல்லது இடத்தை முயற்சிக்கவும்.' : 'No matching published services. Try another keyword or location.' }}</p>
+        <div class="state"><p role="status">{{ i18n.language() === 'ta' ? 'பொருத்தமான வெளியிடப்பட்ட சேவைகள் இல்லை. வேறு தேடல் அல்லது இடத்தை முயற்சிக்கவும்.' : 'No matching published services. Try another keyword or location.' }}</p>
+          <a class="browse-link" routerLink="/services">{{ i18n.language() === 'ta' ? 'வேறு வகையைப் பார்க்க' : 'Browse another category' }}</a>
+        </div>
       } @else {
         <p role="status">{{ i18n.language() === 'ta' ? 'இந்தப் பக்கத்தில்' : 'Showing' }} {{ result().listings.length }} {{ i18n.language() === 'ta' ? 'சேவைகள் • பக்கம்' : 'services on page' }} {{ page() + 1 }}</p>
         <div class="listings">
