@@ -38,6 +38,7 @@ describe('Home and Services navigation', () => {
     const element = harness.routeNativeElement!;
     expect(element.querySelector('h1')?.textContent).toContain('Everything you need');
     expect(element.querySelector('app-category-card')).toBeNull();
+    expect(element.querySelector('.main-nav a[href="/admin/login"]')).not.toBeNull();
     const image = element.querySelector<HTMLImageElement>('.hero-image');
     expect(image?.getAttribute('src')).toBe('assets/images/chidambaram-hero.png');
     expect(image?.alt).toBe('Chidambaram temple, local streets and community');

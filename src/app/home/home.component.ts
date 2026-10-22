@@ -32,6 +32,8 @@ import { LanguageService } from '../core/services/language.service';
         <a routerLink="/" fragment="community"><span aria-hidden="true">♧</span><span>{{ i18n.language() === 'ta' ? 'உள்ளூர் வணிகங்கள்' : 'Local businesses' }}</span></a>
         <a routerLink="/services"><span aria-hidden="true">▣</span><span>{{ i18n.language() === 'ta' ? 'வேலைவாய்ப்புகள்' : 'Jobs' }}</span></a>
         <a routerLink="/" fragment="community"><span aria-hidden="true">♧</span><span>{{ i18n.language() === 'ta' ? 'நிகழ்வுகள்' : 'Events' }}</span></a>
+        <a routerLink="/admin/login" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><span aria-hidden="true">⚙</span><span>{{ i18n.language() === 'ta' ? 'நிர்வாகம்' : 'Admin' }}</span></a>
+        <a routerLink="/account" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><span aria-hidden="true">◉</span><span>{{ i18n.language() === 'ta' ? 'கணக்கு' : 'Account' }}</span></a>
       </nav>
     </header>
 

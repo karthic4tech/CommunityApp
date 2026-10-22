@@ -37,6 +37,9 @@ import { ServiceDirectoryService } from '../../core/services/service-directory.s
       @if (detail() && listing().service_providers.description; as description) {
         <p class="description">{{ description }}</p>
       }
+      @if (detail() && listing().service_providers.address; as address) {
+        <p class="address"><strong>{{ i18n.language() === 'ta' ? 'முகவரி' : 'Address' }}:</strong> {{ address }}@if (listing().service_providers.postal_code) {, {{ listing().service_providers.postal_code }}}</p>
+      }
       @if (places().length) {
         <ul class="places" [attr.aria-label]="i18n.language() === 'ta' ? 'இடங்கள்' : 'Locations'">
           @for (place of places(); track $index) {
@@ -50,6 +53,7 @@ import { ServiceDirectoryService } from '../../core/services/service-directory.s
             {{ contact.label }}<span class="contact-value">{{ contact.value }}</span>
           </a>
         }
+        @if (mapsHref(); as maps) { <a [href]="maps" target="_blank" rel="noopener noreferrer">{{ i18n.language() === 'ta' ? 'Google Maps வழிகள்' : 'Google Maps directions' }}</a> }
         @if (!detail()) {
           <a [routerLink]="['/providers', listing().id]">{{ i18n.language() === 'ta' ? 'விவரங்கள்' : 'View details' }}</a>
         }
@@ -64,7 +68,7 @@ import { ServiceDirectoryService } from '../../core/services/service-directory.s
     article { height:100%; box-sizing:border-box; padding:1.25rem; background:white; border:1px solid #dfe7e2; border-radius:16px; color:#173f32; overflow-wrap:anywhere; }
     h1 { font-size:clamp(1.5rem,3vw,2rem); } h2,h3 { font-size:1.15rem; } h1,h3 { margin:0 0 .75rem; }
     a { color:#075541; } .provider { margin:.15rem 0 .65rem; font-weight:650; color:#244f3e; } .verified { display:inline-flex; align-items:center; gap:.25rem; margin-bottom:.5rem; color:#176044; font-size:.82rem; font-weight:700; }
-    .description { white-space:pre-line; line-height:1.8; } p,.places { color:#52665b; line-height:1.7; }
+    .description { white-space:pre-line; line-height:1.8; } p,.places { color:#52665b; line-height:1.7; } .address { white-space:pre-line; }
     .places { padding-left:1.25rem; } .image { position:relative; aspect-ratio:4/3; margin-block:1rem; } .image-placeholder { display:flex; align-items:center; justify-content:center; gap:.5rem; min-height:130px; margin-block:1rem; border:1px dashed #b8c9bf; border-radius:10px; background:#f7faf7; color:#52665b; text-align:center; }
     img { object-fit:contain; border-radius:10px; } .gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:1rem; }
     .actions { display:flex; flex-wrap:wrap; gap:.6rem; } .actions a { display:inline-flex; flex-direction:column; justify-content:center; min-height:44px; padding:.5rem .75rem; border:1px solid #b8c9bf; border-radius:9px; text-decoration:none; font-weight:600; }
@@ -88,6 +92,11 @@ export class ListingSummaryComponent {
     const available = this.images().filter(image => !failed.has(image));
     return this.detail() ? available : available.slice(0, 1);
   });
+  protected readonly mapsHref = computed(() => {
+    const { latitude, longitude } = this.listing().service_providers;
+    if (typeof latitude !== 'number' || typeof longitude !== 'number' || !Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
+    return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+  });
   protected readonly places = computed(() => this.listing().listing_locations.flatMap(place => place.locations ? [{
     name: this.i18n.language() === 'ta' ? place.locations.name_ta : place.locations.name_en ?? place.locations.name_ta,
     based: place.coverage_type === 'based_here',
@@ -104,8 +113,9 @@ export class ListingSummaryComponent {
       seen.add(href);
       const tamil = this.i18n.language() === 'ta';
       const labels = {
-        phone: tamil ? 'அழைக்க' : 'Call', whatsapp: tamil ? 'WhatsApp விசாரணை' : 'Enquire via WhatsApp',
-        email: tamil ? 'மின்னஞ்சல் விசாரணை' : 'Enquire by email', website: tamil ? 'இணையதளம்' : 'Website', other: '',
+         phone: tamil ? 'அழைக்க' : 'Call', whatsapp: tamil ? 'WhatsApp விசாரணை' : 'Enquire via WhatsApp',
+         email: tamil ? 'மின்னஞ்சல் விசாரணை' : 'Enquire by email', website: tamil ? 'இணையதளம்' : 'Website',
+         facebook: 'Facebook', instagram: 'Instagram', youtube: 'YouTube', other: '',
       };
       return [{ href, value: contact.contact_value, label: labels[contact.contact_type] }];
     });

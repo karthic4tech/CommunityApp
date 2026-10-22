@@ -15,7 +15,7 @@ export interface DirectoryListingRow {
 }
 
 export interface ListingContact {
-  contact_type: 'phone' | 'whatsapp' | 'email' | 'website' | 'other';
+  contact_type: 'phone' | 'whatsapp' | 'email' | 'website' | 'facebook' | 'instagram' | 'youtube' | 'other';
   contact_value: string;
   is_public: boolean;
   sort_order: number;
@@ -35,6 +35,10 @@ export interface ServiceListing {
     verification_status: string;
     public_email: string | null;
     website_url: string | null;
+    address?: string | null;
+    postal_code?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
   };
   listing_locations: {
     coverage_type: 'based_here' | 'serves_here';
@@ -99,6 +103,17 @@ export function contactHref(type: ListingContact['contact_type'], value: string)
     try {
       const url = new URL(trimmed);
       return ['https:', 'http:'].includes(url.protocol) && !url.username && !url.password ? url.href : null;
+    } catch { return null; }
+  }
+  if (type === 'facebook' || type === 'instagram' || type === 'youtube') {
+    try {
+      const url = new URL(trimmed);
+      const hosts: Record<'facebook' | 'instagram' | 'youtube', readonly string[]> = {
+        facebook: ['facebook.com', 'www.facebook.com'],
+        instagram: ['instagram.com', 'www.instagram.com'],
+        youtube: ['youtube.com', 'www.youtube.com', 'youtu.be'],
+      };
+      return url.protocol === 'https:' && !url.username && !url.password && hosts[type].includes(url.hostname.toLowerCase()) ? url.href : null;
     } catch { return null; }
   }
   return null;

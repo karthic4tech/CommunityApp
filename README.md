@@ -13,10 +13,12 @@ AI configuration has been changed automatically.
 ### Setup and behaviour
 
 Apply the local migrations `20261020170000_category_public_read.sql`,
-`20261021080000_public_directory.sql` and `20261021090000_ai_search.sql` after
-core 001 and seed 002. **No migration is applied automatically by the
-application.** A read-only linked migration-list check reports these three
-local versions with no matching remote history, so reconcile that history with
+`20261021080000_public_directory.sql`, `20261021090000_ai_search.sql` and the
+pending `20261022090000_category_cycle_guard.sql` and
+`20261022100000_user_submission_workflow.sql` after core 001 and seed 002.
+**No migration is applied automatically by the application.** A read-only linked
+migration-list check reports the previously existing local versions with no
+matching remote history; reconcile that history with
 the project owner before applying anything. Do not use `supabase db push` or
 reset as part of a normal release.
 
@@ -67,12 +69,13 @@ directory is expected until real providers are verified and their listings publi
   error, retry, invalid-location and not-found states are implemented; stale
   responses cannot overwrite a newer route/filter request.
 
-The inspected core schema has no provider address, latitude/longitude, social
-media columns or English category-description column. The UI therefore shows
-the stored location hierarchy/service coverage, validated public website links,
-and Tamil descriptions where supplied; it does not invent map directions,
-addresses, social accounts or translated descriptions. A future schema addition
-can add a validated coordinates projection without changing the route contract.
+The inspected core schema originally had no provider address,
+latitude/longitude or social contact columns. The pending user-workflow
+migration adds those provider/contact fields and validates coordinates; the
+English/Tamil listing title and description remain single-field because the
+existing listing schema has no translated columns. Public maps and social links
+are shown only when the pending migration is applied and the submitted values
+pass validation.
 
 ### Confirmed relationships and security
 
@@ -101,16 +104,16 @@ npm run build
 npm start
 ```
 
-The current implementation passes **48 tests in 10 files** and the production
-build. Coverage includes the three route levels, direct parent validation,
-location and keyword query parameters, public enrichment ordering, publication
-filters, pagination, contact validation, errors/retries, detail not-found,
-related services and stale responses. These are mocked Supabase/unit checks;
-they do not verify a deployed database or Storage bucket.
+The existing baseline passed **52 tests in 11 files** and the production build.
+No new tests were added for the category-management or user-submission changes
+per the implementation request. These changes were verified with the Angular application type-check and
+production build; it still requires manual verification against an authenticated
+administrator account and the development Supabase project.
 
 `supabase/tests/public_directory.sql` is a transactional database regression test:
 run it as postgres in a **development** Supabase SQL editor after applying the
-core/seed migrations and the three timestamped public-directory migrations. It
+core/seed migrations and the five timestamped public-directory/category/user
+migrations. It
 adds fixtures, checks anonymous hierarchy/search/publication/privacy reads and
 authenticated owner access, and rolls everything back. It was not executed as
 part of this UI change; it is not a full Supabase or PostgREST integration test
@@ -137,6 +140,54 @@ Manual release checks:
 Live Supabase data/Storage connectivity and deployed RLS have not been verified.
 The configured public REST schema request returned HTTP 401 during inspection.
 
+### Administrator access
+
+- `/admin/login` is the public sign-in entry point.
+- `/admin` is protected by an Angular route guard that refreshes the Supabase
+  session and verifies one of the existing `super_admin`, `district_admin` or
+  `moderator` roles through the RLS-protected `user_roles` table.
+- `/admin/categories` provides searchable hierarchical category management;
+  `/admin/categories/new` and `/admin/categories/:id/edit` provide the shared
+  create/edit form. It uses the existing self-referencing table and existing
+  admin RLS policy. The pending cycle-guard migration adds database-level
+  protection against circular parent relationships.
+- The browser cannot assign roles. Provision an administrator through a trusted
+  Supabase/Auth workflow, then add the matching `user_roles` row from a trusted
+  administrative context.
+- The current dashboard is a secure shell showing the authenticated account and
+  roles. Directory moderation screens are intentionally a separate next step;
+  database RLS remains the final authorization boundary.
+
+### User onboarding and service submissions
+
+- `/auth/sign-up`, `/auth/sign-in`, `/auth/verify-email`,
+  `/auth/forgot-password` and `/auth/reset-password` use the existing Supabase
+  Auth client. Normal users are never granted administrator roles.
+- `/account` stores only permitted profile fields in `profiles`; passwords and
+  auth tokens remain managed by Supabase Auth.
+- `/services/submit` and `/services/submit/:id` provide a verified-user,
+  multi-step draft/submission flow. `/my-submissions` shows owner-only status
+  and review feedback.
+- `/admin/listings/review` uses the existing administrator guard plus the
+  database review functions. Approval, provider verification, rejection,
+  changes requested and unpublish decisions are recorded in
+  `listing_verification_history`.
+- Published listings are not edited in place by owners. Published updates are
+  stored as pending JSON snapshots in `service_listing_revisions` and replace
+  the public version only after administrator approval.
+- The pending migrations `20261022090000_category_cycle_guard.sql` and
+  `20261022100000_user_submission_workflow.sql` add the category integrity,
+  provider location fields, social contact types, revision table, review
+  functions and required RLS/grants. They have not been applied automatically.
+- Photo upload requires an explicitly configured `supabaseStorageBucket` and
+  matching Supabase Storage policies. The browser never receives a service-role
+  key. Without a configured bucket, text/contact/location submissions still work.
+- Configure `supabaseAuthRedirectUrl` to an allow-listed `/auth/verify-email`
+  URL and `supabasePasswordResetRedirectUrl` to an allow-listed
+  `/auth/reset-password` URL when deploying email confirmation, OAuth or
+  password recovery. The app deliberately does not change Supabase Site URL or
+  provider settings.
+
 ### Directory change manifest
 
 Modified existing files:
@@ -150,6 +201,9 @@ Modified existing files:
 - `src/app/core/services/service-directory.service.ts`
 - `src/app/core/services/service-directory.service.spec.ts`
 - `src/app/home/category-card.component.ts`
+- `src/app/home/home.component.ts`
+- `src/app/home/home.component.spec.ts`
+- `src/app/admin/admin-dashboard.component.ts`
 - `src/app/services/service-category-page.component.ts`
 - `src/app/services/listing-directory/listing-directory.component.ts`
 - `src/app/services/listing-summary/listing-summary.component.ts`
@@ -159,7 +213,31 @@ Modified existing files:
 
 Added files:
 
+- `src/app/core/auth/auth.service.ts`
+- `src/app/core/auth/admin.guard.ts`
+- `src/app/core/auth/auth.service.spec.ts`
 - `src/app/services/service-listings-page.component.ts`
+- `src/app/admin/admin-login.component.ts`
+- `src/app/core/services/admin-category.service.ts`
+- `src/app/admin/admin-category-management.component.ts`
+- `src/app/admin/admin-category-form.component.ts`
+- `src/app/core/auth/user.guard.ts`
+- `src/app/core/models/service-submission.ts`
+- `src/app/core/services/profile.service.ts`
+- `src/app/core/services/service-submission.service.ts`
+- `src/app/core/services/listing-media.service.ts`
+- `src/app/core/services/admin-review.service.ts`
+- `src/app/auth/auth-sign-up.component.ts`
+- `src/app/auth/auth-sign-in.component.ts`
+- `src/app/auth/auth-verify-email.component.ts`
+- `src/app/auth/auth-forgot-password.component.ts`
+- `src/app/auth/auth-reset-password.component.ts`
+- `src/app/account/account.component.ts`
+- `src/app/services/submit-service.component.ts`
+- `src/app/services/my-submissions.component.ts`
+- `src/app/admin/admin-review.component.ts`
+- `supabase/migrations/20261022090000_category_cycle_guard.sql`
+- `supabase/migrations/20261022100000_user_submission_workflow.sql`
 
 The production build regenerates `dist/community-app`. Temporary SQL/browser
 verification scripts and their packages live outside the app at
