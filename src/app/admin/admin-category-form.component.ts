@@ -22,7 +22,7 @@ export function suggestCategorySlug(value: string): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="admin-form-page" aria-labelledby="category-form-title" [attr.aria-busy]="loading() || saving()">
-      <a class="back-link" routerLink="/admin/categories">← {{ i18n.language() === 'ta' ? 'வகை நிர்வாகத்திற்குத் திரும்பு' : 'Back to category management' }}</a>
+      <a class="back-link" routerLink="/admin/categories"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ i18n.language() === 'ta' ? 'வகை நிர்வாகத்திற்குத் திரும்பு' : 'Back to category management' }}</a>
       @if (loading()) {
         <h1 id="category-form-title">{{ i18n.language() === 'ta' ? 'வகை ஏற்றப்படுகிறது…' : 'Loading category…' }}</h1>
         <p class="state" role="status">{{ i18n.language() === 'ta' ? 'தயவுசெய்து காத்திருக்கவும்.' : 'Please wait.' }}</p>

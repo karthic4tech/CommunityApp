@@ -22,7 +22,7 @@ import { LanguageService } from '../core/services/language.service';
         <article class="card">
           <h2>{{ i18n.language() === 'ta' ? 'உங்கள் அணுகல்' : 'Your access' }}</h2>
           <p>{{ auth.user()?.email }}</p>
-          <p class="verified">✓ {{ i18n.language() === 'ta' ? 'நிர்வாகி சரிபார்க்கப்பட்டது' : 'Administrator verified' }}</p>
+          <p class="verified"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> {{ i18n.language() === 'ta' ? 'நிர்வாகி சரிபார்க்கப்பட்டது' : 'Administrator verified' }}</p>
           <ul>
             @for (role of auth.roles(); track role) { <li>{{ role }}</li> }
           </ul>

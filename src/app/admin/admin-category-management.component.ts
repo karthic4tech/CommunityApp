@@ -13,12 +13,12 @@ import { LanguageService } from '../core/services/language.service';
     <section class="category-admin-page" aria-labelledby="category-admin-title" [attr.aria-busy]="loading() || savingId() !== null">
       <header class="page-header">
         <div>
-          <a class="back-link" routerLink="/admin">← {{ i18n.language() === 'ta' ? 'நிர்வாக பலகை' : 'Admin dashboard' }}</a>
+          <a class="back-link" routerLink="/admin"><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ i18n.language() === 'ta' ? 'நிர்வாக பலகை' : 'Admin dashboard' }}</a>
           <p class="eyebrow">{{ i18n.language() === 'ta' ? 'சேவை அடைவு' : 'SERVICE DIRECTORY' }}</p>
           <h1 id="category-admin-title">{{ i18n.language() === 'ta' ? 'வகைகள் மற்றும் உட்பிரிவுகள்' : 'Categories and subcategories' }}</h1>
           <p class="intro">{{ i18n.language() === 'ta' ? 'பொது சேவை அடைவின் வகை அமைப்பை நிர்வகிக்கவும்.' : 'Manage the category hierarchy used by the public service directory.' }}</p>
         </div>
-        <a class="primary-action" routerLink="/admin/categories/new">＋ {{ i18n.language() === 'ta' ? 'வகையைச் சேர்' : 'Add category' }}</a>
+        <a class="primary-action" routerLink="/admin/categories/new"><i class="bi bi-plus-lg" aria-hidden="true"></i> {{ i18n.language() === 'ta' ? 'வகையைச் சேர்' : 'Add category' }}</a>
       </header>
 
       <div class="toolbar">
@@ -47,7 +47,7 @@ import { LanguageService } from '../core/services/language.service';
             <tbody>
               @for (row of visibleRows(); track row.category.id) {
                 <tr>
-                  <th scope="row"><span class="tree-name" [style.padding-inline-start.rem]="row.depth * 1.35"><span class="tree-marker" aria-hidden="true">{{ row.depth ? '↳' : '◆' }}</span><span><strong>{{ row.category.name_en }}</strong><small lang="ta">{{ row.category.name_ta }}</small></span></span></th>
+                  <th scope="row"><span class="tree-name" [style.padding-inline-start.rem]="row.depth * 1.35"><i class="bi tree-marker" [class]="row.depth ? 'bi bi-arrow-return-right tree-marker' : 'bi bi-folder2 tree-marker'" aria-hidden="true"></i><span><strong>{{ row.category.name_en }}</strong><small lang="ta">{{ row.category.name_ta }}</small></span></span></th>
                   <td><code>{{ row.category.slug }}</code></td>
                   <td>{{ row.category.sort_order }}</td>
                   <td><span [class.status-active]="row.category.is_active" [class.status-inactive]="!row.category.is_active">{{ row.category.is_active ? 'Active' : 'Inactive' }}</span></td>

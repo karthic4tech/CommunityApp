@@ -1,10 +1,188 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Noto+Sans+Tamil:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
 
-:root { color-scheme: light; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+@font-face {
+  font-family: 'bootstrap-icons';
+  src: url('/assets/fonts/bootstrap-icons.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --bs-primary: #176346;
+  --bs-primary-rgb: 23, 99, 70;
+  --bs-link-color: #14563d;
+  --bs-link-hover-color: #0b3928;
+  --bs-body-color: #203b30;
+  --bs-body-font-family: 'Noto Sans Tamil', Inter, system-ui, sans-serif;
+  --bs-border-color: #dfe7e2;
+  --bs-border-radius: .75rem;
+  --bs-border-radius-lg: 1rem;
+  --bs-focus-ring-color: rgba(23, 99, 70, .28);
+}
+
 html { scroll-behavior: smooth; background: #fbfaf6; }
-body { margin: 0; background: #fbfaf6; color: #203c30; font-family: 'Noto Sans Tamil', Inter, system-ui, sans-serif; }
+body { margin: 0; background: #fbfaf6; color: #203b30; font-family: 'Noto Sans Tamil', Inter, system-ui, sans-serif; }
 * { box-sizing: border-box; }
 :focus-visible { outline: 3px solid #17583f; outline-offset: 3px; }
-button, input { font: inherit; }
+button, input, select, textarea { font: inherit; }
 ::selection { background: #cde8d5; color: #123f30; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* Shared Bootstrap-inspired form controls and actions for every route. */
+app-root input:not([type='checkbox']):not([type='radio']):not(.hero-search input):not(.header-search input),
+app-root select,
+app-root textarea {
+  min-height: 46px;
+  border: 1px solid #c3d0c8;
+  border-radius: .65rem;
+  padding: .7rem .85rem;
+  color: #203b30;
+  background-color: #fff;
+  box-shadow: 0 1px 2px rgba(20, 55, 39, .04);
+  transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
+}
+
+app-root textarea { min-height: 110px; }
+app-root input::placeholder,
+app-root textarea::placeholder { color: #66786f; opacity: 1; }
+
+app-root input:not([type='checkbox']):not([type='radio']):not(.hero-search input):not(.header-search input):focus,
+app-root select:focus,
+app-root textarea:focus {
+  border-color: #43876a;
+  outline: 0;
+  box-shadow: 0 0 0 .22rem rgba(23, 99, 70, .17);
+}
+
+app-root select {
+  appearance: auto;
+  padding-right: 0.7rem;
+  background-image: none;
+}
+
+app-root select option {
+  padding: .5rem 0.85rem;
+  color: #203b30;
+  background-color: #fff;
+  font-family: 'Noto Sans Tamil', Inter, system-ui, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+app-root select[multiple] { min-height: 130px; background-image: none; padding: .5rem; }
+app-root input[type='checkbox'],
+app-root input[type='radio'] { width: 1.1rem; height: 1.1rem; accent-color: #176346; }
+app-root input[type='file'] { min-height: auto; padding: .55rem; }
+
+app-root button:not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button) {
+  min-height: 44px;
+  border: 1px solid #176346;
+  border-radius: .65rem;
+  padding: .65rem 1rem;
+  color: #fff;
+  background: #176346;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+app-root button:not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):hover:not(:disabled) {
+  border-color: #104a34;
+  background: #104a34;
+}
+
+app-root button:not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):disabled {
+  cursor: not-allowed;
+  opacity: .58;
+}
+
+app-root button.secondary,
+app-root button.oauth-button,
+app-root button.secondary-action,
+app-root .actions button.secondary {
+  border-color: #b8c9bf;
+  color: #14563d;
+  background: #fff;
+}
+
+app-root button.secondary:hover:not(:disabled),
+app-root button.oauth-button:hover:not(:disabled),
+app-root button.secondary-action:hover:not(:disabled) {
+  border-color: #87aa94;
+  color: #0e4932;
+  background: #f2f7f2;
+}
+
+app-root label { color: #294c3d; font-weight: 650; }
+app-root label small,
+app-root .help,
+app-root .intro { color: #62746b; }
+app-submit-service .provider-type-group {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+app-submit-service .provider-type-group legend {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: .75rem;
+  color: #173f32;
+}
+app-submit-service .provider-type-group .row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: .75rem;
+}
+app-submit-service .btn-check:checked + .btn {
+  background-color: #075541 !important;
+  border-color: #075541 !important;
+  color: white !important;
+}
+app-submit-service .btn-outline-success {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  min-height: 48px;
+  border-color: #075541;
+  color: #075541;
+  font-weight: 600;
+  flex-wrap: wrap;
+}
+app-submit-service .btn-outline-success:hover:not(:disabled) {
+  background-color: #e6f4e9;
+  border-color: #075541;
+}
+app-submit-service .btn-check:focus-visible + .btn {
+  outline: 3px solid #17583f;
+  outline-offset: 2px;
+}
+app-root .state,
+app-root .notice,
+app-root .success,
+app-root .preview,
+app-root .card,
+app-root .detail,
+app-root .published article {
+  border-radius: .9rem;
+}
+
+app-root table { border-color: #e5ebe5; }
+app-root table thead th { color: #52665b; background: #f6f9f5; }
+app-root code { color: #4b6458; }
+app-root a { text-underline-offset: .18em; }
+
+@media (max-width: 650px) {
+  app-root input:not([type='checkbox']):not([type='radio']):not(.hero-search input):not(.header-search input), app-root select { min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}

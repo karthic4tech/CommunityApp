@@ -19,7 +19,7 @@ import { ServiceDirectoryService } from '../../core/services/service-directory.s
         <p class="provider">{{ listing().service_providers.display_name }}</p>
       }
       @if (listing().service_providers.verification_status === 'verified') {
-        <span class="verified" [attr.aria-label]="i18n.language() === 'ta' ? 'சரிபார்க்கப்பட்ட சேவை வழங்குநர்' : 'Verified provider'">✓ {{ i18n.language() === 'ta' ? 'சரிபார்க்கப்பட்டது' : 'Verified' }}</span>
+        <span class="verified" [attr.aria-label]="i18n.language() === 'ta' ? 'சரிபார்க்கப்பட்ட சேவை வழங்குநர்' : 'Verified provider'"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> {{ i18n.language() === 'ta' ? 'சரிபார்க்கப்பட்டது' : 'Verified' }}</span>
       }
       @if (visibleImages().length) {
         <div [class.gallery]="detail()">

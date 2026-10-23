@@ -5,11 +5,11 @@ import { RouterLink } from '@angular/router';
 import { NgTemplateOutlet } from '@angular/common';
 
 const ICONS: Readonly<Record<string, string>> = {
-  house: '⌂', heart: '♡', 'hard-hat': '⚒', hospital: '✚', 'graduation-cap': '✧',
-  'book-open': '▤', utensils: '♨', users: '♧', 'car-front': '↗', 'flower-2': '✿',
-  recycle: '⟳', store: '▦', dumbbell: '↗', landmark: '▥', 'calendar-days': '▦',
-  'briefcase-business': '▣', 'building-2': '▥', 'heart-handshake': '♡', car: '↗',
-  sprout: '❧', 'monitor-smartphone': '▣', 'paw-print': '◇',
+  house: 'bi-house-heart', heart: 'bi-heart-pulse', 'hard-hat': 'bi-cone-striped', hospital: 'bi-hospital', 'graduation-cap': 'bi-mortarboard',
+  'book-open': 'bi-book-half', utensils: 'bi-cup-hot', users: 'bi-people', 'car-front': 'bi-car-front', 'flower-2': 'bi-flower1',
+  recycle: 'bi-recycle', store: 'bi-shop', dumbbell: 'bi-activity', landmark: 'bi-bank', 'calendar-days': 'bi-calendar-event',
+  'briefcase-business': 'bi-briefcase', 'building-2': 'bi-buildings', 'heart-handshake': 'bi-heart', car: 'bi-car-front',
+  sprout: 'bi-flower2', 'monitor-smartphone': 'bi-phone', 'paw-print': 'bi-patch-check',
 };
 const PALETTES = ['orange', 'rose', 'blue', 'red', 'purple', 'green'];
 
@@ -19,7 +19,7 @@ const PALETTES = ['orange', 'rose', 'blue', 'red', 'purple', 'green'];
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ng-template #labels>
-        <span [class]="'icon ' + paletteFor(category().sortOrder)" aria-hidden="true">{{ iconFor(category().icon) }}</span>
+        <span [class]="'icon ' + paletteFor(category().sortOrder)" aria-hidden="true"><i class="bi" [class]="'bi ' + iconFor(category().icon)"></i></span>
         <span class="labels"><strong [lang]="i18n.language()">{{ i18n.language() === 'ta' ? category().nameTamil : category().nameEnglish }}</strong>
           <span [lang]="i18n.secondaryLanguage()">{{ i18n.language() === 'ta' ? category().nameEnglish : category().nameTamil }}</span>
         </span>
@@ -41,7 +41,7 @@ const PALETTES = ['orange', 'rose', 'blue', 'red', 'purple', 'green'];
     .card { display:flex; align-items:center; gap:.9rem; padding:1rem 1.1rem; min-height:96px; text-decoration:none; border:1px solid #e0e7e2; border-radius:15px; background:#fff; box-shadow:0 4px 14px #1d483508; transition:border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
     a.card:hover { border-color:#b8d3c3; box-shadow:0 8px 22px #1d483510; transform:translateY(-2px); }
     a.card:focus-visible { outline:3px solid #176044; outline-offset:3px; }
-    .icon { flex:0 0 58px; width:58px; height:58px; display:grid; place-items:center; border-radius:13px; font-size:2rem; font-weight:700; }
+    .icon { flex:0 0 58px; width:58px; height:58px; display:grid; place-items:center; border-radius:13px; font-size:1.45rem; font-weight:700; }
     .orange { color:#a34b0a; background:#fff0df; }.rose { color:#a52b40; background:#ffeaec; }.blue { color:#236b8e; background:#e0f1f8; }.red { color:#ad2525; background:#ffebeb; }.purple { color:#694184; background:#f0e7f8; }.green { color:#146344; background:#e1f4e9; }
     .labels { display:flex; flex-direction:column; gap:.3rem; min-width:0; flex:1; }
     strong { color:#174b3a; line-height:1.6; font-size:1rem; overflow-wrap:anywhere; }
@@ -58,7 +58,7 @@ export class CategoryCardComponent {
   protected readonly i18n = inject(LanguageService);
 
   protected iconFor(name: string | null): string {
-    return ICONS[name ?? ''] ?? '◇';
+    return ICONS[name ?? ''] ?? 'bi-question-circle';
   }
 
   protected paletteFor(sortOrder: number): string {

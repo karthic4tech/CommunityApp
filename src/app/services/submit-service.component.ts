@@ -17,55 +17,621 @@ import { environment } from '../../environments/environment';
   imports: [ReactiveFormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="submit-page" aria-labelledby="submit-title" [attr.aria-busy]="loading() || saving()">
-      <a class="back-link" routerLink="/my-submissions">← Back to my submissions</a>
-      <header><p class="eyebrow">COMMUNITY SERVICE</p><h1 id="submit-title">{{ editing() ? 'Edit your submission' : 'Add your service' }}</h1><p class="intro">Share accurate service information with the Nam Chidambaram community. Submissions are reviewed before publication.</p></header>
-      @if (loading()) { <p class="state" role="status">Loading the submission form…</p> }
-      @else if (!auth.emailVerified()) { <div class="notice" role="alert"><strong>Verify your email first.</strong><p>Only verified accounts can submit services.</p><a routerLink="/auth/verify-email">Verify email</a></div> }
-      @else if (published() && pendingUpdate()) { <div class="notice" role="status"><strong>Update awaiting review.</strong><p>An administrator must review the current update before another update can be submitted.</p><a routerLink="/my-submissions">Return to my submissions</a></div> }
-      @else {
-        @if (published()) { <div class="notice" role="status"><strong>This is an update to a published listing.</strong><p>The current public version remains unchanged until an administrator approves this update.</p></div> }
-        <nav class="steps" aria-label="Submission progress"><span [class.current]="step() === 1">1. Details</span><span [class.current]="step() === 2">2. Contacts</span><span [class.current]="step() === 3">3. Location</span><span [class.current]="step() === 4">4. Review</span></nav>
-        <form [formGroup]="form" (ngSubmit)="step() === 4 ? save(true) : next()" novalidate>
-          @if (step() === 1) {
-            <fieldset><legend>Business and service details</legend>
-              <label>Provider type<select formControlName="provider_type"><option value="individual">Individual</option><option value="business">Business</option><option value="organisation">Organisation</option></select></label>
-              <label>Provider or business name<input formControlName="display_name" maxlength="160" required /></label>
-              <label>Provider description<textarea formControlName="provider_description" rows="3" maxlength="2000"></textarea></label>
-              <label>Parent category<select #parent formControlName="parent_slug" (change)="selectParent(parent.value)" required><option value="">Select a category</option>@for (category of rootCategories(); track category.id) { <option [value]="category.slug">{{ category.nameEnglish }} — {{ category.nameTamil }}</option> }</select></label>
-              <label>Subcategory<select formControlName="category_id" required><option value="">Select a subcategory</option>@for (category of subcategories(); track category.id) { <option [value]="category.id">{{ category.nameEnglish }} — {{ category.nameTamil }}</option> }</select></label>
-              <label>Service title<input formControlName="title" maxlength="200" required /></label>
-              <label>Service description<textarea formControlName="description" rows="6" maxlength="5000" required></textarea></label>
-            </fieldset>
-          } @else if (step() === 2) {
-            <fieldset><legend>Public contacts</legend><p class="help">Only checked contact details will be shown publicly after approval.</p>
-              <label>Phone<input formControlName="phone" autocomplete="tel" maxlength="40" /></label><label class="check"><input type="checkbox" formControlName="phone_public" /> Show phone publicly</label>
-              <label>WhatsApp<input formControlName="whatsapp" maxlength="40" /></label><label class="check"><input type="checkbox" formControlName="whatsapp_public" /> Show WhatsApp publicly</label>
-              <label>Email<input type="email" formControlName="email" autocomplete="email" maxlength="200" /></label><label class="check"><input type="checkbox" formControlName="email_public" /> Show email publicly</label>
-              <label>Website<input type="url" formControlName="website" maxlength="500" placeholder="https://example.com" /></label><label class="check"><input type="checkbox" formControlName="website_public" /> Show website publicly</label>
-              <label>Facebook<input type="url" formControlName="facebook" maxlength="500" placeholder="https://facebook.com/..." /></label><label class="check"><input type="checkbox" formControlName="facebook_public" /> Show Facebook publicly</label>
-              <label>Instagram<input type="url" formControlName="instagram" maxlength="500" placeholder="https://instagram.com/..." /></label><label class="check"><input type="checkbox" formControlName="instagram_public" /> Show Instagram publicly</label>
-              <label>YouTube<input type="url" formControlName="youtube" maxlength="500" placeholder="https://youtube.com/..." /></label><label class="check"><input type="checkbox" formControlName="youtube_public" /> Show YouTube publicly</label>
-            </fieldset>
-          } @else if (step() === 3) {
-            <fieldset><legend>Location and service coverage</legend><p class="help">The current schema stores structured locations and coverage. Street address and coordinates are optional.</p>
-              <label>Business locality<select formControlName="based_location_id"><option value="">Select a locality</option>@for (place of places(); track place.id) { <option [value]="place.id">{{ place.label }}</option> }</select></label>
-              <label>Coverage type<select formControlName="coverage_type"><option value="based_here">Based here</option><option value="serves_here">Serves here</option></select></label>
-              <label>Business address<input formControlName="address" maxlength="500" /></label><label>Postal code<input formControlName="postal_code" maxlength="16" /></label>
-              <div class="coordinate-grid"><label>Latitude<input type="number" formControlName="latitude" min="-90" max="90" step="any" /></label><label>Longitude<input type="number" formControlName="longitude" min="-180" max="180" step="any" /></label></div>
-              <label>Additional service areas<select multiple formControlName="coverage_ids" size="6">@for (place of places(); track place.id) { <option [value]="place.id">{{ place.label }}</option> }</select></label>
-            </fieldset>
-          } @else {
-            <fieldset><legend>Review and submit</legend><div class="preview"><h2>{{ form.controls.title.value || 'Untitled service' }}</h2><p class="provider">{{ form.controls.display_name.value }}</p><p>{{ form.controls.description.value }}</p><p><strong>Category:</strong> {{ selectedCategoryLabel() }}</p><p><strong>Contacts:</strong> {{ publicContactCount() }} public contact(s)</p><p><strong>Coverage:</strong> {{ form.controls.coverage_ids.value.length + (form.controls.based_location_id.value ? 1 : 0) }} location(s)</p></div><label>Service images (up to 10, 5 MB each)<input type="file" accept="image/*" multiple (change)="selectFiles($event)" />@if (selectedFiles().length) { <small>{{ selectedFiles().length }} image(s) selected.</small> } @if (!storageConfigured()) { <small class="help">Photo uploads require a configured Supabase Storage bucket. You can still submit text and contact details.</small> }</label><label class="declaration"><input type="checkbox" formControlName="declaration" required /> I confirm that I am authorized to submit this information and that it is accurate.</label></fieldset>
-          }
-          @if (errorMessage(); as message) { <p class="error" role="alert">{{ message }}</p> }
-          <div class="actions"><button type="button" class="secondary" [disabled]="step() === 1 || saving()" (click)="previous()">Back</button>@if (step() < 4) { <button type="button" class="secondary" [disabled]="saving()" (click)="save(false)">Save draft</button><button type="button" [disabled]="!canNext() || saving()" (click)="next()">Continue</button> } @else { <button type="button" class="secondary" [disabled]="saving()" (click)="save(false)">Save draft</button><button type="submit" [disabled]="!form.controls.declaration.value || saving()">{{ saving() ? 'Submitting…' : 'Submit for review' }}</button> }</div>
-        </form>
-      }
-    </section>
+    <div class="submit-container">
+      <div class="container-xl">
+        <div class="row">
+          <div class="col-lg-8 offset-lg-2">
+            <a class="btn btn-link text-decoration-none mb-4 d-inline-flex align-items-center gap-2" routerLink="/my-submissions">
+              <i class="bi bi-arrow-left"></i>
+              <span>Back to my submissions</span>
+            </a>
+
+            @if (!loading()) {
+              <div class="page-header mb-5">
+                <p class="text-uppercase fw-bold mb-2" style="color:#d9bd72; font-size:0.75rem; letter-spacing:0.12em;">Community Service</p>
+                <h1 class="h2 fw-bold mb-3" style="color:#0b3026;">{{ editing() ? 'Edit your submission' : 'Add your service' }}</h1>
+                <p class="text-muted lead" style="max-width:600px; margin:0;">Share accurate service information with the Nam Chidambaram community. Submissions are reviewed before publication.</p>
+              </div>
+            }
+
+            @if (loading()) {
+              <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading…</span>
+              </div>
+            } @else if (!auth.emailVerified()) {
+              <div class="alert alert-warning border-0 rounded-3 mb-4">
+                <div class="d-flex gap-3">
+                  <i class="bi bi-exclamation-triangle-fill flex-shrink-0" style="font-size:1.25rem;"></i>
+                  <div>
+                    <h5 class="alert-heading fw-bold">Verify your email first</h5>
+                    <p class="mb-3 text-muted">Only verified accounts can submit services.</p>
+                    <a routerLink="/auth/verify-email" class="btn btn-sm btn-warning">
+                      <i class="bi bi-check-circle me-2"></i>Verify email
+                    </a>
+                  </div>
+                </div>
+              </div>
+            } @else if (published() && pendingUpdate()) {
+              <div class="alert alert-info border-0 rounded-3 mb-4">
+                <div class="d-flex gap-3">
+                  <i class="bi bi-info-circle-fill flex-shrink-0" style="font-size:1.25rem;"></i>
+                  <div>
+                    <h5 class="alert-heading fw-bold">Update awaiting review</h5>
+                    <p class="mb-3 text-muted">An administrator must review the current update before another update can be submitted.</p>
+                    <a routerLink="/my-submissions" class="btn btn-sm btn-outline-info">Return to my submissions</a>
+                  </div>
+                </div>
+              </div>
+            } @else {
+              @if (published()) {
+                <div class="alert alert-info border-0 rounded-3 mb-4">
+                  <div class="d-flex gap-3">
+                    <i class="bi bi-info-circle-fill flex-shrink-0" style="font-size:1.25rem;"></i>
+                    <div>
+                      <h5 class="alert-heading fw-bold">Update to published listing</h5>
+                      <p class="mb-0 text-muted">The public version remains unchanged until an administrator approves this update.</p>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- Step Indicator -->
+              <div class="step-progress mb-5">
+                <div class="step-container">
+                  <button class="step-btn" [class.active]="step() === 1" [class.completed]="step() > 1" (click)="step.set(1)" type="button">
+                    <span class="step-circle">1</span>
+                    <span class="step-text">Details</span>
+                  </button>
+                  <button class="step-btn" [class.active]="step() === 2" [class.completed]="step() > 2" (click)="step.set(2)" type="button">
+                    <span class="step-circle">2</span>
+                    <span class="step-text">Contacts</span>
+                  </button>
+                  <button class="step-btn" [class.active]="step() === 3" [class.completed]="step() > 3" (click)="step.set(3)" type="button">
+                    <span class="step-circle">3</span>
+                    <span class="step-text">Location</span>
+                  </button>
+                  <button class="step-btn" [class.active]="step() === 4" [class.completed]="step() > 4" (click)="step.set(4)" type="button">
+                    <span class="step-circle">4</span>
+                    <span class="step-text">Review</span>
+                  </button>
+                </div>
+              </div>
+
+              <form [formGroup]="form" (ngSubmit)="step() === 4 ? save(true) : next()" class="card border-0 shadow-sm" novalidate>
+                <div class="card-body p-5">
+                  
+                  @if (step() === 1) {
+                    <div class="form-section">
+                      <h2 class="h4 fw-bold mb-4" style="color:#0b3026;">Business and service details</h2>
+                      
+                      <div class="mb-5">
+                        <label class="form-label fw-bold d-block mb-3">Provider type</label>
+                        <div class="row g-3">
+                          <div class="col-md-4">
+                            <input class="btn-check" type="radio" id="provider-individual" formControlName="provider_type" value="individual" />
+                            <label class="btn btn-outline-success w-100 d-flex flex-column gap-2" style="min-height:140px; padding:1.5rem;" for="provider-individual">
+                              <i class="bi bi-person-fill" style="font-size:2rem; color:#075541;"></i>
+                              <span class="fw-600">Individual</span>
+                            </label>
+                          </div>
+                          <div class="col-md-4">
+                            <input class="btn-check" type="radio" id="provider-business" formControlName="provider_type" value="business" />
+                            <label class="btn btn-outline-success w-100 d-flex flex-column gap-2" style="min-height:140px; padding:1.5rem;" for="provider-business">
+                              <i class="bi bi-shop" style="font-size:2rem; color:#075541;"></i>
+                              <span class="fw-600">Business</span>
+                            </label>
+                          </div>
+                          <div class="col-md-4">
+                            <input class="btn-check" type="radio" id="provider-organisation" formControlName="provider_type" value="organisation" />
+                            <label class="btn btn-outline-success w-100 d-flex flex-column gap-2" style="min-height:140px; padding:1.5rem;" for="provider-organisation">
+                              <i class="bi bi-building" style="font-size:2rem; color:#075541;"></i>
+                              <span class="fw-600">Organisation</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="mb-4">
+                        <label for="display_name" class="form-label fw-bold">Provider or business name</label>
+                        <input class="form-control form-control-lg" id="display_name" formControlName="display_name" maxlength="160" required />
+                      </div>
+
+                      <div class="mb-4">
+                        <label for="provider_description" class="form-label fw-bold">Provider description</label>
+                        <textarea class="form-control form-control-lg" id="provider_description" formControlName="provider_description" rows="3" maxlength="2000"></textarea>
+                      </div>
+
+                      <div class="row g-4">
+                        <div class="col-md-6">
+                          <label for="parent_slug" class="form-label fw-bold">Parent category</label>
+                          <select class="form-select form-select-lg" id="parent_slug" #parent formControlName="parent_slug" (change)="selectParent(parent.value)" required>
+                            <option value="">Select a category</option>
+                            @for (category of rootCategories(); track category.id) {
+                              <option [value]="category.slug">{{ category.nameEnglish }} — {{ category.nameTamil }}</option>
+                            }
+                          </select>
+                        </div>
+                        <div class="col-md-6">
+                          <label for="category_id" class="form-label fw-bold">Subcategory</label>
+                          <select class="form-select form-select-lg" id="category_id" formControlName="category_id" required>
+                            <option value="">Select a subcategory</option>
+                            @for (category of subcategories(); track category.id) {
+                              <option [value]="category.id">{{ category.nameEnglish }} — {{ category.nameTamil }}</option>
+                            }
+                          </select>
+                        </div>
+                      </div>
+
+                      <div class="mb-4 mt-4">
+                        <label for="title" class="form-label fw-bold">Service title</label>
+                        <input class="form-control form-control-lg" id="title" formControlName="title" maxlength="200" required />
+                      </div>
+
+                      <div class="mb-0">
+                        <label for="description" class="form-label fw-bold">Service description</label>
+                        <textarea class="form-control form-control-lg" id="description" formControlName="description" rows="6" maxlength="5000" required></textarea>
+                      </div>
+                    </div>
+                  }
+
+                  @else if (step() === 2) {
+                    <div class="form-section">
+                      <h2 class="h4 fw-bold mb-2" style="color:#0b3026;">Public contacts</h2>
+                      <p class="text-muted mb-5"><i class="bi bi-info-circle me-2"></i>Only checked contact details will be shown publicly.</p>
+
+                      <div class="row g-4">
+                        <div class="col-12">
+                          <label for="phone" class="form-label fw-bold">Phone</label>
+                          <input class="form-control form-control-lg" id="phone" formControlName="phone" autocomplete="tel" maxlength="40" />
+                          <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="phone_public" formControlName="phone_public" />
+                            <label class="form-check-label" for="phone_public">Show publicly</label>
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <label for="whatsapp" class="form-label fw-bold">WhatsApp</label>
+                          <input class="form-control form-control-lg" id="whatsapp" formControlName="whatsapp" maxlength="40" />
+                          <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="whatsapp_public" formControlName="whatsapp_public" />
+                            <label class="form-check-label" for="whatsapp_public">Show publicly</label>
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <label for="email" class="form-label fw-bold">Email</label>
+                          <input class="form-control form-control-lg" id="email" type="email" formControlName="email" autocomplete="email" maxlength="200" />
+                          <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="email_public" formControlName="email_public" />
+                            <label class="form-check-label" for="email_public">Show publicly</label>
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <label for="website" class="form-label fw-bold">Website</label>
+                          <input class="form-control form-control-lg" id="website" type="url" formControlName="website" maxlength="500" placeholder="https://example.com" />
+                          <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="website_public" formControlName="website_public" />
+                            <label class="form-check-label" for="website_public">Show publicly</label>
+                          </div>
+                        </div>
+
+                        <div class="col-md-6">
+                          <label for="facebook" class="form-label fw-bold">Facebook</label>
+                          <input class="form-control form-control-lg" id="facebook" type="url" formControlName="facebook" maxlength="500" placeholder="https://facebook.com/..." />
+                          <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="facebook_public" formControlName="facebook_public" />
+                            <label class="form-check-label" for="facebook_public">Show publicly</label>
+                          </div>
+                        </div>
+
+                        <div class="col-md-6">
+                          <label for="instagram" class="form-label fw-bold">Instagram</label>
+                          <input class="form-control form-control-lg" id="instagram" type="url" formControlName="instagram" maxlength="500" placeholder="https://instagram.com/..." />
+                          <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="instagram_public" formControlName="instagram_public" />
+                            <label class="form-check-label" for="instagram_public">Show publicly</label>
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <label for="youtube" class="form-label fw-bold">YouTube</label>
+                          <input class="form-control form-control-lg" id="youtube" type="url" formControlName="youtube" maxlength="500" placeholder="https://youtube.com/..." />
+                          <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="youtube_public" formControlName="youtube_public" />
+                            <label class="form-check-label" for="youtube_public">Show publicly</label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  @else if (step() === 3) {
+                    <div class="form-section">
+                      <h2 class="h4 fw-bold mb-2" style="color:#0b3026;">Location and service coverage</h2>
+                      <p class="text-muted mb-5"><i class="bi bi-info-circle me-2"></i>Street address and coordinates are optional.</p>
+
+                      <div class="row g-4">
+                        <div class="col-md-6">
+                          <label for="based_location_id" class="form-label fw-bold">Business locality</label>
+                          <select class="form-select form-select-lg" id="based_location_id" formControlName="based_location_id">
+                            <option value="">Select a locality</option>
+                            @for (place of places(); track place.id) {
+                              <option [value]="place.id">{{ place.label }}</option>
+                            }
+                          </select>
+                        </div>
+                        <div class="col-md-6">
+                          <label for="coverage_type" class="form-label fw-bold">Coverage type</label>
+                          <select class="form-select form-select-lg" id="coverage_type" formControlName="coverage_type">
+                            <option value="based_here">Based here</option>
+                            <option value="serves_here">Serves here</option>
+                          </select>
+                        </div>
+
+                        <div class="col-md-6">
+                          <label for="address" class="form-label fw-bold">Business address</label>
+                          <input class="form-control form-control-lg" id="address" formControlName="address" maxlength="500" />
+                        </div>
+                        <div class="col-md-6">
+                          <label for="postal_code" class="form-label fw-bold">Postal code</label>
+                          <input class="form-control form-control-lg" id="postal_code" formControlName="postal_code" maxlength="16" />
+                        </div>
+
+                        <div class="col-md-6">
+                          <label for="latitude" class="form-label fw-bold">Latitude</label>
+                          <input class="form-control form-control-lg" id="latitude" type="number" formControlName="latitude" min="-90" max="90" step="any" />
+                        </div>
+                        <div class="col-md-6">
+                          <label for="longitude" class="form-label fw-bold">Longitude</label>
+                          <input class="form-control form-control-lg" id="longitude" type="number" formControlName="longitude" min="-180" max="180" step="any" />
+                        </div>
+
+                        <div class="col-12">
+                          <label for="coverage_ids" class="form-label fw-bold">Additional service areas</label>
+                          <select class="form-select form-select-lg" id="coverage_ids" multiple formControlName="coverage_ids" size="6">
+                            @for (place of places(); track place.id) {
+                              <option [value]="place.id">{{ place.label }}</option>
+                            }
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  @else {
+                    <div class="form-section">
+                      <h2 class="h4 fw-bold mb-4" style="color:#0b3026;">Review and submit</h2>
+                      
+                      <div class="card border-0 mb-4" style="background:#f8fbf8;">
+                        <div class="card-body">
+                          <h3 class="h5 fw-bold mb-2" style="color:#0b3026;">{{ form.controls.title.value || 'Untitled service' }}</h3>
+                          <p class="text-muted fw-600 mb-2">{{ form.controls.display_name.value }}</p>
+                          <p class="mb-0">{{ form.controls.description.value }}</p>
+                          <hr class="my-3">
+                          <div class="row g-3 small">
+                            <div class="col-12"><strong>Category:</strong> {{ selectedCategoryLabel() }}</div>
+                            <div class="col-12"><strong>Contacts:</strong> {{ publicContactCount() }} public</div>
+                            <div class="col-12"><strong>Coverage:</strong> {{ form.controls.coverage_ids.value.length + (form.controls.based_location_id.value ? 1 : 0) }} location(s)</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="mb-4">
+                        <label for="images" class="form-label fw-bold">Service images <span class="text-muted">(up to 10, 5 MB each)</span></label>
+                        <input class="form-control form-control-lg" id="images" type="file" accept="image/*" multiple (change)="selectFiles($event)" />
+                        @if (selectedFiles().length) {
+                          <small class="text-success d-block mt-2"><i class="bi bi-check-circle me-1"></i>{{ selectedFiles().length }} image(s) ready</small>
+                        }
+                        @if (!storageConfigured()) {
+                          <small class="text-warning d-block mt-2"><i class="bi bi-info-circle me-1"></i>Storage not configured. Text details only.</small>
+                        }
+                      </div>
+
+                      <div class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" id="declaration" formControlName="declaration" required />
+                        <label class="form-check-label" for="declaration">
+                          I confirm that I am authorized to submit this information and that it is accurate.
+                        </label>
+                      </div>
+                    </div>
+                  }
+
+                  @if (errorMessage(); as message) {
+                    <div class="alert alert-danger alert-dismissible fade show mt-4 mb-0 border-0 rounded-3" role="alert">
+                      <i class="bi bi-exclamation-circle me-2"></i>
+                      <span>{{ message }}</span>
+                      <button type="button" class="btn-close" (click)="errorMessage.set(null)"></button>
+                    </div>
+                  }
+                </div>
+
+                <div class="card-footer bg-light border-top p-5">
+                  <div class="d-flex gap-3 justify-content-between">
+                    <button type="button" class="btn btn-lg btn-outline-secondary" [disabled]="step() === 1 || saving()" (click)="previous()">
+                      <i class="bi bi-chevron-left me-2"></i>Back
+                    </button>
+                    <div class="d-flex gap-3">
+                      @if (step() < 4) {
+                        <button type="button" class="btn btn-lg btn-light border" [disabled]="saving()" (click)="save(false)">
+                          <i class="bi bi-cloud-arrow-down me-2"></i>Save draft
+                        </button>
+                        <button type="button" class="btn btn-lg btn-success" [disabled]="!canNext() || saving()" (click)="next()">
+                          Next<i class="bi bi-chevron-right ms-2"></i>
+                        </button>
+                      } @else {
+                        <button type="button" class="btn btn-lg btn-light border" [disabled]="saving()" (click)="save(false)">
+                          <i class="bi bi-cloud-arrow-down me-2"></i>Save draft
+                        </button>
+                        <button type="submit" class="btn btn-lg btn-success" [disabled]="!form.controls.declaration.value || saving()">
+                          <i class="bi bi-send me-2"></i>{{ saving() ? 'Submitting…' : 'Submit for review' }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </form>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
   `,
   styles: `
-    :host { display:block; padding-block:1.5rem 2.5rem; }.submit-page { display:grid; gap:1.25rem; }.back-link { color:#075541; display:inline-flex; align-items:center; min-height:44px; }.eyebrow { margin:0 0 .35rem; color:#52665b; font-size:.72rem; font-weight:800; letter-spacing:.12em; } h1 { margin:0; color:#173f32; font-size:clamp(1.7rem,4vw,2.5rem); }.intro,.help { color:#52665b; line-height:1.8; }.steps { display:flex; gap:.5rem; flex-wrap:wrap; }.steps span { padding:.5rem .75rem; border:1px solid #dfe7e2; border-radius:99px; color:#52665b; background:white; }.steps .current { border-color:#075541; background:#e6f4e9; color:#075541; font-weight:700; } form { display:grid; gap:1rem; padding:clamp(1rem,3vw,1.5rem); border:1px solid #dfe7e2; border-radius:16px; background:white; } fieldset { display:grid; gap:1rem; border:0; padding:0; margin:0; } legend { margin-bottom:.25rem; color:#173f32; font-size:1.25rem; font-weight:800; } label { display:grid; gap:.4rem; color:#173f32; font-weight:650; } input,select,textarea { width:100%; min-height:44px; border:1px solid #b8c9bf; border-radius:9px; padding:.7rem; background:white; color:#173f32; font:inherit; } textarea { resize:vertical; line-height:1.6; }.check,.declaration { display:flex; align-items:center; gap:.6rem; font-weight:500; }.check input,.declaration input { width:1.1rem; height:1.1rem; accent-color:#075541; }.coordinate-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }.preview { padding:1rem; border:1px solid #dfe7e2; border-radius:12px; background:#f8fbf8; line-height:1.7; }.preview h2 { margin-top:0; color:#173f32; }.provider { color:#52665b; font-weight:700; }.actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:.75rem; }.actions button { min-height:44px; border:1px solid #075541; border-radius:9px; padding:.7rem 1rem; background:#075541; color:white; font:inherit; font-weight:700; }.actions .secondary { background:white; color:#075541; }.actions button:disabled { opacity:.6; }.notice { padding:1rem; border:1px solid #e7d9ae; border-radius:14px; background:#fffaf0; color:#625329; line-height:1.7; }.notice a { color:#075541; }.state { padding:1rem; border:1px solid #dfe7e2; border-radius:14px; background:white; color:#52665b; }.error { color:#8a261f; line-height:1.7; } :is(a,button,input,select,textarea):focus-visible { outline:3px solid #17583f; outline-offset:3px; } @media(max-width:650px) { .coordinate-grid { grid-template-columns:1fr; }.actions > * { flex:1 1 130px; } }
+    .submit-container {
+      background: linear-gradient(180deg, #fbfaf6 0%, #fbfaf6 100%);
+      min-height: 100vh;
+      padding: 2.5rem 0;
+    }
+
+    .page-header {
+      animation: fadeInDown 0.6s ease-out;
+    }
+
+    .step-progress {
+      animation: fadeIn 0.6s ease-out;
+      margin-bottom: 2rem;
+    }
+
+    .step-container {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-start;
+      align-items: center;
+      flex-wrap: wrap;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #e2e7dd;
+    }
+
+    .step-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.25rem;
+      border: 2px solid #c3d0c8;
+      background: white;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #62746b;
+    }
+
+    .step-circle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #e5ebe7;
+      color: #62746b;
+      font-weight: 700;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+
+    .step-text {
+      font-weight: 600;
+      color: #62746b;
+      transition: color 0.3s ease;
+    }
+
+    .step-btn.completed {
+      border-color: #075541;
+      color: #075541;
+    }
+
+    .step-btn.completed .step-circle {
+      background: #075541;
+      color: white;
+    }
+
+    .step-btn.completed .step-text {
+      color: #075541;
+    }
+
+    .step-btn.active {
+      border-color: #075541;
+      background: white;
+      color: #075541;
+      box-shadow: 0 0 0 3px rgba(7, 85, 65, 0.12);
+    }
+
+    .step-btn.active .step-circle {
+      background: #075541;
+      color: white;
+    }
+
+    .step-btn.active .step-text {
+      color: #075541;
+      font-weight: 700;
+    }
+
+    .step-btn:hover:not(.active) {
+      border-color: #43876a;
+      color: #0e4932;
+    }
+
+    .step-btn:hover:not(.active) .step-circle {
+      background: #e0f0eb;
+    }
+
+    .form-control-lg,
+    .form-select-lg {
+      font-size: 1rem;
+      padding: 0.75rem 1rem;
+      min-height: 48px;
+      border: 1px solid #c3d0c8;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    textarea:focus {
+      border-color: #43876a;
+      box-shadow: 0 0 0 0.2rem rgba(23, 99, 70, 0.15);
+    }
+
+    .btn-success {
+      background-color: #075541;
+      border-color: #075541;
+      font-weight: 600;
+    }
+
+    .btn-success:hover:not(:disabled) {
+      background-color: #053d2f;
+      border-color: #053d2f;
+    }
+
+    .btn-outline-secondary {
+      color: #075541;
+      border-color: #b8c9bf;
+      font-weight: 600;
+    }
+
+    .btn-outline-secondary:hover:not(:disabled) {
+      background-color: #f2f7f2;
+      border-color: #87aa94;
+      color: #0e4932;
+    }
+
+    .btn-outline-success {
+      border: 2px solid #c3d0c8;
+      color: #075541;
+      transition: all 0.3s ease;
+    }
+
+    .btn-outline-success:hover {
+      border-color: #075541;
+      background-color: #f8fbf8;
+    }
+
+    .btn-check:checked + .btn-outline-success {
+      background-color: #075541;
+      border-color: #075541;
+      color: white;
+      box-shadow: 0 4px 12px rgba(7, 85, 65, 0.2);
+    }
+
+    .card {
+      box-shadow: 0 2px 8px rgba(20, 55, 39, 0.08);
+      border: 1px solid #e2e7dd;
+    }
+
+    .card-footer {
+      border-color: #e2e7dd;
+    }
+
+    .alert {
+      border: 0;
+      border-radius: 0.75rem;
+      animation: slideDown 0.4s ease-out;
+    }
+
+    .alert-info {
+      background: #f0f8f5;
+      color: #14563d;
+    }
+
+    .alert-warning {
+      background: #fffaf0;
+      color: #625329;
+    }
+
+    .alert-danger {
+      background: #fdf3f1;
+      color: #8a261f;
+    }
+
+    .form-section {
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .step-container {
+        gap: 0.5rem;
+        padding-bottom: 1rem;
+      }
+
+      .step-btn {
+        padding: 0.55rem 1rem;
+        font-size: 0.85rem;
+      }
+
+      .step-circle {
+        width: 20px;
+        height: 20px;
+        font-size: 0.65rem;
+      }
+
+      .form-control-lg,
+      .form-select-lg {
+        font-size: 0.95rem;
+        padding: 0.65rem 0.85rem;
+        min-height: 44px;
+      }
+
+      .card-body,
+      .card-footer {
+        padding: 1.5rem !important;
+      }
+
+      .d-flex {
+        gap: 1rem !important;
+      }
+    }
   `,
 })
 export class SubmitServiceComponent implements OnInit {

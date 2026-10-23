@@ -33,7 +33,7 @@ describe('Home and Services navigation', () => {
 
   afterEach(() => TestBed.inject(LanguageService).setLanguage('ta'));
 
-  it('keeps categories off Home and opens Services through navigation', async () => {
+  it('renders the homepage and opens Services through navigation', async () => {
     const harness = await RouterTestingHarness.create('/');
     const element = harness.routeNativeElement!;
     expect(element.querySelector('h1')?.textContent).toContain('Everything you need');
@@ -47,7 +47,7 @@ describe('Home and Services navigation', () => {
     expect(image?.getAttribute('loading')).toBe('eager');
     expect(image?.getAttribute('fetchpriority')).toBe('high');
     expect(element.querySelector('.temple')).toBeNull();
-    expect(load).not.toHaveBeenCalled();
+    expect(load).toHaveBeenCalledTimes(1);
     element.querySelector<HTMLAnchorElement>('.main-nav a[href="/services"]')?.click();
     await harness.fixture.whenStable();
     harness.detectChanges();

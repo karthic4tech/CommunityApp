@@ -26,7 +26,7 @@ import { ServiceDirectoryService } from '../core/services/service-directory.serv
             @if (message(); as text) { <p class="message" role="status">{{ text }}</p> }
             <button type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Saving…' : 'Save profile' }}</button>
           </form>
-          <aside class="card actions-card"><h2>Community services</h2><a routerLink="/services/submit">＋ Add your service</a><a routerLink="/my-submissions">View my submissions</a><button type="button" class="secondary" (click)="signOut()">Sign out</button></aside>
+          <aside class="card actions-card"><h2>Community services</h2><a routerLink="/services/submit"><i class="bi bi-plus-circle" aria-hidden="true"></i> Add your service</a><a routerLink="/my-submissions"><i class="bi bi-card-list" aria-hidden="true"></i> View my submissions</a><button type="button" class="secondary" (click)="signOut()"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sign out</button></aside>
         </div>
       }
     </section>
