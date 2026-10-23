@@ -1,4 +1,9 @@
+
 {
-  "name": "community-app",
-  "compatibility_date": "2026-10-19"
+  "name": "communityapp",
+  "compatibility_date": "2026-10-23",
+  "assets": {
+    "directory": "./dist/community-app/browser",
+    "not_found_handling": "single-page-application"
+  }
 }
