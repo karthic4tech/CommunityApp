@@ -7,8 +7,8 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./home/home.component').then((m) => m.HomeComponent),
     children: [
-      { path: '', pathMatch: 'full', loadComponent: () => import('./home/home.component').then((m) => m.LandingComponent) },
-      { path: 'home-beta', loadComponent: () => import('./home/home-beta.component').then((m) => m.HomeBetaComponent) },
+      { path: '', pathMatch: 'full', loadComponent: () => import('./home/home-beta.component').then((m) => m.HomeBetaComponent) },
+      { path: 'beta', redirectTo: '', pathMatch: 'full' },
       { path: 'admin/login', loadComponent: () => import('./admin/admin-login.component').then((m) => m.AdminLoginComponent) },
       { path: 'admin/categories/new', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-category-form.component').then((m) => m.AdminCategoryFormComponent) },
       { path: 'admin/categories/:id/edit', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-category-form.component').then((m) => m.AdminCategoryFormComponent) },

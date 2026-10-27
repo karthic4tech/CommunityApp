@@ -1,0 +1,350 @@
+<nav class="site-nav">
+  <div class="container">
+    <button class="navbar-toggler" type="button" (click)="menuOpen.set(!menuOpen())">
+      <i class="bi bi-list"></i>
+    </button>
+    <div class="nav-menu" [class.active]="menuOpen()">
+      <a href="#services" class="nav-link">Services</a>
+      <a href="#categories" class="nav-link">Categories</a>
+      <a href="#community" class="nav-link">Community</a>
+      <a href="#events" class="nav-link">Events</a>
+      <a href="#contact" class="nav-link">Contact</a>
+      <a href="#list-business" class="btn-orange">List Your Business</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <!-- Hero Section -->
+  <section class="hero-section">
+    @for (slide of heroSlides; track slide; let i = $index) {
+      <div class="hero-image" [class.active]="i === heroIndex()" [style.background-image]="'url(' + slide + ')'"></div>
+    }
+    <div class="container hero-inner">
+      <div class="hero-controls">
+        <button type="button" class="hero-arrow" aria-label="Previous slide" (click)="prevSlide()"><i class="bi bi-chevron-left"></i></button>
+        @for (slide of heroSlides; track slide; let i = $index) {
+          <button type="button" class="slide-dot" [class.active]="i === heroIndex()" [attr.aria-label]="'Go to slide ' + (i + 1)" (click)="heroIndex.set(i)">{{ i + 1 }}</button>
+        }
+        <button type="button" class="hero-arrow" aria-label="Next slide" (click)="nextSlide()"><i class="bi bi-chevron-right"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Introduction Section -->
+  <section class="intro-section" id="community">
+    <div class="container section-pad">
+      <div class="intro-grid">
+        <div class="intro-photo"></div>
+        <div class="orange-panel intro-panel">
+          <span class="eyebrow light">OUR COMMUNITY</span>
+          <h2>People. Services. A Stronger Chidambaram.</h2>
+          <p>Nam Chidambaram brings together local services, businesses, events and useful information to make everyday life easier for residents and for people connected to Chidambaram around the world.</p>
+          <a href="#about" class="btn-light">Learn More</a>
+        </div>
+        <div class="benefits-list">
+          <div class="benefit-item">
+            <span class="benefit-icon"><i class="bi bi-people-fill"></i></span>
+            <div>
+              <h3>Support Local</h3>
+              <p>Discover and support local businesses and service providers.</p>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <span class="benefit-icon"><i class="bi bi-newspaper"></i></span>
+            <div>
+              <h3>Stay Updated</h3>
+              <p>Get the latest community news, events and announcements.</p>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <span class="benefit-icon"><i class="bi bi-heart-fill"></i></span>
+            <div>
+              <h3>A Stronger Community</h3>
+              <p>Stay connected with the people, places and culture of Chidambaram.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services Section -->
+  <section class="services-feature dark-section" id="services">
+    <div class="container section-pad">
+      <div class="services-grid">
+        <div class="services-left">
+          <span class="eyebrow">MADE FOR OUR TOWN</span>
+          <h2 class="display-heading">Local Services for a Better Chidambaram</h2>
+          <p>From trusted professionals to everyday needs, find everything you need in one place. Our platform helps you connect with service providers in your community.</p>
+          <a href="#categories" class="btn-orange">Browse Services</a>
+        </div>
+        <div class="services-center">
+          <div class="circle-photo-wrap">
+            <span class="orange-orb"></span>
+            <div class="circle-photo"></div>
+          </div>
+        </div>
+        <div class="services-right" id="list-business">
+          <div class="orange-panel business-panel">
+            <i class="bi bi-handshake panel-symbol"></i>
+            <h3>WE SUPPORT LOCAL BUSINESSES</h3>
+            <p>Be part of a growing community that values local talent and trusted businesses. List your business and reach more people in Chidambaram.</p>
+            <a href="#contact" class="btn-light">List Your Business</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="categories-section" id="categories">
+    <div class="container section-pad">
+      <div class="section-heading">
+        <span class="eyebrow">BROWSE BY CATEGORY</span>
+        <h2>Explore What You Need</h2>
+        <p>Find trusted local services, businesses, events and more — all in one place.</p>
+      </div>
+      <div class="categories-grid">
+        <a class="category-card" href="#services">
+          <span><i class="bi bi-house-door-fill"></i></span>
+          <h3>Local Services</h3>
+          <p>Home, repair, professionals and more</p>
+          <b>Explore</b>
+        </a>
+        <a class="category-card" href="#services">
+          <span><i class="bi bi-shop"></i></span>
+          <h3>Shops & Businesses</h3>
+          <p>Local shops, stores and traders</p>
+          <b>Explore</b>
+        </a>
+        <a class="category-card" href="#events">
+          <span><i class="bi bi-calendar-event-fill"></i></span>
+          <h3>Events & Functions</h3>
+          <p>Upcoming events and community programs</p>
+          <b>Explore</b>
+        </a>
+        <a class="category-card" href="#community">
+          <span><i class="bi bi-newspaper"></i></span>
+          <h3>Community News</h3>
+          <p>Latest updates and announcements</p>
+          <b>Explore</b>
+        </a>
+        <a class="category-card" href="#about">
+          <span><i class="bi bi-bank2"></i></span>
+          <h3>Temples & Culture</h3>
+          <p>Heritage, culture and local traditions</p>
+          <b>Explore</b>
+        </a>
+        <a class="category-card" href="#services">
+          <span><i class="bi bi-cup-hot-fill"></i></span>
+          <h3>Food & Stay</h3>
+          <p>Restaurants, food, hotels and stay options</p>
+          <b>Explore</b>
+        </a>
+        <a class="category-card" href="#contact">
+          <span><i class="bi bi-airplane-fill"></i></span>
+          <h3>NRI Assistance</h3>
+          <p>Support services for NRIs and their families</p>
+          <b>Explore</b>
+        </a>
+        <a class="category-card" href="#contact">
+          <span><i class="bi bi-chat-heart-fill"></i></span>
+          <h3>Community Help</h3>
+          <p>Connect with local support and resources</p>
+          <b>Explore</b>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Heritage Section -->
+  <section class="heritage-section" id="about">
+    <div class="container section-pad">
+      <div class="heritage-grid">
+        <div class="heritage-photo"></div>
+        <div class="heritage-copy">
+          <span class="eyebrow">OUR TOWN. OUR PRIDE.</span>
+          <h2>Our town, our people, all in one place!</h2>
+          <p>CDM360 is created to make life easier for the people of Chidambaram. Our aim is to bring our local community together and help people find the services, businesses, jobs, educational resources, and useful information they need in one place.</p>
+          <p>Through CDM360, you can discover local service providers, explore nearby businesses, find job opportunities, learn about government exams, share community updates, and help local businesses reach more people.</p>
+          <p class="heritage-mission"><strong>Our mission is simple:</strong> Help our people, support our local businesses, and build a stronger community together.</p>
+          <span class="temple-outline"><i class="bi bi-bank"></i></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust Section -->
+  <section class="trust-section dark-section">
+    <div class="container section-pad">
+      <div class="trust-grid">
+        <div class="trust-card" role="img" aria-label="Modern New Moorthy Cafe Facade"></div>
+        <div class="community-collage">
+          <span class="orange-orb"></span>
+          <div class="collage-photo"></div>
+          <div class="small-round-photo"></div>
+        </div>
+        <div class="stats-list">
+          <div class="stat-item">
+            <span><i class="bi bi-people-fill"></i></span>
+            <div>
+              <strong>Growing Community</strong>
+              <small>Community Members</small>
+            </div>
+          </div>
+          <div class="stat-item">
+            <span><i class="bi bi-shop"></i></span>
+            <div>
+              <strong>Local Businesses</strong>
+              <small>Business Directory</small>
+            </div>
+          </div>
+          <div class="stat-item">
+            <span><i class="bi bi-calendar-event"></i></span>
+            <div>
+              <strong>Community Events</strong>
+              <small>Annual Events & Programs</small>
+            </div>
+          </div>
+          <div class="stat-item">
+            <span><i class="bi bi-heart-fill"></i></span>
+            <div>
+              <strong>A Stronger Chidambaram</strong>
+              <small>Connected by community</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonial Section -->
+  <section class="testimonial-section">
+    <div class="container section-pad">
+      <div class="services-banner">
+        <img ngSrc="/assets/images/Home%20Services%20Professionals%20Banner.png" width="2172" height="724" alt="Home services professionals banner">
+      </div>
+    </div>
+  </section>
+
+  <!-- Events Section -->
+  <section class="events-section" id="events">
+    <div class="container section-pad">
+      <div class="section-heading">
+        <span class="eyebrow">WHAT'S HAPPENING</span>
+        <h2>Events Around Our Town</h2>
+        <p>Discover local celebrations, community programs and upcoming events.</p>
+      </div>
+      <div class="events-grid">
+        <article class="event-card">
+          <div class="event-image event-one"></div>
+          <div class="event-body">
+            <span class="event-tag">COMMUNITY</span>
+            <h3>Community Gatherings</h3>
+            <p>Connect with neighbours and take part in local activities.</p>
+            <a href="#contact">Explore events</a>
+          </div>
+        </article>
+        <article class="event-card">
+          <div class="event-image event-two"></div>
+          <div class="event-body">
+            <span class="event-tag">CULTURE</span>
+            <h3>Culture & Traditions</h3>
+            <p>Celebrate the heritage and traditions that make our town special.</p>
+            <a href="#contact">Explore events</a>
+          </div>
+        </article>
+        <article class="event-card">
+          <div class="event-image event-three"></div>
+          <div class="event-body">
+            <span class="event-tag">LOCAL</span>
+            <h3>Local Programs</h3>
+            <p>Stay informed about programs, announcements and activities.</p>
+            <a href="#contact">Explore events</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="contact-section" id="contact">
+    <div class="container section-pad">
+      <div class="contact-panel">
+        <div class="contact-form-wrap">
+          <span class="eyebrow">GET IN TOUCH</span>
+          <h2>Contact Us</h2>
+          <form (ngSubmit)="onSubmitContact()">
+            <div class="form-group">
+              <label for="name">Your Name</label>
+              <input class="form-control" id="name" name="name" placeholder="Enter your name" required>
+            </div>
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input class="form-control" type="email" id="email" name="email" placeholder="Enter your email address" required>
+            </div>
+            <div class="form-group">
+              <label for="message">Message</label>
+              <textarea class="form-control" id="message" name="message" rows="3" placeholder="How can we help?" required></textarea>
+            </div>
+            <button class="btn-orange w-100" type="submit">Send Message</button>
+          </form>
+        </div>
+        <div class="contact-info">
+          <h3>CONTACT INFORMATION</h3>
+          <div class="contact-detail">
+            <i class="bi bi-telephone"></i>
+            <span>
+              <strong>Phone</strong>
+              <small>Add your community contact number</small>
+            </span>
+          </div>
+          <div class="contact-detail">
+            <i class="bi bi-geo-alt"></i>
+            <span>
+              <strong>Location</strong>
+              <small>Chidambaram, Cuddalore District<br>Tamil Nadu, India</small>
+            </span>
+          </div>
+          <div class="contact-detail">
+            <i class="bi bi-envelope"></i>
+            <span>
+              <strong>Email</strong>
+              <small>Add your community email address</small>
+            </span>
+          </div>
+          <hr>
+          <h3>FOLLOW OUR COMMUNITY</h3>
+          <div class="social-links">
+            <a href="#"><i class="bi bi-facebook"></i></a>
+            <a href="#"><i class="bi bi-instagram"></i></a>
+            <a href="#"><i class="bi bi-youtube"></i></a>
+            <a href="#"><i class="bi bi-whatsapp"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <a class="footer-brand" href="#">
+      <i class="bi bi-bank2"></i>
+      <span>
+        <strong>நம் சிதம்பரம்</strong>
+        <small>Nam Chidambaram</small>
+      </span>
+    </a>
+    <nav class="footer-nav">
+      <a href="#">Home</a>
+      <a href="#services">Services</a>
+      <a href="#categories">Categories</a>
+      <a href="#events">Events</a>
+      <a href="#community">Community</a>
+      <a href="#about">About</a>
+    </nav>
+    <p class="copyright">&copy; <span id="year"></span> Nam Chidambaram. All rights reserved.</p>
+  </div>
+</footer>

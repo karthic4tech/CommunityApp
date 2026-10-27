@@ -186,3 +186,81 @@ app-root a { text-underline-offset: .18em; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+/* Nam Chidambaram reference-matched landing page. All rules are scoped to app-landing. */
+app-landing { display:block; --nc-orange:#f56b2e; --nc-orange-dark:#e95b20; --nc-ink:#17232e; --nc-dark:#25282e; --nc-muted:#59616b; --nc-cream:#f7f3ec; }
+app-landing .nc-home { color:var(--nc-ink); background:#fff; overflow:hidden; font-family:Arial,Helvetica,sans-serif; }
+app-landing .nc-kicker { margin:0 0 10px; color:var(--nc-orange-dark); font-size:11px; font-weight:800; letter-spacing:1.6px; }
+app-landing h1, app-landing h2, app-landing h3, app-landing p { margin-top:0; }
+app-landing h2 { font-family:Georgia,'Times New Roman',serif; font-weight:700; letter-spacing:-.5px; }
+app-landing .nc-button { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:42px; padding:0 22px; border:0; border-radius:30px; background:var(--nc-orange); color:white; text-decoration:none; font-size:12px; font-weight:700; transition:transform .2s,background .2s; }
+app-landing .nc-button:hover { transform:translateY(-2px); background:var(--nc-orange-dark); }
+app-landing .nc-button-light { background:#fff; color:var(--nc-orange-dark); }
+app-landing .nc-hero { position:relative; min-height:370px; display:flex; align-items:center; padding:32px max(6.5%,calc((100vw - 1200px)/2)); isolation:isolate; }
+app-landing .nc-hero-photo { position:absolute; z-index:-2; inset:0; background:linear-gradient(90deg,#ffffff70,transparent 55%),url('/assets/images/chidambaram-hero.png') center 48%/cover no-repeat,linear-gradient(120deg,#e7d6b7,#9ab8b1 55%,#d4c5a9); }
+app-landing .nc-hero::after { content:''; position:absolute; z-index:-1; inset:0; background:linear-gradient(90deg,#fff9f0 0%,#fff9f0ee 33%,#fff9f060 52%,transparent 75%); }
+app-landing .nc-hero-copy { width:min(440px,54%); padding:28px 30px; background:#fff; border-radius:22px; box-shadow:0 12px 35px #19202b20; }
+app-landing .nc-hero-copy h1 { margin:0 0 12px; color:#172b3c; font-family:Georgia,'Times New Roman',serif; font-size:clamp(28px,3vw,43px); line-height:1.08; }
+app-landing .nc-hero-copy h1 span:first-child { font-family:Arial,sans-serif; font-weight:900; }
+app-landing .nc-hero-copy p:not(.nc-kicker) { max-width:360px; color:#56606a; font-size:14px; line-height:1.65; }
+app-landing .nc-intro { display:grid; grid-template-columns:1fr 1.05fr 1.1fr; gap:28px; align-items:center; max-width:1200px; margin:auto; padding:48px 5%; }
+app-landing .nc-photo { background-color:#e9e5df; background-position:center; background-size:cover; }
+app-landing .nc-family-photo { min-height:260px; border-radius:48% 0 16px 48%; background-image:url('/assets/images/chidambaram-community.png'),linear-gradient(135deg,#d8c5a8,#8b9e91); }
+app-landing .nc-intro-card { padding:26px; border-radius:14px; color:#fff; background:linear-gradient(135deg,#fa7b39,var(--nc-orange-dark)); }
+app-landing .nc-intro-card .nc-kicker { color:#fff5e9; }
+app-landing .nc-intro-card h2 { margin-bottom:12px; font-size:clamp(23px,2.2vw,32px); line-height:1.1; }
+app-landing .nc-intro-card p:not(.nc-kicker) { font-size:13px; line-height:1.65; color:#fff4ed; }
+app-landing .nc-benefits { display:grid; gap:22px; }
+app-landing .nc-benefits article { display:flex; gap:15px; align-items:center; }
+app-landing .nc-benefits article>span { display:grid; place-items:center; flex:0 0 56px; width:56px; height:56px; border-radius:50%; color:var(--nc-orange); background:#f7eee8; font-size:23px; }
+app-landing .nc-benefits h3 { margin:0 0 5px; font-size:14px; }
+app-landing .nc-benefits p { margin:0; color:var(--nc-muted); font-size:12px; line-height:1.5; }
+app-landing .nc-services-band { display:grid; grid-template-columns:1fr 1.1fr .85fr; gap:32px; align-items:center; padding:54px max(6.5%,calc((100vw - 1200px)/2)); color:#fff; background:var(--nc-dark); }
+app-landing .nc-services-copy h2 { max-width:330px; margin-bottom:14px; font-size:clamp(30px,3vw,43px); line-height:1.04; }
+app-landing .nc-services-copy p, app-landing .nc-business-card p { color:#e0e1e4; font-size:13px; line-height:1.65; }
+app-landing .nc-business-photo { min-height:260px; border-radius:48% 16px 16px 16px; background-image:url('/assets/images/local-business-owner.png'),linear-gradient(135deg,#b4a18b,#4d665e); }
+app-landing .nc-business-card { padding:27px; border-radius:14px; background:var(--nc-orange); }
+app-landing .nc-business-card>i { font-size:32px; }
+app-landing .nc-business-card h3 { margin:12px 0; font-size:17px; line-height:1.2; }
+app-landing .nc-categories { padding:38px 4% 48px; text-align:center; background:linear-gradient(#fff9f0d9,#fff9f0d9),url('/assets/images/temple-stone-texture.jpg') center/cover, #e9dfd2; }
+app-landing .nc-categories-heading h2 { margin:0 0 8px; font-size:clamp(28px,3vw,38px); }
+app-landing .nc-categories-heading>p:last-child { margin-bottom:24px; color:var(--nc-muted); font-size:13px; }
+app-landing .nc-category-grid { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:12px; max-width:1250px; margin:auto; }
+app-landing .nc-category-grid app-category-card { min-width:0; }
+app-landing .nc-category-tile { display:flex; min-height:160px; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px 8px; border:1px solid #eee5dd; border-radius:16px; color:var(--nc-ink); background:#fff; box-shadow:0 8px 20px #28231b12; text-decoration:none; }
+app-landing .nc-category-icon { display:grid; place-items:center; width:48px; height:48px; border-radius:50%; color:var(--nc-orange); background:#fff0e8; font-size:24px; }
+app-landing .nc-category-tile strong { font-size:12px; line-height:1.25; }
+app-landing .nc-category-tile small { margin-top:auto; color:var(--nc-orange-dark); font-weight:700; }
+app-landing .nc-heritage { display:grid; grid-template-columns:1fr 1.1fr; gap:7%; align-items:center; padding:54px max(8%,calc((100vw - 1120px)/2)); }
+app-landing .nc-temple-photo { min-height:320px; border-radius:52% 0 0 52%; background-image:url('/assets/images/chidambaram-temple.png'),linear-gradient(135deg,#c8d5dc,#c7a27a); }
+app-landing .nc-heritage h2 { margin-bottom:14px; font-size:clamp(29px,3vw,42px); line-height:1.05; }
+app-landing .nc-heritage p:not(.nc-kicker) { color:var(--nc-muted); font-size:14px; line-height:1.7; }
+app-landing .nc-trust { display:grid; grid-template-columns:1fr 1.15fr .8fr; gap:28px; align-items:center; padding:44px max(6.5%,calc((100vw - 1200px)/2)); color:white; background:var(--nc-dark); }
+app-landing .nc-trust-card { padding:26px; border-radius:15px; color:var(--nc-ink); background:white; }
+app-landing .nc-trust-card h2 { margin-bottom:12px; font-size:clamp(26px,2.6vw,36px); line-height:1.08; }
+app-landing .nc-trust-card p:not(.nc-kicker) { color:var(--nc-muted); font-size:13px; line-height:1.65; }
+app-landing .nc-people-photo { min-height:260px; border-radius:50%; background-image:url('/assets/images/chidambaram-community.png'),linear-gradient(135deg,#d2c1a9,#68867b); }
+app-landing .nc-stats { display:grid; gap:18px; }
+app-landing .nc-stats>div { display:grid; grid-template-columns:44px 1fr; column-gap:12px; align-items:center; }
+app-landing .nc-stats i { grid-row:span 2; display:grid; place-items:center; width:42px; height:42px; border:1px solid var(--nc-orange); border-radius:50%; color:var(--nc-orange); font-size:19px; }
+app-landing .nc-stats strong { font-size:15px; }
+app-landing .nc-stats small { color:#c8cbd0; font-size:11px; }
+app-landing .nc-testimonial { display:flex; align-items:center; justify-content:center; gap:0; padding:44px 8%; min-height:260px; }
+app-landing .nc-testimonial-photo { width:250px; height:250px; margin-left:24px; border-radius:50%; background-image:url('/assets/images/chidambaram-resident.png'),linear-gradient(135deg,#e6d3be,#9eb7b1); }
+app-landing .nc-testimonial blockquote { z-index:1; width:min(440px,55%); margin:0 -35px 0 0; padding:25px 28px; border-radius:18px; color:#fff; background:var(--nc-orange); }
+app-landing .nc-testimonial blockquote>i { font-size:26px; }
+app-landing .nc-testimonial blockquote p { margin:5px 0 12px; font-size:13px; line-height:1.65; }
+app-landing .nc-testimonial cite { font-size:11px; font-style:normal; }
+app-landing .nc-contact { display:grid; grid-template-columns:1.1fr .9fr; max-width:1050px; margin:0 auto 42px; padding:0 20px; }
+app-landing .nc-contact-form { padding:30px; background:#fff; }
+app-landing .nc-contact h2 { margin-bottom:15px; font-size:30px; }
+app-landing .nc-contact form { display:grid; gap:10px; }
+app-landing .nc-contact label { display:grid; gap:5px; color:#525b63; font-size:11px; }
+app-landing .nc-contact input, app-landing .nc-contact textarea { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #e7e2dd; border-radius:5px; font:inherit; font-size:12px; }
+app-landing .nc-contact-info { padding:30px; color:white; background:var(--nc-orange); }
+app-landing .nc-contact-info h3 { margin:0 0 18px; font-size:13px; }
+app-landing .nc-contact-info p { display:flex; gap:12px; align-items:center; font-size:12px; line-height:1.6; }
+app-landing .nc-contact-info p i { font-size:20px; }
+app-landing .nc-social { display:flex; gap:10px; }
+app-landing .nc-social span { display:grid; place-items:center; width:30px; height:30px; border-radius:50%; color:var(--nc-orange); background:#fff; font-weight:800; }
+@media(max-width:1000px) { app-landing .nc-category-grid { grid-template-columns:repeat(4,minmax(0,1fr)); } app-landing .nc-intro { grid-template-columns:1fr 1fr; } app-landing .nc-benefits { grid-column:1/-1; grid-template-columns:repeat(3,1fr); } app-landing .nc-services-band { grid-template-columns:1fr 1fr; } app-landing .nc-business-card { grid-column:1/-1; } app-landing .nc-trust { grid-template-columns:1fr 1fr; } app-landing .nc-stats { grid-column:1/-1; grid-template-columns:repeat(4,1fr); } }
+@media(max-width:640px) { app-landing .nc-hero { min-height:430px; padding:22px 18px; align-items:flex-end; } app-landing .nc-hero-photo { background-position:58% center; } app-landing .nc-hero::after { background:linear-gradient(0deg,#fff9f0f5 0%,#fff9f0c9 56%,transparent 100%); } app-landing .nc-hero-copy { width:100%; padding:22px; } app-landing .nc-intro { grid-template-columns:1fr; padding:30px 18px; gap:18px; } app-landing .nc-family-photo { min-height:220px; border-radius:20px 80px 20px 20px; } app-landing .nc-benefits { grid-column:auto; grid-template-columns:1fr; } app-landing .nc-services-band { grid-template-columns:1fr; padding:36px 20px; gap:20px; } app-landing .nc-business-photo { min-height:220px; } app-landing .nc-business-card { grid-column:auto; } app-landing .nc-categories { padding:32px 14px; } app-landing .nc-category-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } app-landing .nc-category-tile { min-height:130px; } app-landing .nc-heritage { grid-template-columns:1fr; padding:35px 20px; gap:24px; } app-landing .nc-temple-photo { min-height:260px; } app-landing .nc-trust { grid-template-columns:1fr; padding:30px 18px; } app-landing .nc-stats { grid-column:auto; grid-template-columns:repeat(2,1fr); } app-landing .nc-testimonial { padding:30px 18px; flex-direction:column-reverse; gap:0; } app-landing .nc-testimonial-photo { width:190px; height:190px; margin:0 0 -15px 80px; } app-landing .nc-testimonial blockquote { width:100%; box-sizing:border-box; margin:0; } app-landing .nc-contact { grid-template-columns:1fr; padding:0 14px; margin-bottom:24px; } app-landing .nc-contact-form, app-landing .nc-contact-info { padding:22px; } }

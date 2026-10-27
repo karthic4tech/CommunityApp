@@ -1,0 +1,899 @@
+/* Professional Community App Design - Inspired by Construction/Services Template */
+
+:root {
+  --primary: #ff6b35;      /* Vibrant Orange - Action & Energy */
+  --primary-dark: #e55a28;
+  --secondary: #004e89;    /* Deep Blue - Trust & Professionalism */
+  --accent: #f7b32b;       /* Gold - Highlights */
+  --dark: #1a1a1a;
+  --dark-bg: #2d2d2d;
+  --light: #f5f5f5;
+  --white: #ffffff;
+  --text: #333333;
+  --muted: #666666;
+  --border: #e0e0e0;
+}
+
+.nc-home {
+  background: #f9f9f9;
+  
+  /* ==================== HERO SECTION ==================== */
+  .nc-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    min-height: 600px;
+    background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.08) 0%, rgba(4, 78, 137, 0.08) 100%);
+      pointer-events: none;
+    }
+  }
+
+  .nc-hero-photo {
+    position: relative;
+    height: 600px;
+    background: linear-gradient(135deg, #ff6b35 0%, #004e89 100%);
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%25" style="stop-color:rgba(255,107,53,0.9);stop-opacity:1" /><stop offset="100%25" style="stop-color:rgba(4,78,137,0.9);stop-opacity:1" /></linearGradient></defs><rect fill="url(%23grad)" width="1200" height="600"/><circle cx="900" cy="150" r="200" fill="rgba(255,255,255,0.1)"/><circle cx="100" cy="500" r="150" fill="rgba(255,255,255,0.08)"/></svg>');
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 100%);
+    }
+  }
+
+  .nc-hero-copy {
+    position: relative;
+    z-index: 2;
+    padding: 3rem;
+    max-width: 600px;
+  }
+
+  .nc-kicker {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--primary);
+    margin-bottom: 1rem;
+  }
+
+  .nc-hero h1 {
+    font-size: clamp(2.5rem, 8vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--dark);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+
+    span {
+      display: block;
+
+      &:last-child {
+        color: var(--primary);
+      }
+    }
+  }
+
+  .nc-hero-copy > p {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--text);
+    margin-bottom: 2rem;
+    max-width: 500px;
+  }
+
+  /* ==================== BUTTON STYLES ==================== */
+  .nc-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.9rem 2rem;
+    border: none;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.2);
+      transition: left 0.3s ease;
+    }
+
+    &:hover::before {
+      left: 100%;
+    }
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(255, 107, 53, 0.3);
+    }
+
+    &:active {
+      transform: translateY(-1px);
+    }
+
+    i {
+      font-size: 1.1rem;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover i {
+      transform: translateX(3px);
+    }
+  }
+
+  .nc-button {
+    background: var(--primary);
+    color: #fff;
+
+    &:hover {
+      background: var(--primary-dark);
+    }
+  }
+
+  .nc-button-light {
+    background: #fff;
+    color: var(--primary);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      background: #f5f5f5;
+      color: var(--primary-dark);
+    }
+  }
+
+  /* ==================== INTRO SECTION ==================== */
+  .nc-intro {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    padding: 4rem 3rem;
+    background: #fff;
+    margin: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  }
+
+  .nc-photo {
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, #ff6b35 0%, #004e89 100%);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .nc-intro-card {
+    padding: 2rem;
+  }
+
+  .nc-intro-card h2 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.3;
+    color: var(--dark);
+    margin-bottom: 1.5rem;
+  }
+
+  .nc-intro-card > p {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 2rem;
+  }
+
+  .nc-benefits {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 3rem;
+
+    article {
+      display: flex;
+      gap: 1rem;
+      padding: 1.5rem;
+      background: #f9f9f9;
+      border-radius: 15px;
+      border-left: 4px solid var(--primary);
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(255, 107, 53, 0.15);
+      }
+
+      span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        background: var(--primary);
+        color: white;
+        border-radius: 12px;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+      }
+
+      h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+    }
+  }
+
+  /* ==================== SERVICES BAND SECTION ==================== */
+  .nc-services-band {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 3rem;
+    padding: 4rem 3rem;
+    background: linear-gradient(135deg, var(--dark-bg) 0%, var(--secondary) 100%);
+    margin: 2rem;
+    border-radius: 20px;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: rgba(255, 107, 53, 0.1);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+  }
+
+  .nc-services-copy {
+    position: relative;
+    z-index: 2;
+    color: white;
+
+    h2 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 1.5rem;
+      color: #fff;
+    }
+
+    p {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 2rem;
+      max-width: 500px;
+    }
+  }
+
+  .nc-services-copy .nc-button {
+    background: var(--primary);
+    color: white;
+
+    &:hover {
+      background: var(--accent);
+      color: var(--dark);
+    }
+  }
+
+  .nc-services-band .nc-photo {
+    position: relative;
+    z-index: 2;
+  }
+
+  .nc-business-card {
+    position: absolute;
+    bottom: 2rem;
+    left: 3rem;
+    z-index: 3;
+    max-width: 350px;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+
+    i {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: var(--dark);
+      margin-bottom: 0.8rem;
+      text-transform: uppercase;
+    }
+
+    p {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+    }
+
+    .nc-button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  /* ==================== CATEGORIES SECTION ==================== */
+  .nc-categories {
+    padding: 4rem 3rem;
+  }
+
+  .nc-categories-heading {
+    text-align: center;
+    margin-bottom: 3rem;
+
+    .nc-kicker {
+      display: inline-block;
+    }
+
+    h2 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--dark);
+      margin: 0.8rem 0;
+    }
+
+    p {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+  }
+
+  .nc-category-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+
+  .nc-category-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 2rem;
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: 15px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover {
+      border-color: var(--primary);
+      transform: translateY(-8px);
+      box-shadow: 0 15px 40px rgba(255, 107, 53, 0.2);
+
+      &::before {
+        transform: scaleX(1);
+      }
+
+      .nc-category-icon {
+        transform: scale(1.15) rotate(5deg);
+      }
+
+      strong {
+        color: var(--primary);
+      }
+    }
+  }
+
+  .nc-category-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(247, 179, 43, 0.15) 100%);
+    border-radius: 12px;
+    font-size: 1.8rem;
+    color: var(--primary);
+    transition: all 0.3s ease;
+  }
+
+  .nc-category-tile strong {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--dark);
+    transition: color 0.3s ease;
+  }
+
+  .nc-category-tile small {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 500;
+    margin-top: auto;
+    transition: color 0.3s ease;
+  }
+
+  .nc-category-tile:hover small {
+    color: var(--primary);
+  }
+
+  /* ==================== HERITAGE SECTION ==================== */
+  .nc-heritage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    padding: 4rem 3rem;
+    background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
+
+    .nc-photo {
+      order: -1;
+    }
+
+    > div:not(.nc-photo) {
+      h2 {
+        font-size: 2.2rem;
+        font-weight: 800;
+        line-height: 1.3;
+        color: var(--dark);
+        margin: 0.8rem 0 1.5rem;
+      }
+
+      p {
+        font-size: 1.05rem;
+        line-height: 1.8;
+        color: var(--text);
+        margin-bottom: 2rem;
+      }
+    }
+  }
+
+  /* ==================== TESTIMONIALS SECTION ==================== */
+  .nc-testimonial {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    padding: 4rem 3rem;
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--dark-bg) 100%);
+
+    .nc-photo {
+      border-radius: 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    }
+
+    blockquote {
+      margin: 0;
+      padding: 0;
+      color: white;
+
+      i {
+        font-size: 3rem;
+        color: var(--accent);
+        margin-bottom: 1rem;
+        opacity: 0.8;
+      }
+
+      p {
+        font-size: 1.3rem;
+        font-weight: 500;
+        line-height: 1.8;
+        margin-bottom: 1.5rem;
+        font-style: italic;
+      }
+
+      cite {
+        display: block;
+        font-size: 1rem;
+        font-style: normal;
+        color: var(--accent);
+        font-weight: 700;
+      }
+    }
+  }
+
+  /* ==================== CONTACT SECTION ==================== */
+  .nc-contact {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    padding: 4rem 3rem;
+    background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
+  }
+
+  .nc-contact-form {
+    h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--dark);
+      margin: 0.8rem 0 1.5rem;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: var(--dark);
+
+        input,
+        textarea {
+          padding: 0.9rem 1rem;
+          border: 2px solid var(--border);
+          border-radius: 10px;
+          font-size: 1rem;
+          font-family: inherit;
+          transition: all 0.3s ease;
+
+          &:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+          }
+        }
+
+        textarea {
+          resize: vertical;
+          min-height: 120px;
+        }
+      }
+
+      button {
+        margin-top: 1rem;
+      }
+    }
+  }
+
+  .nc-contact-info {
+    h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: var(--dark);
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+
+      &:not(:first-child) {
+        margin-top: 2rem;
+      }
+    }
+
+    p {
+      font-size: 1rem;
+      line-height: 1.8;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+
+      i {
+        font-size: 1.2rem;
+        color: var(--primary);
+      }
+    }
+
+    .nc-social {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+
+      span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 45px;
+        height: 45px;
+        background: var(--primary);
+        color: white;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 10px 25px rgba(255, 107, 53, 0.3);
+        }
+      }
+    }
+  }
+
+  /* ==================== TRUST SECTION ==================== */
+  .nc-trust {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    padding: 4rem 3rem;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  }
+
+  .nc-trust-card {
+    color: white;
+
+    .nc-kicker {
+      color: var(--accent);
+    }
+
+    h2 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1.3;
+      color: white;
+      margin: 0.8rem 0 1.5rem;
+    }
+
+    p {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 2rem;
+    }
+
+    .nc-button {
+      background: var(--primary);
+      color: white;
+
+      &:hover {
+        background: var(--accent);
+        color: var(--dark);
+      }
+    }
+  }
+
+  .nc-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      color: white;
+
+      i {
+        font-size: 2rem;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+      }
+
+      strong {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--accent);
+      }
+
+      small {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+
+  /* ==================== STATE MESSAGES ==================== */
+  .nc-state {
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+    text-align: center;
+    font-weight: 500;
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      margin-left: 1rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: var(--primary-dark);
+      }
+    }
+  }
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 1200px) {
+  .nc-home {
+    .nc-hero {
+      grid-template-columns: 1fr;
+      min-height: 500px;
+
+      .nc-hero-photo {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+      }
+
+      .nc-hero-copy {
+        position: relative;
+        z-index: 2;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 2rem;
+        border-radius: 20px;
+        margin: auto;
+        max-width: 400px;
+      }
+    }
+
+    .nc-intro {
+      grid-template-columns: 1fr;
+    }
+
+    .nc-services-band {
+      grid-template-columns: 1fr;
+
+      .nc-business-card {
+        position: static;
+        max-width: none;
+      }
+    }
+
+    .nc-category-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .nc-benefits {
+      grid-template-columns: 1fr;
+    }
+
+    .nc-heritage,
+    .nc-testimonial,
+    .nc-contact,
+    .nc-trust {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .nc-home {
+    .nc-hero-copy {
+      padding: 1.5rem;
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      > p {
+        font-size: 1rem;
+      }
+    }
+
+    .nc-intro,
+    .nc-services-band,
+    .nc-categories,
+    .nc-heritage,
+    .nc-testimonial,
+    .nc-contact,
+    .nc-trust {
+      padding: 2rem 1.5rem;
+      margin: 1rem;
+    }
+
+    .nc-category-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .nc-button {
+      padding: 0.8rem 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    .nc-stats {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .nc-home {
+    .nc-hero {
+      min-height: 400px;
+    }
+
+    .nc-hero h1 {
+      font-size: 1.5rem;
+    }
+
+    .nc-intro-card h2,
+    .nc-categories-heading h2,
+    .nc-heritage h2,
+    .nc-trust h2 {
+      font-size: 1.5rem;
+    }
+
+    .nc-category-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .nc-benefits {
+      flex-direction: column;
+    }
+
+    .nc-button {
+      padding: 0.7rem 1.2rem;
+      font-size: 0.9rem;
+    }
+
+    .nc-contact-form,
+    .nc-contact-info {
+      padding: 1rem 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nc-home * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -20,8 +20,12 @@ const PALETTES = ['orange', 'rose', 'blue', 'red', 'purple', 'green'];
   template: `
     <ng-template #labels>
         <span [class]="'icon ' + paletteFor(category().sortOrder)" aria-hidden="true"><i class="bi" [class]="'bi ' + iconFor(category().icon)"></i></span>
-        <span class="labels"><strong [lang]="i18n.language()">{{ i18n.language() === 'ta' ? category().nameTamil : category().nameEnglish }}</strong>
-          <span [lang]="i18n.secondaryLanguage()">{{ i18n.language() === 'ta' ? category().nameEnglish : category().nameTamil }}</span>
+        <span class="labels">
+          @if (i18n.language() === 'ta') {
+            <strong lang="ta">{{ category().nameTamil }}</strong>
+          } @else {
+            <strong lang="en">{{ category().nameEnglish }}</strong>
+          }
         </span>
     </ng-template>
     @if (navigable()) {

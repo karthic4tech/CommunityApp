@@ -146,163 +146,113 @@ export class HomeComponent {
   imports: [RouterLink, NgOptimizedImage, CategoryCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="hero" id="top" aria-labelledby="home-title">
-      <div class="hero-copy">
-        <p class="eyebrow"><span>{{ i18n.language() === 'ta' ? 'நம் ஊர்' : 'Our town' }}</span><i></i><span>{{ i18n.language() === 'ta' ? 'நம் மக்கள்' : 'Our people' }}</span><i></i><span>{{ i18n.language() === 'ta' ? 'நம் சேவைகள்' : 'Our services' }}</span></p>
-        @if (i18n.language() === 'ta') {
-          <h1 id="home-title">சிதம்பரத்தில் உங்களுக்குத் தேவையான அனைத்தும் <em>ஒரே இடத்தில்</em></h1>
-        } @else {
-          <h1 id="home-title">Everything you need for your community, <em>all in one place.</em></h1>
-        }
-        <p class="hero-description">{{ i18n.language() === 'ta' ? 'வீடு, கல்வி, மருத்துவம், கட்டுமானம் மற்றும் பல உள்ளூர் சேவைகளை எளிதாகக் கண்டறியுங்கள்.' : 'Discover local services, useful information, and the people who make Chidambaram feel like home.' }}</p>
-        <div class="hero-actions">
-          <a routerLink="/services" class="button button-primary">{{ i18n.language() === 'ta' ? 'சேவைகளைப் பார்க்க' : 'Explore services' }} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
-          <a routerLink="/" fragment="community" class="button button-secondary">{{ i18n.language() === 'ta' ? 'சேவையைப் பகிருங்கள்' : 'Share your service' }} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+    <div class="nc-home">
+      <section class="nc-hero" aria-labelledby="home-title">
+        <div class="nc-hero-photo" role="img" aria-label="Chidambaram temple street"></div>
+        <div class="nc-hero-copy">
+          <p class="nc-kicker">{{ i18n.language() === 'ta' ? 'நம் ஊருக்கு வரவேற்கிறோம்' : 'WELCOME TO' }}</p>
+          <h1 id="home-title"><span lang="ta">நம் சிதம்பரம்</span><br><span>Nam Chidambaram</span></h1>
+          <p>{{ i18n.language() === 'ta' ? 'உள்ளூர் சேவைகள், வணிகங்கள், நிகழ்வுகள் மற்றும் சமூகத் தகவல்களை ஒரே இடத்தில் கண்டறியுங்கள்.' : 'Discover local services, businesses, events and community updates in Chidambaram.' }}</p>
+          <a class="nc-button" routerLink="/services">{{ i18n.language() === 'ta' ? 'இப்போதே பாருங்கள்' : 'Explore Now' }} <i class="bi bi-arrow-right"></i></a>
         </div>
-        <form class="hero-search" action="/service-search" (submit)="search($event, heroSearch.value)">
-          <i class="bi bi-search" aria-hidden="true"></i>
-          <input #heroSearch type="search" name="q" maxlength="200" [placeholder]="i18n.language() === 'ta' ? 'எந்த சேவை தேவை?' : 'What service do you need?'" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவையைத் தேடுங்கள்' : 'Find a service'">
-          <button type="submit">{{ i18n.language() === 'ta' ? 'தேடுக' : 'Search' }} <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
-        </form>
-        <div class="hero-points"><span><b aria-hidden="true"><i class="bi bi-check2"></i></b>{{ i18n.language() === 'ta' ? 'உள்ளூர் சேவைகள்' : 'Local services' }}</span><span><b aria-hidden="true"><i class="bi bi-check2"></i></b>{{ i18n.language() === 'ta' ? 'எளிதான தேடல்' : 'Easy discovery' }}</span><span><b aria-hidden="true"><i class="bi bi-check2"></i></b>{{ i18n.language() === 'ta' ? 'இருமொழி அனுபவம்' : 'Tamil + English' }}</span></div>
-      </div>
-      <div class="hero-art" (mouseenter)="pauseCarousel()" (mouseleave)="resumeCarousel()" (focusin)="pauseCarousel()" (focusout)="resumeCarousel()">
-        <div class="hero-image-frame carousel-frame">
-          @for (slide of heroSlides; track slide.id; let i = $index) {
-            <div class="hero-slide" [class.active]="activeSlide === i" [attr.aria-hidden]="activeSlide !== i">
-              <img [src]="slide.image" width="1774" height="887" [alt]="slide.alt" [attr.fetchpriority]="i === 0 ? 'high' : 'auto'" [attr.loading]="i === 0 ? 'eager' : 'lazy'" class="hero-image" />
-              <div class="slide-caption">
-                <span>{{ i18n.language() === 'ta' ? slide.kickerTa : slide.kickerEn }}</span>
-                <strong>{{ i18n.language() === 'ta' ? slide.titleTa : slide.titleEn }}</strong>
-              </div>
-            </div>
+      </section>
+
+      <section class="nc-intro" id="about">
+        <div class="nc-photo nc-family-photo" role="img" aria-label="Chidambaram community"></div>
+        <div class="nc-intro-card"><p class="nc-kicker">{{ i18n.language() === 'ta' ? 'நம் சமூகம்' : 'OUR COMMUNITY' }}</p><h2>{{ i18n.language() === 'ta' ? 'மக்கள். சேவைகள். வலுவான சிதம்பரம்.' : 'People. Services. A Stronger Chidambaram.' }}</h2><p>{{ i18n.language() === 'ta' ? 'உள்ளூர் சேவைகள், வணிகங்கள் மற்றும் நிகழ்வுகளை ஒரே இடத்தில் இணைக்கிறோம்.' : 'Nam Chidambaram brings together local services, businesses, events and useful information to make everyday life easier.' }}</p><a class="nc-button nc-button-light" routerLink="/services">{{ i18n.language() === 'ta' ? 'மேலும் அறிய' : 'Learn More' }} <i class="bi bi-arrow-right"></i></a></div>
+        <div class="nc-benefits">
+          <article><span><i class="bi bi-people-fill"></i></span><div><h3>{{ i18n.language() === 'ta' ? 'உள்ளூரை ஆதரியுங்கள்' : 'Support Local' }}</h3><p>{{ i18n.language() === 'ta' ? 'உள்ளூர் வணிகங்கள் மற்றும் சேவை வழங்குநர்களைக் கண்டறியுங்கள்.' : 'Discover and support local businesses and service providers.' }}</p></div></article>
+          <article><span><i class="bi bi-newspaper"></i></span><div><h3>{{ i18n.language() === 'ta' ? 'தகவலுடன் இருங்கள்' : 'Stay Updated' }}</h3><p>{{ i18n.language() === 'ta' ? 'சமூகச் செய்திகள் மற்றும் நிகழ்வுகளை அறியுங்கள்.' : 'Get the latest community news, events and important announcements.' }}</p></div></article>
+          <article><span><i class="bi bi-heart-fill"></i></span><div><h3>{{ i18n.language() === 'ta' ? 'வலுவான சமூகம்' : 'A Stronger Community' }}</h3><p>{{ i18n.language() === 'ta' ? 'நம் மக்கள், இடங்கள், பண்பாட்டுடன் இணைந்திருங்கள்.' : 'Stay connected with the people, places and culture of Chidambaram.' }}</p></div></article>
+        </div>
+      </section>
+
+      <section class="nc-services-band">
+        <div class="nc-services-copy"><h2>{{ i18n.language() === 'ta' ? 'சிதம்பரத்திற்கான உள்ளூர் சேவைகள்' : 'Local Services for a Better Chidambaram' }}</h2><p>{{ i18n.language() === 'ta' ? 'உங்கள் அன்றாடத் தேவைகளுக்கு நம்பகமான உள்ளூர் நிபுணர்களை ஒரே இடத்தில் கண்டறியுங்கள்.' : 'From trusted professionals to everyday needs, find everything you need in one place.' }}</p><a class="nc-button" routerLink="/services">{{ i18n.language() === 'ta' ? 'சேவைகளைப் பாருங்கள்' : 'Browse Services' }} <i class="bi bi-arrow-right"></i></a></div>
+        <div class="nc-photo nc-business-photo" role="img" aria-label="Local business owner"></div>
+        <div class="nc-business-card"><i class="bi bi-handshake"></i><h3>{{ i18n.language() === 'ta' ? 'உள்ளூர் வணிகங்களுக்கு ஆதரவு' : 'WE SUPPORT LOCAL BUSINESSES' }}</h3><p>{{ i18n.language() === 'ta' ? 'உங்கள் வணிகத்தைப் பதிவு செய்து சிதம்பரம் மக்களைச் சென்றடையுங்கள்.' : 'Be part of a growing community that values local talent and trusted businesses.' }}</p><a class="nc-button nc-button-light" routerLink="/services/submit">{{ i18n.language() === 'ta' ? 'வணிகத்தைப் பட்டியலிடுங்கள்' : 'List Your Business' }} <i class="bi bi-arrow-right"></i></a></div>
+      </section>
+
+      <section class="nc-categories" id="categories">
+        <div class="nc-categories-heading">
+          @if (i18n.language() === 'ta') {
+            <p class="nc-kicker">வகைகளின்படி தேடுங்கள்</p>
+            <h2>உங்களுக்குத் தேவையானதைத் தேடுங்கள்</h2>
+            <p>சேவைகள், வணிகங்கள், நிகழ்வுகள் — ஒரே இடத்தில்.</p>
+          } @else {
+            <p class="nc-kicker">BROWSE BY CATEGORY</p>
+            <h2>Explore What You Need</h2>
+            <p>Find trusted local services, businesses, events and more — all in one place.</p>
           }
         </div>
-        <div class="hero-badge"><span aria-hidden="true">நம்</span><small>{{ i18n.language() === 'ta' ? 'நம் ஊர்' : 'OUR TOWN' }}</small></div>
-        <div class="carousel-controls" role="group" [attr.aria-label]="i18n.language() === 'ta' ? 'பதாகை கட்டுப்பாடுகள்' : 'Banner controls'">
-          <span class="slide-counter">{{ (activeSlide + 1).toString().padStart(2, '0') }} <small>/ {{ heroSlides.length.toString().padStart(2, '0') }}</small></span>
-          <div class="slide-dots">
-            @for (slide of heroSlides; track slide.id; let i = $index) {
-              <button type="button" [class.active]="activeSlide === i" (click)="selectSlide(i)" [attr.aria-label]="(i18n.language() === 'ta' ? 'பதாகை ' : 'Banner ') + (i + 1)" [attr.aria-pressed]="activeSlide === i"></button>
+        @if (categoryService.loading()) {
+          <p class="nc-state">
+            @if (i18n.language() === 'ta') {
+              வகைகள் ஏற்றப்படுகின்றன…
+            } @else {
+              Loading categories…
+            }
+          </p>
+        } @else if (categoryService.error()) {
+          <p class="nc-state">
+            @if (i18n.language() === 'ta') {
+              வகைகளை ஏற்ற முடியவில்லை.
+            } @else {
+              Categories could not be loaded.
+            }
+            <button type="button" (click)="loadCategories()">
+              @if (i18n.language() === 'ta') {
+                மீண்டும் முயற்சி
+              } @else {
+                Try again
+              }
+            </button>
+          </p>
+        } @else if (categoryService.categories().length) {
+          <div class="nc-category-grid">
+            @for (category of categoryService.categories().slice(0, 8); track category.id) {
+              <app-category-card [category]="category" />
             }
           </div>
-          <button type="button" class="slide-arrow" (click)="previousSlide()" [attr.aria-label]="i18n.language() === 'ta' ? 'முந்தைய பதாகை' : 'Previous banner'">‹</button>
-          <button type="button" class="slide-arrow" (click)="nextSlide()" [attr.aria-label]="i18n.language() === 'ta' ? 'அடுத்த பதாகை' : 'Next banner'">›</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="trust-strip" [attr.aria-label]="i18n.language() === 'ta' ? 'சமூக நன்மைகள்' : 'Community benefits'">
-      @for (value of communityValues; track value.id) {
-        <div class="trust-item">
-          <span class="trust-icon" [class]="'trust-icon ' + value.id" aria-hidden="true"><i class="bi" [class]="'bi ' + value.icon"></i></span>
-          <span><strong>{{ i18n.language() === 'ta' ? value.titleTamil : value.titleEnglish }}</strong><small>{{ i18n.language() === 'ta' ? value.descriptionTamil : value.descriptionEnglish }}</small></span>
-        </div>
-      }
-    </section>
-
-    <section class="directory-home-section" id="categories" aria-labelledby="category-title">
-      <div class="section-heading">
-        <div><p class="section-kicker">{{ i18n.language() === 'ta' ? 'சிதம்பரத்தை ஆராயுங்கள்' : 'EXPLORE YOUR TOWN' }}</p>
-          <h2 id="category-title">{{ i18n.language() === 'ta' ? 'எதைத் தேடுகிறீர்கள்?' : 'What are you looking for?' }}</h2>
-          <p class="section-intro">{{ i18n.language() === 'ta' ? 'உங்கள் தேவைக்கேற்ற சேவை வகையைத் தேர்ந்தெடுங்கள்.' : 'Choose a category to discover useful local services.' }}</p>
-        </div>
-        <a class="section-link" routerLink="/services">{{ i18n.language() === 'ta' ? 'அனைத்து வகைகளும்' : 'All categories' }} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
-      </div>
-      @if (categoryService.loading()) {
-        <p class="home-state">{{ i18n.language() === 'ta' ? 'சேவை வகைகள் ஏற்றப்படுகின்றன…' : 'Loading local categories…' }}</p>
-      } @else if (categoryService.error()) {
-        <p class="home-state">{{ i18n.language() === 'ta' ? 'வகைகளை ஏற்ற முடியவில்லை.' : 'Categories could not be loaded.' }} <button type="button" class="text-button" (click)="loadCategories()">{{ i18n.language() === 'ta' ? 'மீண்டும் முயற்சிக்கவும்' : 'Try again' }}</button></p>
-      } @else if (categoryService.categories().length) {
-        <div class="home-category-grid">
-          @for (category of categoryService.categories().slice(0, 8); track category.id) {
-            <app-category-card [category]="category" />
-          }
-        </div>
-      } @else {
-        <p class="home-state">{{ i18n.language() === 'ta' ? 'சேவை வகைகள் விரைவில் இங்கே காண்பிக்கப்படும்.' : 'Categories will appear here when available.' }}</p>
-      }
-    </section>
-
-    <section class="sponsor-strip" aria-label="Advertising">
-      <div class="sponsor-mark"><i class="bi bi-megaphone" aria-hidden="true"></i></div>
-      <div><p class="section-kicker">{{ i18n.language() === 'ta' ? 'உள்ளூர் விளம்பர இடம்' : 'LOCAL SPOTLIGHT' }}</p>
-        <h2>{{ i18n.language() === 'ta' ? 'உங்கள் வணிகத்தை சிதம்பரம் மக்களிடம் கொண்டு செல்லுங்கள்.' : 'Put your business in front of the Chidambaram community.' }}</h2>
-        <p>{{ i18n.language() === 'ta' ? 'உள்ளூர் வணிகங்களுக்கும் சேவைகளுக்கும் சிறப்பு விளம்பர இடம்.' : 'A dedicated space for local businesses, services and community announcements.' }}</p>
-      </div>
-      <a routerLink="/services/submit">{{ i18n.language() === 'ta' ? 'சேவையைப் பகிருங்கள்' : 'Promote your service' }} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
-    </section>
-
-    <section class="home-listings-section" id="featured-listings" aria-labelledby="listings-title">
-      <div class="section-heading">
-        <div><p class="section-kicker">{{ i18n.language() === 'ta' ? 'உள்ளூர் சேவைகள்' : 'DISCOVER LOCAL' }}</p>
-          <h2 id="listings-title">{{ i18n.language() === 'ta' ? 'சமூகத்தில் சிறப்பாக' : 'Featured in your community' }}</h2>
-          <p class="section-intro">{{ i18n.language() === 'ta' ? 'சரிபார்க்கப்பட்ட உள்ளூர் சேவைகளை ஆராயுங்கள்.' : 'Explore published services from verified local providers.' }}</p>
-        </div>
-        <a class="section-link" routerLink="/services">{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகள்' : 'View all services' }} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
-      </div>
-      @if (listingsLoading) {
-        <p class="home-state">{{ i18n.language() === 'ta' ? 'சேவைகள் ஏற்றப்படுகின்றன…' : 'Loading featured services…' }}</p>
-      } @else if (featuredListings.length) {
-        <div class="home-listing-grid">
-          @for (listing of featuredListings; track listing.id) {
-            <a class="home-listing-card" [routerLink]="['/providers', listing.service_providers.id]">
-              <div class="listing-photo">
-                @if (listingImage(listing); as image) { <img [src]="image" [alt]="listing.title" loading="lazy" /> }
-                @else { <span class="listing-placeholder"><i class="bi bi-shop" aria-hidden="true"></i></span> }
-                <span class="verified-tag"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> {{ i18n.language() === 'ta' ? 'சரிபார்க்கப்பட்டது' : 'Verified' }}</span>
-              </div>
-              <div class="listing-copy">
-                <span class="listing-provider">{{ listing.service_providers.display_name }}</span>
-                <h3>{{ listing.title }}</h3>
-                <p>{{ listing.description }}</p>
-                <span class="listing-location"><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ listingLocation(listing) }}</span>
-                <span class="listing-open">{{ i18n.language() === 'ta' ? 'விவரங்களைப் பார்க்க' : 'View details' }} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
-              </div>
-            </a>
-          }
-        </div>
-      } @else {
-        <p class="home-state">{{ i18n.language() === 'ta' ? 'வெளியிடப்பட்ட சேவைகள் கிடைக்கும் போது இங்கே காண்பிக்கப்படும்.' : 'Published services will appear here when available.' }}</p>
-      }
-    </section>
-
-    <section class="featured-section" id="discover" aria-labelledby="featured-title">
-      <div class="section-heading">
-        <div><p class="section-kicker">{{ i18n.language() === 'ta' ? 'உங்கள் சமூகத்திற்காக' : 'MADE FOR YOUR COMMUNITY' }}</p><h2 id="featured-title">{{ i18n.language() === 'ta' ? 'எதைத் தேடுகிறீர்கள்?' : 'Start with what you need' }}</h2></div>
-        <a class="section-link" routerLink="/services">{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகள்' : 'View all services' }} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
-      </div>
-      <div class="featured-grid">
-        @for (highlight of serviceHighlights; track highlight.id) {
-          <a class="feature-card" routerLink="/services">
-            <span class="feature-card-top"><span [class]="'feature-icon ' + highlight.tone" aria-hidden="true"><i class="bi" [class]="'bi ' + highlight.icon"></i></span><i class="bi bi-arrow-up-right card-arrow" aria-hidden="true"></i></span>
-            <h3>{{ i18n.language() === 'ta' ? highlight.titleTamil : highlight.titleEnglish }}</h3>
-            <p>{{ i18n.language() === 'ta' ? highlight.descriptionTamil : highlight.descriptionEnglish }}</p>
-            <span class="card-link">{{ i18n.language() === 'ta' ? 'சேவைகளைப் பார்க்க' : 'Explore services' }} <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
-          </a>
+        } @else {
+          <div class="nc-category-grid">
+            @for (item of categoryPlaceholders.slice(0, 8); track item.label) {
+              <a class="nc-category-tile" routerLink="/services">
+                <span class="nc-category-icon">
+                  <i class="bi" [class]="'bi ' + item.icon"></i>
+                </span>
+                <strong>
+                  @if (i18n.language() === 'ta') {
+                    {{ item.ta }}
+                  } @else {
+                    {{ item.label }}
+                  }
+                </strong>
+                <small>
+                  @if (i18n.language() === 'ta') {
+                    மேலும் அறிய
+                  } @else {
+                    Explore
+                  }
+                  →
+                </small>
+              </a>
+            }
+          </div>
         }
-      </div>
-    </section>
+      </section>
 
-    <section class="story-section" id="about" aria-labelledby="story-title">
-      <div class="story-media">
-        <img ngSrc="assets/images/chidambaram-hero1.png" width="1650" height="953" loading="lazy" alt="Chidambaram services and local community illustrated beside the town temple" />
-        <span class="story-caption">{{ i18n.language() === 'ta' ? 'நம் சிதம்பரம்' : 'NAM CHIDAMBARAM' }}</span>
-      </div>
-      <div class="story-copy">
-        <p class="section-kicker">{{ i18n.language() === 'ta' ? 'நம் சமூகத்தின் கதை' : 'OUR COMMUNITY STORY' }}</p>
-        <h2 id="story-title">{{ i18n.language() === 'ta' ? 'நம் ஊரை சிறப்பாக்குவது நம் மக்கள்.' : 'Our town is at its best when its people are connected.' }}</h2>
-        <p>{{ i18n.language() === 'ta' ? 'நம் சிதம்பரம் என்பது உள்ளூர் சேவைகள் மற்றும் பயனுள்ள தகவல்களை எளிதாகக் கண்டறிய உதவும் ஒரு சமூகத் தளம்.' : 'Nam Chidambaram brings local services and useful information together in a way that feels clear, welcoming, and made for everyday life.' }}</p>
-        <p>{{ i18n.language() === 'ta' ? 'உங்களுக்கு தேவையானதைத் தேடுங்கள், உங்களுக்குத் தெரிந்ததைப் பகிருங்கள், நம் ஊருடன் இணைந்திருங்கள்.' : 'Find what you need, share what you offer, and stay connected to the people and places around you.' }}</p>
-        <a class="text-link" routerLink="/services">{{ i18n.language() === 'ta' ? 'உள்ளூர் சேவைகளை ஆராயுங்கள்' : 'Explore the local directory' }} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
-      </div>
-    </section>
+      <section class="nc-heritage">
+        <div class="nc-photo nc-temple-photo" role="img" aria-label="Chidambaram Nataraja Temple"></div>
+        <div><p class="nc-kicker">{{ i18n.language() === 'ta' ? 'நம் ஊர். நம் பெருமை.' : 'OUR TOWN. OUR PRIDE.' }}</p><h2>{{ i18n.language() === 'ta' ? 'செழுமையான பாரம்பரியமும் ஒளிமயமான எதிர்காலமும்' : 'A Town with a Rich Heritage and a Bright Future' }}</h2><p>{{ i18n.language() === 'ta' ? 'சிதம்பரம் ஒரு நகரம் மட்டுமல்ல — பண்பாடு, வணிகம் மற்றும் சமூக உணர்வு நிறைந்த இடம்.' : 'Chidambaram is more than a town — it’s a vibrant community with a rich cultural heritage, active businesses and a warm, welcoming people.' }}</p><a class="nc-button" routerLink="/services">{{ i18n.language() === 'ta' ? 'சிதம்பரத்தை அறிய' : 'Learn About Chidambaram' }} <i class="bi bi-arrow-right"></i></a></div>
+      </section>
 
-    <section class="community-banner" id="community" aria-labelledby="provider-title">
-      <div class="banner-icon" aria-hidden="true"><i class="bi bi-plus-lg"></i></div>
-      <div class="banner-copy"><p class="banner-kicker">{{ i18n.language() === 'ta' ? 'சமூகத்துடன் இணைவோம்' : 'GROW WITH THE COMMUNITY' }}</p><h2 id="provider-title">{{ i18n.language() === 'ta' ? 'உங்கள் சேவையையும் இங்கே இணைக்கலாம்' : 'Bring your service to the community.' }}</h2><p>{{ i18n.language() === 'ta' ? 'நம் சிதம்பரம் சமூகத்துடன் உங்கள் சேவையைப் பகிர்ந்து, அதிக மக்களைச் சென்றடையுங்கள்.' : 'Share what you offer with local people and help make the directory more useful for everyone.' }}</p></div>
-      <a routerLink="/services/submit">{{ i18n.language() === 'ta' ? 'சேவையைச் சேர்க்கவும்' : 'Add your service' }} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
-    </section>
+      <section class="nc-trust" id="community"><div class="nc-trust-card"><p class="nc-kicker">{{ i18n.language() === 'ta' ? 'நம் சமூகத்தின் நம்பிக்கை' : 'TRUSTED BY OUR COMMUNITY' }}</p><h2>{{ i18n.language() === 'ta' ? 'இன்றிலிருந்து ஒன்றாக வளர்வோம்' : 'Growing Together Since Today' }}</h2><p>{{ i18n.language() === 'ta' ? 'உள்ளூர் திறமைகளை ஆதரிக்கும், நம் பண்பாட்டைக் கொண்டாடும் சமூகத்தில் இணையுங்கள்.' : 'Our platform is built by and for the people of Chidambaram. Join a community that supports local talent, celebrates our culture and creates new opportunities.' }}</p><a class="nc-button" routerLink="/services/submit">{{ i18n.language() === 'ta' ? 'சமூகத்தில் இணையுங்கள்' : 'Join Our Community' }} <i class="bi bi-arrow-right"></i></a></div><div class="nc-photo nc-people-photo" role="img" aria-label="People in Chidambaram"></div><div class="nc-stats"><div><i class="bi bi-people"></i><strong>Local</strong><small>{{ i18n.language() === 'ta' ? 'சமூக உறுப்பினர்கள்' : 'Community Members' }}</small></div><div><i class="bi bi-shop"></i><strong>Local</strong><small>{{ i18n.language() === 'ta' ? 'உள்ளூர் வணிகங்கள்' : 'Local Businesses' }}</small></div><div><i class="bi bi-calendar-event"></i><strong>Events</strong><small>{{ i18n.language() === 'ta' ? 'சமூக நிகழ்வுகள்' : 'Community Events' }}</small></div><div><i class="bi bi-heart"></i><strong>{{ i18n.language() === 'ta' ? 'ஒன்றாக' : 'Together' }}</strong><small>{{ i18n.language() === 'ta' ? 'வலுவான சிதம்பரம்' : 'A Stronger Chidambaram' }}</small></div></div></section>
+
+      <section class="nc-testimonial"><div class="nc-photo nc-testimonial-photo" role="img" aria-label="Chidambaram resident"></div><blockquote><i class="bi bi-quote"></i><p>{{ i18n.language() === 'ta' ? 'நம் சிதம்பரம் உள்ளூர் சேவைகளைக் கண்டறியவும், நம் ஊருடன் இணைந்திருக்கவும் உதவுகிறது.' : 'Nam Chidambaram makes it easy to find trusted local services, discover new businesses, know about upcoming events and stay connected with my town.' }}</p><cite>— {{ i18n.language() === 'ta' ? 'சிதம்பரம் குடியிருப்பாளர்' : 'A Chidambaram Resident' }}</cite></blockquote></section>
+
+      <section class="nc-contact" id="contact"><div class="nc-contact-form"><p class="nc-kicker">{{ i18n.language() === 'ta' ? 'தொடர்பு கொள்ளுங்கள்' : 'GET IN TOUCH' }}</p><h2>{{ i18n.language() === 'ta' ? 'எங்களைத் தொடர்பு கொள்ளுங்கள்' : 'Contact Us' }}</h2><form (submit)="$event.preventDefault()"><label>{{ i18n.language() === 'ta' ? 'பெயர்' : 'Name' }}<input type="text" [placeholder]="i18n.language() === 'ta' ? 'உங்கள் பெயர்' : 'Enter your name'"></label><label>{{ i18n.language() === 'ta' ? 'மின்னஞ்சல்' : 'Email Address' }}<input type="email" placeholder="Enter a valid email address"></label><label>{{ i18n.language() === 'ta' ? 'செய்தி' : 'Message' }}<textarea rows="3" placeholder="How can we help?"></textarea></label><button type="submit" class="nc-button">{{ i18n.language() === 'ta' ? 'செய்தி அனுப்புங்கள்' : 'Send Message' }} <i class="bi bi-arrow-right"></i></button></form></div><div class="nc-contact-info"><h3>{{ i18n.language() === 'ta' ? 'தொடர்பு விவரங்கள்' : 'CONTACT INFORMATION' }}</h3><p><i class="bi bi-geo-alt"></i> Chidambaram, Cuddalore District<br>Tamil Nadu, India</p><p><i class="bi bi-envelope"></i> support@namchidambaram.org</p><h3>{{ i18n.language() === 'ta' ? 'எங்களைப் பின்தொடருங்கள்' : 'FOLLOW US' }}</h3><div class="nc-social"><span>f</span><span>▶</span><span>◎</span><span>◉</span></div></div></section>
+    </div>
   `,
   styleUrl: './home.component.scss',
 })
@@ -314,6 +264,25 @@ export class LandingComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   protected readonly communityValues = LANDING_VALUES;
   protected readonly serviceHighlights = SERVICE_HIGHLIGHTS;
+
+  protected readonly categoryPlaceholders = [
+    { label: 'Home Services', ta: 'வீட்டுச் சேவைகள்', icon: 'bi-house-heart', tone: 'tone-green' },
+    { label: 'Education', ta: 'கல்வி', icon: 'bi-mortarboard', tone: 'tone-purple' },
+    { label: 'Healthcare', ta: 'மருத்துவம்', icon: 'bi-heart-pulse', tone: 'tone-rose' },
+    { label: 'Construction', ta: 'கட்டுமானம்', icon: 'bi-houses', tone: 'tone-orange' },
+    { label: 'Professional', ta: 'தொழில்முறை சேவைகள்', icon: 'bi-people', tone: 'tone-blue' },
+    { label: 'Shops & Retail', ta: 'கடைகள்', icon: 'bi-shop', tone: 'tone-pink' },
+    { label: 'Food & Dining', ta: 'உணவு', icon: 'bi-cup-hot', tone: 'tone-orange' },
+    { label: 'Transport', ta: 'போக்குவரத்து', icon: 'bi-car-front', tone: 'tone-blue' },
+    { label: 'Events', ta: 'நிகழ்வுகள்', icon: 'bi-calendar-event', tone: 'tone-purple' },
+    { label: 'More Services', ta: 'மேலும் சேவைகள்', icon: 'bi-three-dots', tone: 'tone-green' },
+  ] as const;
+  protected readonly communityEvents = [
+    { day: '05', month: 'OCT', title: 'Chidambaram Temple Festival', titleTa: 'சிதம்பரம் கோவில் திருவிழா', place: 'Chidambaram Nataraja Temple', placeTa: 'சிதம்பரம் நடராஜர் கோவில்', icon: 'bi-stars', tone: 'event-gold' },
+    { day: '12', month: 'OCT', title: 'Community Food Distribution', titleTa: 'சமூக அன்னதானம்', place: 'East Car Street', placeTa: 'கிழக்கு ரத வீதி', icon: 'bi-people', tone: 'event-green' },
+    { day: '20', month: 'OCT', title: 'Tree Plantation Drive', titleTa: 'மரக்கன்று நடும் நிகழ்வு', place: 'Chidambaram', placeTa: 'சிதம்பரம்', icon: 'bi-flower1', tone: 'event-leaf' },
+    { day: '28', month: 'OCT', title: 'Local Business Meet', titleTa: 'உள்ளூர் வணிகர் சந்திப்பு', place: 'Community Hall', placeTa: 'சமூகக் கூடம்', icon: 'bi-shop', tone: 'event-blue' },
+  ] as const;
   protected readonly heroSlides = [
     { id: 'town', image: 'assets/images/chidambaram-hero.png', alt: 'Chidambaram temple and local community', kickerEn: 'OUR TOWN · OUR PEOPLE', kickerTa: 'நம் ஊர் · நம் மக்கள்', titleEn: 'A closer connection to Chidambaram', titleTa: 'சிதம்பரத்துடன் இன்னும் நெருக்கமான இணைப்பு' },
     { id: 'community', image: 'assets/images/chidambaram-hero1.png', alt: 'Local services and community life in Chidambaram', kickerEn: 'LOCAL LIFE, MADE EASIER', kickerTa: 'உள்ளூர் வாழ்க்கை எளிதாக', titleEn: 'Discover the people behind local services', titleTa: 'உள்ளூர் சேவைகளின் பின்னால் உள்ள மக்களைக் கண்டறியுங்கள்' },
@@ -354,6 +323,10 @@ export class LandingComponent implements OnInit, OnDestroy {
       this.listingsLoading = false;
       this.cdr.markForCheck();
     }
+  }
+
+  protected listingIcon(index: number): string {
+    return ['bi-house-gear', 'bi-building', 'bi-heart-pulse', 'bi-tools', 'bi-cup-hot', 'bi-flower1'][index % 6];
   }
 
   protected listingImage(listing: ServiceListing): string | null {
