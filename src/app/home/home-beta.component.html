@@ -16,18 +16,30 @@
 
 <main>
   <!-- Hero Section -->
-  <section class="hero-section">
-    @for (slide of heroSlides; track slide; let i = $index) {
-      <div class="hero-image" [class.active]="i === heroIndex()" [style.background-image]="'url(' + slide + ')'"></div>
-    }
+  <section class="hero-section" role="region" aria-label="Hero carousel">
+    <div class="hero-slides-container">
+      @for (slide of heroSlides(); track $index; let i = $index) {
+        <div class="hero-slide" 
+             [class.active]="i === heroIndex()"
+             [attr.data-index]="i"
+             [style.background-image]="'url(' + slide + ')'">
+        </div>
+      }
+    </div>
+    
+    <div class="hero-overlay"></div>
+    
     <div class="container hero-inner">
-      <div class="hero-controls">
-        <button type="button" class="hero-arrow" aria-label="Previous slide" (click)="prevSlide()"><i class="bi bi-chevron-left"></i></button>
-        @for (slide of heroSlides; track slide; let i = $index) {
-          <button type="button" class="slide-dot" [class.active]="i === heroIndex()" [attr.aria-label]="'Go to slide ' + (i + 1)" (click)="heroIndex.set(i)">{{ i + 1 }}</button>
+    </div>
+    
+    <div class="hero-controls" role="navigation" aria-label="Slide navigation">
+      <button type="button" class="hero-arrow hero-arrow-prev" aria-label="Previous slide" (click)="prevSlide()"><i class="bi bi-chevron-left"></i></button>
+      <div class="hero-dots-wrapper">
+        @for (slide of heroSlides(); track $index; let i = $index) {
+          <button type="button" class="slide-dot" [class.active]="i === heroIndex()" [attr.aria-label]="'Go to slide ' + (i + 1)" [attr.aria-current]="i === heroIndex() ? 'true' : 'false'" (click)="heroIndex.set(i)">{{ i + 1 }}</button>
         }
-        <button type="button" class="hero-arrow" aria-label="Next slide" (click)="nextSlide()"><i class="bi bi-chevron-right"></i></button>
       </div>
+      <button type="button" class="hero-arrow hero-arrow-next" aria-label="Next slide" (click)="nextSlide()"><i class="bi bi-chevron-right"></i></button>
     </div>
   </section>
 
