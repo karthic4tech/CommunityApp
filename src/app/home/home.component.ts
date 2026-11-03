@@ -72,14 +72,11 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
     <a class="skip-link" href="#main">{{ i18n.text().skip }}</a>
     <header class="site-header">
       <div class="header-inner">
-        <a routerLink="/" class="brand">
-          <img ngSrc="assets/images/nam-chidambaram-logo.png"
-            width="1672" height="941" priority alt="" aria-hidden="true" class="brand-logo" />
-          <span class="brand-copy">
-            <strong lang="en">Nam Chidambaram</strong>
-            <span lang="ta">நம் சிதம்பரம்</span>
-            <small lang="en">Our town · Our people · Our services</small>
-          </span>
+        <a routerLink="/" class="brand" aria-label="CDM360 — Chidambaram Community Platform home">
+          <img ngSrc="assets/images/cdm360-logo.jpeg" width="288" height="288" priority
+            alt="" aria-hidden="true" class="brand-logo" />
+          <img ngSrc="assets/images/cdm360-pagetitle.webp" width="1303" height="434" priority
+            alt="CDM360 — Chidambaram Community Platform" class="brand-wordmark" />
         </a>
         <form class="header-search" action="/service-search" (submit)="search($event, headerSearch.value)">
           <i class="bi bi-search search-icon" aria-hidden="true"></i>

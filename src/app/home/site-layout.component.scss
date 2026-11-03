@@ -37,7 +37,7 @@ main {
   display: flex;
   align-items: center;
   gap: clamp(1rem, 3vw, 2.5rem);
-  min-height: 94px;
+  min-height: 140px;
 }
 
 .brand {
@@ -52,24 +52,22 @@ main {
 
 .brand-logo {
   display: block;
-  flex: 0 1 132px;
-  width: 132px;
-  max-width: 42vw;
-  height: auto;
+  flex: 0 0 108px;
+  width: 108px;
+  height: 108px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.brand-wordmark {
+  display: block;
+  height: 108px;
+  width: auto;
+  max-width: 52vw;
   object-fit: contain;
 }
 
-.brand-copy {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 2px;
-  line-height: 1.22;
-}
 
-.brand-copy strong { font-size: 1rem; font-weight: 850; }
-.brand-copy > span { font-size: .82rem; font-weight: 750; }
-.brand-copy small { margin-top: 3px; color: #61756a; font-size: .65rem; }
 
 .header-search {
   display: flex;
@@ -188,19 +186,18 @@ main { min-height: 38vh; padding-bottom: 1.25rem; }
   .header-inner, .main-nav, main { width: min(100% - 32px, 900px); }
   .header-inner { gap: 1rem; flex-wrap: wrap; padding-block: .75rem; }
   .brand { min-width: 0; }
-  .brand-logo { flex-basis: 100px; width: 100px; }
+  .brand-logo { flex-basis: 92px; width: 92px; height: 92px; }
+  .brand-wordmark { height: 76px; }
   .header-search { order: 3; flex-basis: 100%; max-width: none; }
   .language-switch { margin-left: auto; }
 }
 
 @media (max-width: 600px) {
   .header-inner, .main-nav, main { width: calc(100% - 28px); }
-  .brand { flex: 1 1 auto; }
-  .brand-logo { flex-basis: 78px; width: 78px; }
-  .brand-copy strong { font-size: .9rem; }
-  .brand-copy > span { font-size: .74rem; }
-  .brand-copy small { display: none; }
-  .language-switch button { padding-inline: .55rem; font-size: .72rem; }
+  .brand { flex: 0 1 auto; }
+  .brand-logo { flex-basis: clamp(56px, 16vw, 92px); width: clamp(56px, 16vw, 92px); height: clamp(56px, 16vw, 92px); }
+  .brand-wordmark { display: block; height: clamp(48px, 13vw, 76px); max-width: 46vw; }
+  .language-switch button { padding-inline: .4rem; font-size: .68rem; min-height: 32px; }
   .main-nav { gap: 1rem; min-height: 46px; }
   .main-nav a { font-size: .76rem; }
   .main-nav a i { font-size: .88rem; }
