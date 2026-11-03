@@ -1,19 +1,3 @@
-<nav class="site-nav">
-  <div class="container">
-    <button class="navbar-toggler" type="button" (click)="menuOpen.set(!menuOpen())">
-      <i class="bi bi-list"></i>
-    </button>
-    <div class="nav-menu" [class.active]="menuOpen()">
-      <a href="#services" class="nav-link">Services</a>
-      <a href="#categories" class="nav-link">Categories</a>
-      <a href="#community" class="nav-link">Community</a>
-      <a href="#events" class="nav-link">Events</a>
-      <a href="#contact" class="nav-link">Contact</a>
-      <a href="#list-business" class="btn-orange">List Your Business</a>
-    </div>
-  </div>
-</nav>
-
 <main>
   <!-- Hero Section -->
   <section class="hero-section" role="region" aria-label="Hero carousel">
@@ -306,10 +290,17 @@
         <div class="contact-info">
           <h3>CONTACT INFORMATION</h3>
           <div class="contact-detail">
+            <i class="bi bi-person"></i>
+            <span>
+              <strong>Karthic</strong>
+              <small>Community contact</small>
+            </span>
+          </div>
+          <div class="contact-detail">
             <i class="bi bi-telephone"></i>
             <span>
-              <strong>Phone</strong>
-              <small>Add your community contact number</small>
+              <strong><a href="tel:+919514636355">9514636355</a></strong>
+              <small><a href="https://wa.me/919514636355" target="_blank" rel="noopener noreferrer">Chat on WhatsApp</a></small>
             </span>
           </div>
           <div class="contact-detail">

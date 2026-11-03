@@ -78,11 +78,6 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
           <img ngSrc="assets/images/cdm360-pagetitle.webp" width="1303" height="434" priority
             alt="CDM360 — Chidambaram Community Platform" class="brand-wordmark" />
         </a>
-        <form class="header-search" action="/service-search" (submit)="search($event, headerSearch.value)">
-          <i class="bi bi-search search-icon" aria-hidden="true"></i>
-          <input #headerSearch type="search" name="q" maxlength="200" [placeholder]="i18n.language() === 'ta' ? 'சேவைகளைத் தேடுங்கள்...' : 'Search local services...'" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவைகளைத் தேடுங்கள்' : 'Search local services'">
-          <button type="submit" class="search-submit" [attr.aria-label]="i18n.language() === 'ta' ? 'தேடுக' : 'Search'"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
-        </form>
         <div class="language-switch" role="group" aria-label="Language / மொழி">
           <button type="button" lang="ta" [class.active]="i18n.language() === 'ta'" [attr.aria-pressed]="i18n.language() === 'ta'" (click)="i18n.setLanguage('ta')">தமிழ்</button>
           <button type="button" lang="en" [class.active]="i18n.language() === 'en'" [attr.aria-pressed]="i18n.language() === 'en'" (click)="i18n.setLanguage('en')">English</button>
@@ -125,13 +120,7 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
 })
 export class HomeComponent {
   protected readonly i18n = inject(LanguageService);
-  private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
-
-  protected search(event: Event, term: string): void {
-    event.preventDefault();
-    void this.router.navigate([term.trim() ? '/service-search' : '/services'], { queryParams: term.trim() ? { q: term.trim() } : {} });
-  }
 
   protected focusContent(): void {
     this.document.getElementById('main')?.focus({ preventScroll: true });

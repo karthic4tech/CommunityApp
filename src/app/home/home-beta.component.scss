@@ -16,19 +16,6 @@ a { text-decoration: none; }
 main { display: block; }
 
 /* Navigation */
-.site-nav { position: sticky; top: 0; z-index: 1000; min-height: 76px; background: rgba(255,255,255,0.97); box-shadow: 0 2px 18px rgba(18,31,42,0.06); }
-.site-nav .container { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; }
-.navbar-brand { display: flex; align-items: center; gap: 0.75rem; color: var(--ink); line-height: 1.05; }
-.brand-symbol { display: grid; place-items: center; width: 42px; height: 42px; color: var(--orange); font-size: 30px; }
-.brand-copy { display: flex; flex-direction: column; gap: 3px; }
-.brand-copy strong { font-size: 15px; font-weight: 700; }
-.brand-copy small { font-size: 12px; font-weight: 700; }
-.navbar-toggler { border: none; background: transparent; font-size: 24px; color: var(--ink); cursor: pointer; padding: 0.5rem; display: none; }
-.nav-menu { display: flex; align-items: center; gap: 2rem; margin-left: auto; }
-.nav-link { color: #293b49; font-size: 13px; font-weight: 600; transition: color 0.2s; }
-.nav-link:hover { color: var(--orange); }
-.language-btn { border: 0; background: transparent; color: var(--ink); font-size: 12px; font-weight: 700; padding: 8px; cursor: pointer; }
-.language-btn:hover { color: var(--orange); }
 .btn-orange { color: #fff; background: var(--orange); border: 1px solid var(--orange); font-size: 12px; font-weight: 700; padding: 11px 16px; border-radius: 24px; transition: all 0.2s; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; }
 .btn-orange:hover { background: var(--orange-dark); border-color: var(--orange-dark); transform: translateY(-1px); }
 
@@ -470,6 +457,8 @@ main { display: block; }
 .contact-detail > i { display: grid; place-items: center; flex: 0 0 34px; width: 34px; height: 34px; border: 1px solid rgba(255,255,255,0.75); border-radius: 50%; }
 .contact-detail strong, .contact-detail small { display: block; }
 .contact-detail strong { font-size: 12px; margin: 0; }
+.contact-detail a { color: inherit; text-decoration: none; }
+.contact-detail a:hover, .contact-detail a:focus-visible { text-decoration: underline; text-underline-offset: .2em; }
 .contact-detail small { color: rgba(255,255,255,0.9); font-size: 11px; line-height: 1.55; margin-top: 3px; }
 .contact-info hr { border-color: rgba(255,255,255,0.35); margin: 25px 0; }
 .social-links { display: flex; gap: 10px; }
@@ -490,10 +479,6 @@ main { display: block; }
 
 /* Responsive */
 @media (max-width: 991.98px) {
-  .navbar-toggler { display: block; }
-  .nav-menu { display: none; flex-direction: column; position: absolute; top: 68px; left: 0; right: 0; background: white; padding: 1rem; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
-  .nav-menu.active { display: flex; }
-  
   .hero-section { 
     min-height: 470px;
   }

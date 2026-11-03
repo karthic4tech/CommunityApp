@@ -16,7 +16,6 @@ import { LanguageService } from '../core/services/language.service';
 export class HomeBetaComponent implements OnInit {
   readonly i18n = inject(LanguageService);
   private sanitizer = inject(DomSanitizer);
-  menuOpen = signal(false);
   isMobile = signal(false);
   
   // Desktop images (use high-quality full images)
@@ -176,11 +175,6 @@ export class HomeBetaComponent implements OnInit {
 
   sanitizeUrl(url: string): SafeStyle {
     return this.sanitizer.bypassSecurityTrustStyle(`url('${url}')`);
-  }
-
-  toggleLanguage(): void {
-    const newLanguage = this.i18n.language() === 'ta' ? 'en' : 'ta';
-    this.i18n.setLanguage(newLanguage);
   }
 
   onSubmitContact(): void {
