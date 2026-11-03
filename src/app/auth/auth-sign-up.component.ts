@@ -19,8 +19,9 @@ import { LanguageService } from '../core/services/language.service';
           <label>Full name<input type="text" formControlName="fullName" autocomplete="name" maxlength="160" required /></label>
           <label>Email<input type="email" formControlName="email" autocomplete="email" required /></label>
           <label>Password<input type="password" formControlName="password" autocomplete="new-password" required /><small>Use at least 8 characters with uppercase, lowercase and a number.</small></label>
+          @if (form.controls.password.dirty && form.controls.password.invalid) { <p class="error" role="alert">Password must be at least 8 characters and include an uppercase letter, a lowercase letter and a number.</p> }
           <label>Confirm password<input type="password" formControlName="confirmPassword" autocomplete="new-password" required /></label>
-          @if (form.controls.confirmPassword.touched && form.controls.password.value !== form.controls.confirmPassword.value) { <p class="error" role="alert">Passwords do not match.</p> }
+          @if (form.controls.confirmPassword.dirty && form.controls.password.value !== form.controls.confirmPassword.value) { <p class="error" role="alert">Passwords do not match.</p> }
           @if (errorMessage(); as message) { <p class="error" role="alert">{{ message }}</p> }
           <button type="submit" [disabled]="form.invalid || submitting() || form.controls.password.value !== form.controls.confirmPassword.value">{{ submitting() ? 'Creating account…' : 'Create account' }}</button>
         </form>

@@ -79,7 +79,15 @@ export class AdminReviewService {
       _notes: notes.trim() || null,
       _verify_provider: verifyProvider,
     });
-    if (error) throw new Error('Unable to complete this review decision.');
+    if (error) {
+      console.error('Unable to complete this review decision.', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+      throw new Error(`Unable to complete this review decision. ${error.message}`);
+    }
   }
 
   async reviewRevision(id: string, decision: 'approve' | 'request_changes' | 'reject', notes: string, verifyProvider: boolean): Promise<void> {
@@ -89,6 +97,14 @@ export class AdminReviewService {
       _notes: notes.trim() || null,
       _verify_provider: verifyProvider,
     });
-    if (error) throw new Error('Unable to complete this revision review.');
+    if (error) {
+      console.error('Unable to complete this revision review.', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+      throw new Error(`Unable to complete this revision review. ${error.message}`);
+    }
   }
 }

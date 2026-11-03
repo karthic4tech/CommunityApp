@@ -38,6 +38,11 @@ import { LanguageService } from '../core/services/language.service';
           <a routerLink="/admin/categories">{{ i18n.language() === 'ta' ? 'வகைகளை நிர்வகிக்கவும்' : 'Manage categories' }}</a>
         </article>
         <article class="card">
+          <h2>{{ i18n.language() === 'ta' ? 'படங்கள்' : 'Media management' }}</h2>
+          <p>{{ i18n.language() === 'ta' ? 'பதிவேற்றப்பட்ட படங்கள், புள்ளியியல் மற்றும் சேமிப்பக பராமரிப்பை நிர்வகிக்கவும்.' : 'Review upload stats, preview files and remove media.' }}</p>
+          <a routerLink="/admin/media">{{ i18n.language() === 'ta' ? 'பட நிர்வாகம்' : 'Open media management' }}</a>
+        </article>
+        <article class="card">
           <h2>{{ i18n.language() === 'ta' ? 'சமர்ப்பிப்பு மதிப்பாய்வு' : 'Listing review' }}</h2>
           <p>{{ i18n.language() === 'ta' ? 'சமூக சேவை சமர்ப்பிப்புகளை சரிபார்த்து வெளியிடவும்.' : 'Review, request changes, reject and publish community service submissions.' }}</p>
           <a routerLink="/admin/listings/review">{{ i18n.language() === 'ta' ? 'மதிப்பாய்வு வரிசையைத் திறக்கவும்' : 'Open review queue' }}</a>

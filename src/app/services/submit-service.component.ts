@@ -3,14 +3,13 @@ import { FormControl, NonNullableFormBuilder, ReactiveFormsModule, Validators } 
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../core/auth/auth.service';
 import { findCategoryPathById, ServiceCategory } from '../core/models/service-category';
-import { DirectoryLocation, locationOptions } from '../core/models/service-listing';
+import { contactValidationMessage, DirectoryLocation, ListingContact, locationOptions, normalizeContactValue } from '../core/models/service-listing';
 import { SubmissionFormInput } from '../core/models/service-submission';
 import { LanguageService } from '../core/services/language.service';
 import { ServiceCategoryService } from '../core/services/service-category.service';
 import { ServiceDirectoryService } from '../core/services/service-directory.service';
 import { ServiceSubmissionService } from '../core/services/service-submission.service';
 import { ListingMediaService } from '../core/services/listing-media.service';
-import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-submit-service',
@@ -19,18 +18,17 @@ import { environment } from '../../environments/environment';
   template: `
     <div class="submit-container">
       <div class="container-xl">
-        <div class="row">
-          <div class="col-lg-8 offset-lg-2">
-            <a class="btn btn-link text-decoration-none mb-4 d-inline-flex align-items-center gap-2" routerLink="/my-submissions">
+        <main class="submit-content mx-auto">
+            <a class="back-link text-decoration-none mb-4 d-inline-flex align-items-center gap-2" routerLink="/my-submissions">
               <i class="bi bi-arrow-left"></i>
               <span>Back to my submissions</span>
             </a>
 
             @if (!loading()) {
-              <div class="page-header mb-5">
-                <p class="text-uppercase fw-bold mb-2" style="color:#d9bd72; font-size:0.75rem; letter-spacing:0.12em;">Community Service</p>
-                <h1 class="h2 fw-bold mb-3" style="color:#0b3026;">{{ editing() ? 'Edit your submission' : 'Add your service' }}</h1>
-                <p class="text-muted lead" style="max-width:600px; margin:0;">Share accurate service information with the Nam Chidambaram community. Submissions are reviewed before publication.</p>
+              <div class="page-header mb-4 mb-lg-5">
+                <p class="eyebrow text-uppercase fw-bold mb-2">Community service</p>
+                <h1 class="page-title fw-bold mb-3">{{ editing() ? 'Edit your submission' : 'Add your service' }}</h1>
+                <p class="page-intro mb-0">Share accurate service information with the Nam Chidambaram community. Submissions are reviewed before publication.</p>
               </div>
             }
 
@@ -76,74 +74,81 @@ import { environment } from '../../environments/environment';
               }
 
               <!-- Step Indicator -->
-              <div class="step-progress mb-5">
+              <nav class="step-progress mb-4 mb-lg-5" aria-label="Submission steps">
                 <div class="step-container">
-                  <button class="step-btn" [class.active]="step() === 1" [class.completed]="step() > 1" (click)="step.set(1)" type="button">
+                  <button class="step-btn" [class.active]="step() === 1" [class.completed]="step() > 1" [attr.aria-current]="step() === 1 ? 'step' : null" (click)="step.set(1)" type="button">
                     <span class="step-circle">1</span>
                     <span class="step-text">Details</span>
                   </button>
-                  <button class="step-btn" [class.active]="step() === 2" [class.completed]="step() > 2" (click)="step.set(2)" type="button">
+                  <button class="step-btn" [class.active]="step() === 2" [class.completed]="step() > 2" [attr.aria-current]="step() === 2 ? 'step' : null" (click)="step.set(2)" type="button">
                     <span class="step-circle">2</span>
                     <span class="step-text">Contacts</span>
                   </button>
-                  <button class="step-btn" [class.active]="step() === 3" [class.completed]="step() > 3" (click)="step.set(3)" type="button">
+                  <button class="step-btn" [class.active]="step() === 3" [class.completed]="step() > 3" [attr.aria-current]="step() === 3 ? 'step' : null" (click)="step.set(3)" type="button">
                     <span class="step-circle">3</span>
                     <span class="step-text">Location</span>
                   </button>
-                  <button class="step-btn" [class.active]="step() === 4" [class.completed]="step() > 4" (click)="step.set(4)" type="button">
+                  <button class="step-btn" [class.active]="step() === 4" [class.completed]="step() > 4" [attr.aria-current]="step() === 4 ? 'step' : null" (click)="step.set(4)" type="button">
                     <span class="step-circle">4</span>
                     <span class="step-text">Review</span>
                   </button>
                 </div>
-              </div>
+              </nav>
 
-              <form [formGroup]="form" (ngSubmit)="step() === 4 ? save(true) : next()" class="card border-0 shadow-sm" novalidate>
-                <div class="card-body p-5">
+              <form [formGroup]="form" (ngSubmit)="step() === 4 ? save(true) : next()" class="submission-form card border-0" novalidate>
+                <div class="card-body p-4 p-lg-5">
                   
                   @if (step() === 1) {
                     <div class="form-section">
-                      <h2 class="h4 fw-bold mb-4" style="color:#0b3026;">Business and service details</h2>
+                      <div class="section-heading mb-4">
+                        <span class="section-icon" aria-hidden="true"><i class="bi bi-card-checklist"></i></span>
+                        <div><h2 class="h4 fw-bold mb-1">Business and service details</h2><p class="mb-0">Start with the details people will use to find and understand your service.</p></div>
+                      </div>
                       
                       <div class="mb-5">
-                        <label class="form-label fw-bold d-block mb-3">Provider type</label>
+                        <fieldset class="provider-type-group">
+                        <legend class="form-label fw-bold d-block mb-3">Provider type <span class="required-mark" aria-hidden="true">*</span></legend>
                         <div class="row g-3">
                           <div class="col-md-4">
                             <input class="btn-check" type="radio" id="provider-individual" formControlName="provider_type" value="individual" />
-                            <label class="btn btn-outline-success w-100 d-flex flex-column gap-2" style="min-height:140px; padding:1.5rem;" for="provider-individual">
-                              <i class="bi bi-person-fill" style="font-size:2rem; color:#075541;"></i>
-                              <span class="fw-600">Individual</span>
+                            <label class="provider-choice btn btn-outline-success w-100 d-flex flex-column gap-2" for="provider-individual">
+                              <i class="bi bi-person-fill" aria-hidden="true"></i>
+                              <span>Individual</span>
                             </label>
                           </div>
                           <div class="col-md-4">
                             <input class="btn-check" type="radio" id="provider-business" formControlName="provider_type" value="business" />
-                            <label class="btn btn-outline-success w-100 d-flex flex-column gap-2" style="min-height:140px; padding:1.5rem;" for="provider-business">
-                              <i class="bi bi-shop" style="font-size:2rem; color:#075541;"></i>
-                              <span class="fw-600">Business</span>
+                            <label class="provider-choice btn btn-outline-success w-100 d-flex flex-column gap-2" for="provider-business">
+                              <i class="bi bi-shop" aria-hidden="true"></i>
+                              <span>Business</span>
                             </label>
                           </div>
                           <div class="col-md-4">
                             <input class="btn-check" type="radio" id="provider-organisation" formControlName="provider_type" value="organisation" />
-                            <label class="btn btn-outline-success w-100 d-flex flex-column gap-2" style="min-height:140px; padding:1.5rem;" for="provider-organisation">
-                              <i class="bi bi-building" style="font-size:2rem; color:#075541;"></i>
-                              <span class="fw-600">Organisation</span>
+                            <label class="provider-choice btn btn-outline-success w-100 d-flex flex-column gap-2" for="provider-organisation">
+                              <i class="bi bi-building" aria-hidden="true"></i>
+                              <span>Organisation</span>
                             </label>
                           </div>
                         </div>
+                        </fieldset>
                       </div>
 
                       <div class="mb-4">
-                        <label for="display_name" class="form-label fw-bold">Provider or business name</label>
+                        <label for="display_name" class="form-label fw-bold">Provider or business name <span class="required-mark" aria-hidden="true">*</span></label>
                         <input class="form-control form-control-lg" id="display_name" formControlName="display_name" maxlength="160" required />
+                        <div class="form-text">Use the name your customers or community members know you by.</div>
                       </div>
 
                       <div class="mb-4">
-                        <label for="provider_description" class="form-label fw-bold">Provider description</label>
-                        <textarea class="form-control form-control-lg" id="provider_description" formControlName="provider_description" rows="3" maxlength="2000"></textarea>
+                        <label for="provider_description" class="form-label fw-bold">About the provider <span class="optional-mark">(optional)</span></label>
+                        <textarea class="form-control form-control-lg" id="provider_description" formControlName="provider_description" rows="3" maxlength="2000" placeholder="Tell the community a little about your business or organisation"></textarea>
+                        <div class="form-text">This describes you or your organisation, not an individual service.</div>
                       </div>
 
                       <div class="row g-4">
                         <div class="col-md-6">
-                          <label for="parent_slug" class="form-label fw-bold">Parent category</label>
+                          <label for="parent_slug" class="form-label fw-bold">Parent category <span class="required-mark" aria-hidden="true">*</span></label>
                           <select class="form-select form-select-lg" id="parent_slug" #parent formControlName="parent_slug" (change)="selectParent(parent.value)" required>
                             <option value="">Select a category</option>
                             @for (category of rootCategories(); track category.id) {
@@ -152,8 +157,8 @@ import { environment } from '../../environments/environment';
                           </select>
                         </div>
                         <div class="col-md-6">
-                          <label for="category_id" class="form-label fw-bold">Subcategory</label>
-                          <select class="form-select form-select-lg" id="category_id" formControlName="category_id" required>
+                          <label for="category_id" class="form-label fw-bold">Subcategory <span class="required-mark" aria-hidden="true">*</span></label>
+                          <select class="form-select form-select-lg" id="category_id" formControlName="category_id" [disabled]="!subcategories().length" required>
                             <option value="">Select a subcategory</option>
                             @for (category of subcategories(); track category.id) {
                               <option [value]="category.id">{{ category.nameEnglish }} — {{ category.nameTamil }}</option>
@@ -163,13 +168,14 @@ import { environment } from '../../environments/environment';
                       </div>
 
                       <div class="mb-4 mt-4">
-                        <label for="title" class="form-label fw-bold">Service title</label>
+                        <label for="title" class="form-label fw-bold">Service title <span class="required-mark" aria-hidden="true">*</span></label>
                         <input class="form-control form-control-lg" id="title" formControlName="title" maxlength="200" required />
                       </div>
 
                       <div class="mb-0">
-                        <label for="description" class="form-label fw-bold">Service description</label>
-                        <textarea class="form-control form-control-lg" id="description" formControlName="description" rows="6" maxlength="5000" required></textarea>
+                        <label for="description" class="form-label fw-bold">Service description <span class="required-mark" aria-hidden="true">*</span></label>
+                        <textarea class="form-control form-control-lg" id="description" formControlName="description" rows="6" maxlength="5000" placeholder="Describe what you offer, who it is for and what makes your service useful" required></textarea>
+                        <div class="form-text">A clear, specific description helps people decide if your service is right for them.</div>
                       </div>
                     </div>
                   }
@@ -177,12 +183,14 @@ import { environment } from '../../environments/environment';
                   @else if (step() === 2) {
                     <div class="form-section">
                       <h2 class="h4 fw-bold mb-2" style="color:#0b3026;">Public contacts</h2>
-                      <p class="text-muted mb-5"><i class="bi bi-info-circle me-2"></i>Only checked contact details will be shown publicly.</p>
+                      <p class="text-muted mb-5"><i class="bi bi-info-circle me-2"></i>Only checked contact details will be shown publicly. Web and social links without a protocol are saved with HTTPS.</p>
 
                       <div class="row g-4">
                         <div class="col-12">
                           <label for="phone" class="form-label fw-bold">Phone</label>
-                          <input class="form-control form-control-lg" id="phone" formControlName="phone" autocomplete="tel" maxlength="40" />
+                          @let phoneError = contactError('phone', form.controls.phone.value);
+                          <input class="form-control form-control-lg" id="phone" formControlName="phone" autocomplete="tel" inputmode="tel" maxlength="40" [class.is-invalid]="!!phoneError" [attr.aria-invalid]="phoneError ? 'true' : null" [attr.aria-describedby]="phoneError ? 'phone-error' : null" />
+                          @if (phoneError; as message) { <div class="invalid-feedback d-block" id="phone-error" role="alert">{{ message }}</div> }
                           <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" id="phone_public" formControlName="phone_public" />
                             <label class="form-check-label" for="phone_public">Show publicly</label>
@@ -191,7 +199,9 @@ import { environment } from '../../environments/environment';
 
                         <div class="col-12">
                           <label for="whatsapp" class="form-label fw-bold">WhatsApp</label>
-                          <input class="form-control form-control-lg" id="whatsapp" formControlName="whatsapp" maxlength="40" />
+                          @let whatsappError = contactError('whatsapp', form.controls.whatsapp.value);
+                          <input class="form-control form-control-lg" id="whatsapp" formControlName="whatsapp" autocomplete="tel" inputmode="tel" maxlength="40" placeholder="+91 98765 43210" [class.is-invalid]="!!whatsappError" [attr.aria-invalid]="whatsappError ? 'true' : null" [attr.aria-describedby]="whatsappError ? 'whatsapp-error' : null" />
+                          @if (whatsappError; as message) { <div class="invalid-feedback d-block" id="whatsapp-error" role="alert">{{ message }}</div> }
                           <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" id="whatsapp_public" formControlName="whatsapp_public" />
                             <label class="form-check-label" for="whatsapp_public">Show publicly</label>
@@ -200,7 +210,9 @@ import { environment } from '../../environments/environment';
 
                         <div class="col-12">
                           <label for="email" class="form-label fw-bold">Email</label>
-                          <input class="form-control form-control-lg" id="email" type="email" formControlName="email" autocomplete="email" maxlength="200" />
+                          @let emailError = contactError('email', form.controls.email.value);
+                          <input class="form-control form-control-lg" id="email" type="email" formControlName="email" autocomplete="email" maxlength="200" [class.is-invalid]="!!emailError" [attr.aria-invalid]="emailError ? 'true' : null" [attr.aria-describedby]="emailError ? 'email-error' : null" />
+                          @if (emailError; as message) { <div class="invalid-feedback d-block" id="email-error" role="alert">{{ message }}</div> }
                           <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" id="email_public" formControlName="email_public" />
                             <label class="form-check-label" for="email_public">Show publicly</label>
@@ -209,7 +221,9 @@ import { environment } from '../../environments/environment';
 
                         <div class="col-12">
                           <label for="website" class="form-label fw-bold">Website</label>
-                          <input class="form-control form-control-lg" id="website" type="url" formControlName="website" maxlength="500" placeholder="https://example.com" />
+                          @let websiteError = contactError('website', form.controls.website.value);
+                          <input class="form-control form-control-lg" id="website" type="url" formControlName="website" maxlength="500" placeholder="example.com or https://example.com" [class.is-invalid]="!!websiteError" [attr.aria-invalid]="websiteError ? 'true' : null" [attr.aria-describedby]="websiteError ? 'website-error' : null" />
+                          @if (websiteError; as message) { <div class="invalid-feedback d-block" id="website-error" role="alert">{{ message }}</div> }
                           <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" id="website_public" formControlName="website_public" />
                             <label class="form-check-label" for="website_public">Show publicly</label>
@@ -218,7 +232,9 @@ import { environment } from '../../environments/environment';
 
                         <div class="col-md-6">
                           <label for="facebook" class="form-label fw-bold">Facebook</label>
-                          <input class="form-control form-control-lg" id="facebook" type="url" formControlName="facebook" maxlength="500" placeholder="https://facebook.com/..." />
+                          @let facebookError = contactError('facebook', form.controls.facebook.value);
+                          <input class="form-control form-control-lg" id="facebook" type="url" formControlName="facebook" maxlength="500" placeholder="facebook.com/your-page" [class.is-invalid]="!!facebookError" [attr.aria-invalid]="facebookError ? 'true' : null" [attr.aria-describedby]="facebookError ? 'facebook-error' : null" />
+                          @if (facebookError; as message) { <div class="invalid-feedback d-block" id="facebook-error" role="alert">{{ message }}</div> }
                           <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" id="facebook_public" formControlName="facebook_public" />
                             <label class="form-check-label" for="facebook_public">Show publicly</label>
@@ -227,7 +243,9 @@ import { environment } from '../../environments/environment';
 
                         <div class="col-md-6">
                           <label for="instagram" class="form-label fw-bold">Instagram</label>
-                          <input class="form-control form-control-lg" id="instagram" type="url" formControlName="instagram" maxlength="500" placeholder="https://instagram.com/..." />
+                          @let instagramError = contactError('instagram', form.controls.instagram.value);
+                          <input class="form-control form-control-lg" id="instagram" type="url" formControlName="instagram" maxlength="500" placeholder="instagram.com/your-profile" [class.is-invalid]="!!instagramError" [attr.aria-invalid]="instagramError ? 'true' : null" [attr.aria-describedby]="instagramError ? 'instagram-error' : null" />
+                          @if (instagramError; as message) { <div class="invalid-feedback d-block" id="instagram-error" role="alert">{{ message }}</div> }
                           <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" id="instagram_public" formControlName="instagram_public" />
                             <label class="form-check-label" for="instagram_public">Show publicly</label>
@@ -236,7 +254,9 @@ import { environment } from '../../environments/environment';
 
                         <div class="col-12">
                           <label for="youtube" class="form-label fw-bold">YouTube</label>
-                          <input class="form-control form-control-lg" id="youtube" type="url" formControlName="youtube" maxlength="500" placeholder="https://youtube.com/..." />
+                          @let youtubeError = contactError('youtube', form.controls.youtube.value);
+                          <input class="form-control form-control-lg" id="youtube" type="url" formControlName="youtube" maxlength="500" placeholder="youtube.com/@your-channel or youtu.be/video" [class.is-invalid]="!!youtubeError" [attr.aria-invalid]="youtubeError ? 'true' : null" [attr.aria-describedby]="youtubeError ? 'youtube-error' : null" />
+                          @if (youtubeError; as message) { <div class="invalid-feedback d-block" id="youtube-error" role="alert">{{ message }}</div> }
                           <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" id="youtube_public" formControlName="youtube_public" />
                             <label class="form-check-label" for="youtube_public">Show publicly</label>
@@ -318,13 +338,11 @@ import { environment } from '../../environments/environment';
                       </div>
 
                       <div class="mb-4">
-                        <label for="images" class="form-label fw-bold">Service images <span class="text-muted">(up to 10, 5 MB each)</span></label>
-                        <input class="form-control form-control-lg" id="images" type="file" accept="image/*" multiple (change)="selectFiles($event)" />
+                        <label for="images" class="form-label fw-bold">Service images <span class="text-muted">(up to 10, compressed before upload)</span></label>
+                        <input class="form-control form-control-lg" id="images" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple (change)="selectFiles($event)" />
                         @if (selectedFiles().length) {
                           <small class="text-success d-block mt-2"><i class="bi bi-check-circle me-1"></i>{{ selectedFiles().length }} image(s) ready</small>
-                        }
-                        @if (!storageConfigured()) {
-                          <small class="text-warning d-block mt-2"><i class="bi bi-info-circle me-1"></i>Storage not configured. Text details only.</small>
+                          @if (published()) { <small class="text-muted d-block mt-1"><i class="bi bi-info-circle me-1"></i>For a published listing, photos go live after the administrator approves your update.</small> }
                         }
                       </div>
 
@@ -346,7 +364,7 @@ import { environment } from '../../environments/environment';
                   }
                 </div>
 
-                <div class="card-footer bg-light border-top p-5">
+                <div class="card-footer submission-actions p-4 p-lg-5">
                   <div class="d-flex gap-3 justify-content-between">
                     <button type="button" class="btn btn-lg btn-outline-secondary" [disabled]="step() === 1 || saving()" (click)="previous()">
                       <i class="bi bi-chevron-left me-2"></i>Back
@@ -372,265 +390,310 @@ import { environment } from '../../environments/environment';
                 </div>
               </form>
             }
-          </div>
-        </div>
+        </main>
       </div>
     </div>
   `,
   styles: `
     .submit-container {
-      background: linear-gradient(180deg, #fbfaf6 0%, #fbfaf6 100%);
+      background: #fbfaf6;
       min-height: 100vh;
-      padding: 2.5rem 0;
+      padding: clamp(1.5rem, 4vw, 3rem) 0 4rem;
     }
 
-    .page-header {
-      animation: fadeInDown 0.6s ease-out;
+    .submit-content {
+      width: min(100%, 980px);
+    }
+
+    .back-link {
+      color: #14563d;
+      font-size: 1rem;
+      font-weight: 600;
+      min-height: 44px;
+      align-items: center;
+    }
+
+    .back-link:hover { color: #0b3928; }
+    .back-link i { font-size: 1.1rem; }
+
+    .eyebrow {
+      color: #b48b32;
+      font-size: .78rem;
+      letter-spacing: .14em;
+    }
+
+    .page-title {
+      color: #0b3026;
+      font-size: clamp(2rem, 4vw, 2.65rem);
+      line-height: 1.15;
+      letter-spacing: -.035em;
+    }
+
+    .page-intro {
+      max-width: 720px;
+      color: #53665d;
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+      line-height: 1.6;
     }
 
     .step-progress {
-      animation: fadeIn 0.6s ease-out;
-      margin-bottom: 2rem;
-    }
-
-    .step-container {
-      display: flex;
-      gap: 1rem;
-      justify-content: flex-start;
-      align-items: center;
-      flex-wrap: wrap;
       padding-bottom: 1.5rem;
       border-bottom: 1px solid #e2e7dd;
     }
 
-    .step-btn {
+    .step-container {
+      display: flex;
+      gap: .75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .submit-container .step-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
-      padding: 0.65rem 1.25rem;
-      border: 2px solid #c3d0c8;
-      background: white;
-      border-radius: 999px;
+      gap: .6rem;
+      min-height: 54px;
+      padding: .65rem 1.15rem;
+      border: 1px solid #c8d8cf;
+      border-radius: .8rem;
+      color: #315a49;
+      background: #edf3ee;
+      font-size: 1rem;
+      font-weight: 650;
       cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #62746b;
+      transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
     }
 
     .step-circle {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 24px;
-      height: 24px;
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
-      background: #e5ebe7;
-      color: #62746b;
-      font-weight: 700;
-      font-size: 0.75rem;
-      flex-shrink: 0;
-      transition: all 0.3s ease;
+      color: #315a49;
+      background: #fff;
+      font-size: .82rem;
+      font-weight: 750;
+      flex: 0 0 auto;
     }
 
-    .step-text {
-      font-weight: 600;
-      color: #62746b;
-      transition: color 0.3s ease;
+    .step-text { color: inherit; }
+
+    .submit-container .step-btn.active,
+    .submit-container .step-btn.completed {
+      border-color: #176346;
+      color: #fff;
+      background: #176346;
     }
 
-    .step-btn.completed {
-      border-color: #075541;
-      color: #075541;
-    }
-
-    .step-btn.completed .step-circle {
+    .submit-container .step-btn.active .step-circle,
+    .submit-container .step-btn.completed .step-circle {
+      color: #fff;
       background: #075541;
-      color: white;
     }
 
-    .step-btn.completed .step-text {
+    .submit-container .step-btn:hover {
+      border-color: #176346;
+      box-shadow: 0 0 0 3px rgba(23, 99, 70, .1);
+    }
+
+    .submit-container .step-btn:focus-visible,
+    .submit-container .provider-choice:focus-visible {
+      outline: 3px solid #17583f;
+      outline-offset: 3px;
+    }
+
+    .submission-form {
+      overflow: hidden;
+      border: 1px solid #eceee8 !important;
+      border-radius: 1.15rem;
+      background: #fff;
+      box-shadow: 0 12px 34px rgba(30, 55, 42, .07);
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: flex-start;
+      gap: .9rem;
+    }
+
+    .section-heading h2 { color: #0b3026; }
+    .section-heading p { color: #66786f; line-height: 1.55; }
+
+    .section-icon {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      flex: 0 0 auto;
+      border-radius: .8rem;
+      color: #176346;
+      background: #eaf3ed;
+      font-size: 1.2rem;
+    }
+
+    .provider-type-group {
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    .provider-type-group legend { float: none; width: auto; }
+
+    .provider-type-group .row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      margin: 0;
+    }
+
+    .provider-type-group .row > .col-md-4 {
+      width: auto;
+      max-width: none;
+      padding: 0;
+    }
+
+    .provider-choice {
+      min-height: 150px;
+      padding: 1.25rem;
+      border: 1.5px solid #c8d8cf;
+      border-radius: .95rem;
       color: #075541;
+      background: #fff;
+      font-weight: 650;
+      justify-content: center;
+      transition: transform .18s ease, background-color .18s ease, border-color .18s ease, box-shadow .18s ease;
     }
 
-    .step-btn.active {
+    .provider-choice i {
+      color: #176346;
+      font-size: 2rem;
+    }
+
+    .provider-choice:hover {
+      border-color: #176346;
+      color: #075541;
+      background: #f5faf6;
+      transform: translateY(-2px);
+    }
+
+    .submit-container .btn-check:checked + .provider-choice {
       border-color: #075541;
-      background: white;
-      color: #075541;
-      box-shadow: 0 0 0 3px rgba(7, 85, 65, 0.12);
-    }
-
-    .step-btn.active .step-circle {
+      color: #fff;
       background: #075541;
-      color: white;
+      box-shadow: 0 8px 18px rgba(7, 85, 65, .18);
     }
 
-    .step-btn.active .step-text {
-      color: #075541;
-      font-weight: 700;
-    }
+    .submit-container .btn-check:checked + .provider-choice i { color: #fff; }
 
-    .step-btn:hover:not(.active) {
-      border-color: #43876a;
-      color: #0e4932;
-    }
+    .form-label { color: #294c3d; }
+    .required-mark { color: #a64b37; }
+    .optional-mark { color: #6b7972; font-size: .875rem; font-weight: 450; }
+    .form-text { color: #66786f; font-size: .84rem; line-height: 1.5; }
 
-    .step-btn:hover:not(.active) .step-circle {
-      background: #e0f0eb;
-    }
-
-    .form-control-lg,
-    .form-select-lg {
+    .submit-container .form-control-lg,
+    .submit-container .form-select-lg {
+      min-height: 52px;
+      padding: .75rem 1rem;
+      border: 1px solid #c5d3ca;
+      border-radius: .7rem;
       font-size: 1rem;
-      padding: 0.75rem 1rem;
-      min-height: 48px;
-      border: 1px solid #c3d0c8;
-      border-radius: 0.5rem;
-      transition: all 0.2s ease;
+      transition: border-color .18s ease, box-shadow .18s ease;
     }
 
-    .form-control:focus,
-    .form-select:focus,
-    textarea:focus {
+    .submit-container textarea.form-control-lg { min-height: 125px; }
+    .submit-container #description { min-height: 180px; }
+
+    .submit-container .form-control:focus,
+    .submit-container .form-select:focus {
       border-color: #43876a;
-      box-shadow: 0 0 0 0.2rem rgba(23, 99, 70, 0.15);
+      box-shadow: 0 0 0 .22rem rgba(23, 99, 70, .15);
     }
 
-    .btn-success {
-      background-color: #075541;
+    .submission-actions {
+      border-top: 1px solid #e4e9e4;
+      background: #f7f9f7;
+    }
+
+    .submit-container .btn-success {
       border-color: #075541;
-      font-weight: 600;
+      color: #fff;
+      background: #075541;
+      font-weight: 650;
     }
 
-    .btn-success:hover:not(:disabled) {
-      background-color: #053d2f;
+    .submit-container .btn-success:hover:not(:disabled) {
       border-color: #053d2f;
+      background: #053d2f;
     }
 
-    .btn-outline-secondary {
-      color: #075541;
+    .submit-container .btn-outline-secondary {
       border-color: #b8c9bf;
-      font-weight: 600;
+      color: #14563d;
+      background: #fff;
+      font-weight: 650;
     }
 
-    .btn-outline-secondary:hover:not(:disabled) {
-      background-color: #f2f7f2;
+    .submit-container .btn-outline-secondary:hover:not(:disabled) {
       border-color: #87aa94;
       color: #0e4932;
+      background: #f2f7f2;
     }
 
-    .btn-outline-success {
-      border: 2px solid #c3d0c8;
-      color: #075541;
-      transition: all 0.3s ease;
-    }
-
-    .btn-outline-success:hover {
-      border-color: #075541;
-      background-color: #f8fbf8;
-    }
-
-    .btn-check:checked + .btn-outline-success {
-      background-color: #075541;
-      border-color: #075541;
-      color: white;
-      box-shadow: 0 4px 12px rgba(7, 85, 65, 0.2);
-    }
-
-    .card {
-      box-shadow: 0 2px 8px rgba(20, 55, 39, 0.08);
-      border: 1px solid #e2e7dd;
-    }
-
-    .card-footer {
-      border-color: #e2e7dd;
-    }
-
-    .alert {
-      border: 0;
-      border-radius: 0.75rem;
-      animation: slideDown 0.4s ease-out;
-    }
-
-    .alert-info {
-      background: #f0f8f5;
+    .submit-container .btn-light {
       color: #14563d;
+      font-weight: 650;
     }
 
-    .alert-warning {
-      background: #fffaf0;
-      color: #625329;
-    }
+    .alert { border: 0; border-radius: .85rem; }
+    .alert-info { color: #14563d; background: #edf6f1; }
+    .alert-warning { color: #625329; background: #fff8e9; }
+    .alert-danger { color: #8a261f; background: #fdf3f1; }
+    .form-section { animation: fadeIn .25s ease-out; }
 
-    .alert-danger {
-      background: #fdf3f1;
-      color: #8a261f;
-    }
-
-    .form-section {
-      animation: fadeIn 0.5s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    @keyframes fadeInDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     @media (max-width: 768px) {
+      .provider-type-group .row { grid-template-columns: 1fr; }
+
       .step-container {
-        gap: 0.5rem;
-        padding-bottom: 1rem;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .6rem;
       }
 
-      .step-btn {
-        padding: 0.55rem 1rem;
-        font-size: 0.85rem;
+      .submit-container .step-btn {
+        width: 100%;
+        min-height: 48px;
+        padding: .55rem .7rem;
+        font-size: .9rem;
       }
 
-      .step-circle {
-        width: 20px;
-        height: 20px;
-        font-size: 0.65rem;
+      .provider-choice { min-height: 118px; }
+      .submit-container .form-control-lg,
+      .submit-container .form-select-lg {
+        min-height: 48px;
+        font-size: 1rem;
       }
 
-      .form-control-lg,
-      .form-select-lg {
-        font-size: 0.95rem;
-        padding: 0.65rem 0.85rem;
-        min-height: 44px;
-      }
+      .submission-actions .d-flex { gap: .75rem !important; }
+      .submission-actions .btn { min-height: 48px; }
+      .submit-container #description { min-height: 150px; }
+    }
 
-      .card-body,
-      .card-footer {
-        padding: 1.5rem !important;
-      }
-
-      .d-flex {
-        gap: 1rem !important;
-      }
+    @media (max-width: 480px) {
+      .submit-container { padding-top: 1.25rem; }
+      .page-intro { font-size: 1rem; }
+      .section-heading { gap: .65rem; }
+      .section-icon { width: 36px; height: 36px; border-radius: .65rem; }
+      .provider-choice { min-height: 108px; padding: .8rem; }
+      .submission-actions > .d-flex { align-items: stretch; }
+      .submission-actions > .d-flex > .btn,
+      .submission-actions > .d-flex > div,
+      .submission-actions > .d-flex > div > .btn { font-size: .9rem; }
+      .submission-actions > .d-flex > div { gap: .5rem !important; }
     }
   `,
 })
@@ -652,14 +715,14 @@ export class SubmitServiceComponent implements OnInit {
   protected readonly saving = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly selectedFiles = signal<readonly File[]>([]);
-  protected readonly storageConfigured = signal(Boolean(environment.supabaseStorageBucket.trim()));
   protected readonly locationRows = signal<DirectoryLocation[]>([]);
   protected readonly existingId = signal<string | null>(null);
   protected readonly existingStatus = signal<string | null>(null);
   protected readonly pendingUpdate = signal(false);
+  protected readonly selectedParentSlug = signal('');
   protected readonly rootCategories = computed(() => this.categories.categories());
   protected readonly subcategories = computed<ServiceCategory[]>(() => {
-    const parent = this.categories.categories().find(category => category.slug === this.form.controls.parent_slug.value);
+    const parent = this.categories.categories().find(category => category.slug === this.selectedParentSlug());
     return parent?.subcategories ?? [];
   });
   protected readonly places = computed(() => locationOptions(this.locationRows(), 'en'));
@@ -673,7 +736,11 @@ export class SubmitServiceComponent implements OnInit {
 
   ngOnInit(): void { void this.load(); }
 
-  protected selectParent(slug: string): void { this.form.controls.parent_slug.setValue(slug); this.form.controls.category_id.setValue(''); }
+  protected selectParent(slug: string): void {
+    this.selectedParentSlug.set(slug);
+    this.form.controls.parent_slug.setValue(slug);
+    this.form.controls.category_id.setValue('');
+  }
   protected selectFiles(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files ?? []);
@@ -684,20 +751,26 @@ export class SubmitServiceComponent implements OnInit {
   protected previous(): void { this.step.update(value => Math.max(1, value - 1)); }
   protected canNext(): boolean {
     if (this.step() === 1) return Boolean(this.form.controls.display_name.value.trim() && this.form.controls.category_id.value && this.form.controls.title.value.trim() && this.form.controls.description.value.trim());
-    if (this.step() === 2) return true;
+    if (this.step() === 2) return !this.firstInvalidContactError();
     if (this.step() === 3) return true;
     return true;
   }
 
+  protected contactError(type: ListingContact['contact_type'], value: string): string | null {
+    return contactValidationMessage(type, value);
+  }
+
   protected async save(submitForReview: boolean): Promise<void> {
+    const contactError = this.firstInvalidContactError();
+    if (contactError) { this.errorMessage.set(contactError); return; }
     if (!this.canNext() && submitForReview) { this.errorMessage.set('Complete the required service details first.'); return; }
     if (submitForReview && !this.form.controls.declaration.value) { this.errorMessage.set('Confirm the declaration before submitting.'); return; }
     this.saving.set(true); this.errorMessage.set(null);
     try {
       const raw = this.form.getRawValue();
-      const input: SubmissionFormInput = { listingId: this.existingId(), providerId: this.loadedProviderId, provider: { provider_type: this.form.controls.provider_type.value, display_name: this.form.controls.display_name.value.trim(), description: this.form.controls.provider_description.value.trim() || null, public_email: raw.email_public && raw.email.trim() ? raw.email.trim() : null, website_url: raw.website_public && raw.website.trim() ? raw.website.trim() : null, address: this.form.controls.address.value.trim() || null, postal_code: this.form.controls.postal_code.value.trim() || null, latitude: this.form.controls.latitude.value, longitude: this.form.controls.longitude.value }, listing: { category_id: this.form.controls.category_id.value, title: this.form.controls.title.value.trim(), description: this.form.controls.description.value.trim() }, contacts: this.publicContacts(), locations: this.locationsInput(), submitForReview };
+      const input: SubmissionFormInput = { listingId: this.existingId(), providerId: this.loadedProviderId, provider: { provider_type: this.form.controls.provider_type.value, display_name: this.form.controls.display_name.value.trim(), description: this.form.controls.provider_description.value.trim() || null, public_email: raw.email_public && raw.email.trim() ? normalizeContactValue('email', raw.email) : null, website_url: raw.website_public && raw.website.trim() ? normalizeContactValue('website', raw.website) : null, address: this.form.controls.address.value.trim() || null, postal_code: this.form.controls.postal_code.value.trim() || null, latitude: this.form.controls.latitude.value, longitude: this.form.controls.longitude.value }, listing: { category_id: this.form.controls.category_id.value, title: this.form.controls.title.value.trim(), description: this.form.controls.description.value.trim() }, contacts: this.publicContacts(), locations: this.locationsInput(), submitForReview };
       const listingId = this.published() ? await this.submissions.saveRevision(input) : await this.submissions.save(input);
-      if (!this.published() && this.selectedFiles().length) await this.media.uploadImages(listingId, this.selectedFiles(), this.existingMediaCount);
+      if (this.selectedFiles().length) await this.media.uploadImages(listingId, this.selectedFiles(), this.existingMediaCount);
       await this.router.navigateByUrl('/my-submissions');
     } catch (error) { this.errorMessage.set(error instanceof Error ? error.message : 'Unable to save this submission.'); }
     finally { this.saving.set(false); }
@@ -705,12 +778,28 @@ export class SubmitServiceComponent implements OnInit {
 
   private loadedProviderId: string | null = null;
   private existingMediaCount = 0;
+  private firstInvalidContactError(): string | null {
+    const raw = this.form.getRawValue();
+    const values = [
+      ['phone', raw.phone], ['whatsapp', raw.whatsapp], ['email', raw.email], ['website', raw.website], ['facebook', raw.facebook], ['instagram', raw.instagram], ['youtube', raw.youtube],
+    ] as const;
+    for (const [type, value] of values) {
+      const message = contactValidationMessage(type, value);
+      if (message) return message;
+    }
+    return null;
+  }
+
   private publicContacts() {
     const raw = this.form.getRawValue();
     const values = [
       ['phone', raw.phone, raw.phone_public], ['whatsapp', raw.whatsapp, raw.whatsapp_public], ['email', raw.email, raw.email_public], ['website', raw.website, raw.website_public], ['facebook', raw.facebook, raw.facebook_public], ['instagram', raw.instagram, raw.instagram_public], ['youtube', raw.youtube, raw.youtube_public],
     ] as const;
-    return values.filter(([, value]) => value.trim()).map(([contact_type, contact_value, isPublic], index) => ({ contact_type, contact_value: contact_value.trim(), is_public: isPublic, sort_order: index }));
+    return values.flatMap(([contact_type, value, is_public], sort_order) => {
+      if (!value.trim()) return [];
+      const contact_value = normalizeContactValue(contact_type, value) ?? value.trim();
+      return [{ contact_type, contact_value, is_public, sort_order }];
+    });
   }
 
   private locationsInput() {
@@ -729,12 +818,15 @@ export class SubmitServiceComponent implements OnInit {
         if (!existing) throw new Error('This submission was not found.');
         this.existingId.set(existing.id); this.existingStatus.set(existing.status); this.pendingUpdate.set(Boolean(existing.service_listing_revisions?.some(revision => revision.status === 'pending_review'))); this.loadedProviderId = existing.provider_id; this.existingMediaCount = existing.listing_media?.length ?? 0;
         const path = findCategoryPathById(this.categories.categories(), existing.category_id);
-        this.form.patchValue({ provider_type: existing.service_providers.provider_type as 'individual' | 'business' | 'organisation', display_name: existing.service_providers.display_name, provider_description: existing.service_providers.description ?? '', parent_slug: path?.[0]?.slug ?? '', category_id: existing.category_id, title: existing.title, description: existing.description, address: existing.service_providers.address ?? '', postal_code: existing.service_providers.postal_code ?? '', latitude: existing.service_providers.latitude, longitude: existing.service_providers.longitude });
+        this.selectedParentSlug.set(path?.[0]?.slug ?? '');
+        const listingLocations = existing.listing_locations ?? [];
+        const basedLocation = listingLocations.find(location => location.coverage_type === 'based_here');
+        this.form.patchValue({ provider_type: existing.service_providers.provider_type as 'individual' | 'business' | 'organisation', display_name: existing.service_providers.display_name, provider_description: existing.service_providers.description ?? '', parent_slug: path?.[0]?.slug ?? '', category_id: existing.category_id, title: existing.title, description: existing.description, based_location_id: basedLocation?.locations?.id ?? '', coverage_type: basedLocation?.coverage_type ?? 'based_here', address: existing.service_providers.address ?? '', postal_code: existing.service_providers.postal_code ?? '', latitude: existing.service_providers.latitude, longitude: existing.service_providers.longitude });
         this.form.controls.phone.setValue(existing.listing_contacts?.find(contact => contact.contact_type === 'phone')?.contact_value ?? '');
         this.form.controls.whatsapp.setValue(existing.listing_contacts?.find(contact => contact.contact_type === 'whatsapp')?.contact_value ?? '');
         this.form.controls.email.setValue(existing.listing_contacts?.find(contact => contact.contact_type === 'email')?.contact_value ?? existing.service_providers.public_email ?? '');
         this.form.controls.website.setValue(existing.listing_contacts?.find(contact => contact.contact_type === 'website')?.contact_value ?? existing.service_providers.website_url ?? '');
-        this.form.controls.coverage_ids.setValue(existing.listing_locations?.map(location => location.locations?.id).filter((value): value is string => Boolean(value)) ?? []);
+        this.form.controls.coverage_ids.setValue(listingLocations.filter(location => location.coverage_type === 'serves_here').map(location => location.locations?.id).filter((value): value is string => Boolean(value)));
       }
     } catch (error) { this.errorMessage.set(error instanceof Error ? error.message : 'Unable to load the submission form.'); }
     finally { this.loading.set(false); }

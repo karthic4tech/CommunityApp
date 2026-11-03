@@ -1,0 +1,124 @@
+<section class="media-upload" [attr.aria-labelledby]="headingId()">
+  <h2 class="visually-hidden" [id]="headingId()">Upload images</h2>
+
+  <div
+    class="dropzone"
+    [class.dropzone-active]="dragActive()"
+    [class.dropzone-disabled]="disabled()"
+    (drop)="onDrop($event)"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave()"
+    (dragend)="onDragEnd()"
+    aria-describedby="dropzone-hint"
+  >
+    <i class="bi bi-cloud-arrow-up dropzone-icon" aria-hidden="true"></i>
+    <p class="dropzone-text">Drag and drop {{ uploadType() === 'image' ? 'images' : 'files' }} here</p>
+    <button type="button" class="browse-button" [disabled]="disabled()" (click)="picker.click()">
+      Browse {{ uploadType() === 'image' ? 'images' : 'files' }}
+    </button>
+    <p class="dropzone-hint" id="dropzone-hint">
+      @if (uploadType() === 'image') {
+        JPEG, PNG, WebP or GIF. Up to {{ maxFileSizeMb() }} MB each, {{ maxFiles() }} {{ maxFiles() === 1 ? 'image' : 'images' }} max.
+      } @else {
+        PDF or image. Up to {{ maxFileSizeMb() }} MB each.
+      }
+    </p>
+    <input
+      #picker
+      type="file"
+      class="visually-hidden-input"
+      [accept]="acceptAttr()"
+      [multiple]="multiple()"
+      [disabled]="disabled()"
+      tabindex="-1"
+      aria-hidden="true"
+      (change)="onFilesSelected($event)"
+    />
+  </div>
+
+  @if (error(); as errorMessage) {
+    <p class="alert alert-error" role="alert">{{ errorMessage }}</p>
+  }
+  @if (message(); as successMessage) {
+    <p class="alert alert-success" role="status">{{ successMessage }}</p>
+  }
+
+  @if (drafts().length) {
+    <ul class="draft-list" aria-live="polite" aria-label="Selected files">
+      @for (draft of drafts(); track draft.id) {
+        <li class="draft">
+          @if (draft.previewUrl && allowPreview()) {
+            <img class="draft-thumb" [src]="draft.previewUrl" [alt]="draft.file.name" width="96" height="96" loading="lazy" />
+          } @else {
+            <span class="draft-thumb draft-thumb-file" aria-hidden="true"><i class="bi bi-file-earmark"></i></span>
+          }
+          <span class="draft-meta">
+            <span class="draft-name">{{ draft.file.name }}</span>
+            <span class="draft-sub">{{ formatSize(draft.file.size) }}@if (draft.status === 'uploading') { · Uploading… }</span>
+            @if (draft.status === 'failed' && draft.error) {
+              <span class="draft-error" role="alert">{{ draft.error }}</span>
+            }
+            @if (draft.status === 'uploading') {
+              <span class="progress" role="progressbar" [attr.aria-label]="'Uploading ' + draft.file.name" aria-valuetext="Uploading"></span>
+            }
+          </span>
+          <button type="button" class="icon-button" [attr.aria-label]="'Remove ' + draft.file.name" [disabled]="draft.status === 'uploading'" (click)="removeDraft(draft.id)">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </li>
+      }
+    </ul>
+
+    <div class="actions">
+      <button type="button" class="secondary-action" (click)="clearAll()" [disabled]="uploadingAll()">Clear all</button>
+      @if (failedDrafts().length) {
+        <button type="button" class="secondary-action" (click)="upload()" [disabled]="uploadingAll()">Retry {{ failedDrafts().length }} failed</button>
+      }
+      <button type="button" class="primary-action" (click)="upload()" [disabled]="!canUpload()">
+        @if (uploadingAll()) { Uploading… } @else { Upload {{ readyCount() }} {{ readyCount() === 1 ? 'file' : 'files' }} }
+      </button>
+    </div>
+  }
+
+  @if (existingLoading()) {
+    <p class="existing-state" role="status">Loading images…</p>
+  } @else if (existing().length) {
+    <ul class="existing-list" aria-label="Uploaded images">
+      @for (item of existing(); track item.asset.id) {
+        <li class="existing-item">
+          @if (allowPreview()) {
+            <img class="existing-thumb" [src]="item.url" [alt]="item.alt" width="96" height="96" loading="lazy" />
+          }
+          <span class="existing-meta">
+            <span class="existing-name">{{ item.fileName }}@if (item.primary) { <span class="primary-badge">Primary</span> }</span>
+            <span class="existing-sub">{{ formatSize(item.size) }}</span>
+          </span>
+          <span class="existing-actions">
+            @if (allowReplace()) {
+              <button type="button" class="secondary-action small" [disabled]="disabled()" (click)="requestReplace(item.asset.id, replacePicker)">Replace</button>
+            }
+            @if (allowDelete()) {
+              @if (confirmDeleteId() === item.asset.id) {
+                <button type="button" class="danger-action small" (click)="confirmDelete()">Confirm delete</button>
+                <button type="button" class="secondary-action small" (click)="cancelDelete()">Cancel</button>
+              } @else {
+                <button type="button" class="secondary-action small" [disabled]="disabled()" (click)="requestDelete(item.asset.id)">Delete</button>
+              }
+            }
+          </span>
+        </li>
+      }
+    </ul>
+  }
+
+  <input
+    #replacePicker
+    type="file"
+    class="visually-hidden-input"
+    [accept]="acceptAttr()"
+    [disabled]="disabled()"
+    tabindex="-1"
+    aria-hidden="true"
+    (change)="onReplaceSelected($event)"
+  />
+</section>

@@ -29,7 +29,7 @@ $$;
 
 -- New, purpose-specific bookkeeping, not duplicate directory data. No query text,
 -- tokens, IP addresses or model output are stored. No direct client table access.
-create table public.ai_search_usage (
+create table if not exists public.ai_search_usage (
   bucket text not null,
   window_start timestamptz not null,
   requests integer not null check (requests > 0),
@@ -38,7 +38,7 @@ create table public.ai_search_usage (
 alter table public.ai_search_usage enable row level security;
 revoke all on public.ai_search_usage from public, anon, authenticated;
 
-create function public.reserve_ai_search() returns boolean
+create or replace function public.reserve_ai_search() returns boolean
 language plpgsql volatile security definer set search_path = '' as $$
 declare
   minute_start timestamptz := date_trunc('minute', now());

@@ -136,7 +136,7 @@ export class AuthService {
   async sendPasswordReset(email: string): Promise<void> {
     this.errorState.set(null);
     try {
-      const redirectTo = environment.supabasePasswordResetRedirectUrl || undefined;
+      const redirectTo = environment.supabasePasswordResetRedirectUrl || (globalThis.location?.origin ? `${globalThis.location.origin}/auth/reset-password` : undefined);
       const { error } = await this.supabase.client.auth.resetPasswordForEmail(email.trim(), redirectTo ? { redirectTo } : undefined);
       if (error) throw error;
     } catch (error) {
@@ -217,7 +217,8 @@ export class AuthService {
 
   private authRedirectUrl(): string | undefined {
     if (environment.supabaseAuthRedirectUrl) return environment.supabaseAuthRedirectUrl;
-    return undefined;
+    const origin = globalThis.location?.origin;
+    return origin ? `${origin}/auth/verify-email` : undefined;
   }
 
   private mapAuthError(error: unknown, fallback: string): string {

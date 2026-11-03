@@ -21,6 +21,8 @@ export interface ListingContact {
   sort_order: number;
 }
 
+type ContactType = ListingContact['contact_type'];
+
 export interface ServiceListing {
   id: string;
   category_id: string;
@@ -88,33 +90,76 @@ export function publicListing(listing: ServiceListing): boolean {
   return listing.status === 'published' && listing.service_providers?.verification_status === 'verified';
 }
 
-export function contactHref(type: ListingContact['contact_type'], value: string): string | null {
+const EMAIL_PATTERN = /^[a-z\d.!#$%&'*+/=?^_`{|}~-]+@[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?(?:\.[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?)+$/i;
+const SOCIAL_HOSTS: Partial<Record<ContactType, readonly string[]>> = {
+  facebook: ['facebook.com', 'www.facebook.com'],
+  instagram: ['instagram.com', 'www.instagram.com'],
+  youtube: ['youtube.com', 'www.youtube.com', 'youtu.be'],
+};
+
+export function normalizeContactValue(type: ContactType, value: string): string | null {
   const trimmed = value.trim();
+  if (!trimmed) return null;
+
   if (type === 'phone' || type === 'whatsapp') {
     if (!/^\+?[\d\s().-]+$/.test(trimmed)) return null;
     const phone = trimmed.replace(/[\s().-]/g, '');
-    if (!/^\+?\d{7,15}$/.test(phone)) return null;
-    return type === 'phone' ? `tel:${phone}` : `https://wa.me/${phone.replace(/^\+/, '')}`;
+    return /^\+?\d{7,15}$/.test(phone) ? phone : null;
   }
+
   if (type === 'email') {
-    return /^[^\s@?&#]+@[^\s@?&#]+\.[^\s@?&#]+$/.test(trimmed) ? `mailto:${trimmed}` : null;
+    const [localPart, domain] = trimmed.split('@');
+    if (!localPart || !domain || trimmed.length > 254 || localPart.length > 64 || localPart.startsWith('.') || localPart.endsWith('.') || localPart.includes('..') || !EMAIL_PATTERN.test(trimmed)) return null;
+    return trimmed;
   }
-  if (type === 'website') {
+
+  if (type === 'website' || type === 'facebook' || type === 'instagram' || type === 'youtube') {
+    const hasHttpScheme = /^https?:\/\//i.test(trimmed);
+    const hasOtherScheme = /^[a-z][a-z\d+.-]*:/i.test(trimmed);
+    if (hasOtherScheme && !hasHttpScheme) return null;
+
+    const candidate = trimmed.startsWith('//') ? `https:${trimmed}` : hasHttpScheme ? trimmed : `https://${trimmed}`;
     try {
-      const url = new URL(trimmed);
-      return ['https:', 'http:'].includes(url.protocol) && !url.username && !url.password ? url.href : null;
-    } catch { return null; }
+      const url = new URL(candidate);
+      const hostname = url.hostname.toLowerCase();
+      const domainLabels = hostname.split('.');
+      const validDomain = domainLabels.length > 1 && domainLabels.every(label => /^[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?$/i.test(label));
+      if (!['https:', 'http:'].includes(url.protocol) || !validDomain || url.username || url.password) return null;
+
+      if (type !== 'website') {
+        if (!SOCIAL_HOSTS[type]?.includes(hostname)) return null;
+        url.protocol = 'https:';
+      }
+      return url.href;
+    } catch {
+      return null;
+    }
   }
-  if (type === 'facebook' || type === 'instagram' || type === 'youtube') {
-    try {
-      const url = new URL(trimmed);
-      const hosts: Record<'facebook' | 'instagram' | 'youtube', readonly string[]> = {
-        facebook: ['facebook.com', 'www.facebook.com'],
-        instagram: ['instagram.com', 'www.instagram.com'],
-        youtube: ['youtube.com', 'www.youtube.com', 'youtu.be'],
-      };
-      return url.protocol === 'https:' && !url.username && !url.password && hosts[type].includes(url.hostname.toLowerCase()) ? url.href : null;
-    } catch { return null; }
-  }
+
   return null;
+}
+
+export function contactValidationMessage(type: ContactType, value: string): string | null {
+  if (!value.trim() || normalizeContactValue(type, value)) return null;
+
+  const messages: Record<ContactType, string> = {
+    phone: 'Please enter a valid phone number.',
+    whatsapp: 'Please enter a valid WhatsApp number.',
+    email: 'Please enter a valid email address.',
+    website: 'Please enter a valid website URL.',
+    facebook: 'Please enter a valid Facebook URL.',
+    instagram: 'Please enter a valid Instagram URL.',
+    youtube: 'Please enter a valid YouTube URL.',
+    other: 'Please enter valid contact details.',
+  };
+  return messages[type];
+}
+
+export function contactHref(type: ListingContact['contact_type'], value: string): string | null {
+  const normalized = normalizeContactValue(type, value);
+  if (!normalized) return null;
+  if (type === 'phone') return `tel:${normalized}`;
+  if (type === 'whatsapp') return `https://wa.me/${normalized.replace(/^\+/, '')}`;
+  if (type === 'email') return `mailto:${normalized}`;
+  return normalized;
 }

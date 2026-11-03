@@ -6,10 +6,11 @@ import { DirectoryLocation, locationOptions } from '../core/models/service-listi
 import { LanguageService } from '../core/services/language.service';
 import { ProfileService } from '../core/services/profile.service';
 import { ServiceDirectoryService } from '../core/services/service-directory.service';
+import { MediaUploadComponent } from '../shared/components/media-upload/media-upload.component';
 
 @Component({
   selector: 'app-account',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, MediaUploadComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="account-page" aria-labelledby="account-title" [attr.aria-busy]="loading() || saving()">
@@ -28,11 +29,17 @@ import { ServiceDirectoryService } from '../core/services/service-directory.serv
           </form>
           <aside class="card actions-card"><h2>Community services</h2><a routerLink="/services/submit"><i class="bi bi-plus-circle" aria-hidden="true"></i> Add your service</a><a routerLink="/my-submissions"><i class="bi bi-card-list" aria-hidden="true"></i> View my submissions</a><button type="button" class="secondary" (click)="signOut()"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sign out</button></aside>
         </div>
+        @if (auth.user()?.id; as userId) {
+          <section class="card photo-card" aria-labelledby="photo-title">
+            <div><h2 id="photo-title">Profile photo</h2><p class="intro">Upload a square photo. Replacing the photo swaps it in after the new one is saved.</p></div>
+            <app-media-upload entityType="profile" [entityId]="userId" [multiple]="false" [maxFiles]="1" [maxFileSizeMb]="5" />
+          </section>
+        }
       }
     </section>
   `,
   styles: `
-    :host { display:block; padding-block:2rem; }.account-page { display:grid; gap:1.25rem; }.eyebrow { margin:0 0 .35rem; color:#52665b; font-size:.72rem; font-weight:800; letter-spacing:.12em; } h1 { margin:0; color:#173f32; font-size:clamp(1.7rem,4vw,2.5rem); }.intro,small { color:#52665b; line-height:1.7; }.notice { padding:1rem; border:1px solid #e7d9ae; border-radius:14px; background:#fffaf0; color:#625329; line-height:1.7; }.notice a,.actions-card a { color:#075541; }.account-grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(240px,1fr); gap:1rem; }.card { display:grid; align-content:start; gap:1rem; padding:1.25rem; border:1px solid #dfe7e2; border-radius:16px; background:white; }.card h2 { margin:0; color:#173f32; font-size:1.2rem; }.card label { display:grid; gap:.4rem; color:#173f32; font-weight:650; }.card input,.card select { min-height:44px; border:1px solid #b8c9bf; border-radius:9px; padding:.7rem; background:white; color:#173f32; font:inherit; }.card button { min-height:44px; border:1px solid #075541; border-radius:9px; padding:.7rem 1rem; background:#075541; color:white; font:inherit; font-weight:700; }.actions-card a { display:flex; align-items:center; min-height:44px; }.actions-card .secondary { background:white; color:#075541; }.message { color:#275b3c; line-height:1.7; }.state { padding:1.25rem; border:1px solid #dfe7e2; border-radius:14px; background:white; color:#52665b; }.card :is(a,button,input,select):focus-visible { outline:3px solid #17583f; outline-offset:3px; } @media(max-width:700px) { .account-grid { grid-template-columns:1fr; } }
+    :host { display:block; padding-block:2rem; }.account-page { display:grid; gap:1.25rem; }.eyebrow { margin:0 0 .35rem; color:#52665b; font-size:.72rem; font-weight:800; letter-spacing:.12em; } h1 { margin:0; color:#173f32; font-size:clamp(1.7rem,4vw,2.5rem); }.intro,small { color:#52665b; line-height:1.7; }.notice { padding:1rem; border:1px solid #e7d9ae; border-radius:14px; background:#fffaf0; color:#625329; line-height:1.7; }.notice a,.actions-card a { color:#075541; }.account-grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(240px,1fr); gap:1rem; }.card { display:grid; align-content:start; gap:1rem; padding:1.25rem; border:1px solid #dfe7e2; border-radius:16px; background:white; }.card h2 { margin:0; color:#173f32; font-size:1.2rem; }.card label { display:grid; gap:.4rem; color:#173f32; font-weight:650; }.card input,.card select { min-height:44px; border:1px solid #b8c9bf; border-radius:9px; padding:.7rem; background:white; color:#173f32; font:inherit; }.card button { min-height:44px; border:1px solid #075541; border-radius:9px; padding:.7rem 1rem; background:#075541; color:white; font:inherit; font-weight:700; }.actions-card a { display:flex; align-items:center; min-height:44px; }.actions-card .secondary { background:white; color:#075541; }.message { color:#275b3c; line-height:1.7; }.state { padding:1.25rem; border:1px solid #dfe7e2; border-radius:14px; background:white; color:#52665b; }.card :is(a,button,input,select):focus-visible { outline:3px solid #17583f; outline-offset:3px; } .photo-card { max-width: 640px; align-self: start; } @media(max-width:700px) { .account-grid { grid-template-columns:1fr; } }
   `,
 })
 export class AccountComponent implements OnInit {

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
-import { contactHref } from '../models/service-listing';
+import { contactValidationMessage, normalizeContactValue } from '../models/service-listing';
 import { SubmissionFormInput, SubmissionHistoryRow, SubmissionLocationInput, SubmissionRow } from '../models/service-submission';
 import { SupabaseService } from './supabase.service';
 
@@ -26,7 +26,15 @@ export class ServiceSubmissionService {
       .eq('service_providers.owner_user_id', user.id)
       .order('updated_at', { ascending: false })
       .returns<SubmissionRow[]>();
-    if (error) throw new Error('Unable to load your submissions.');
+    if (error) {
+      console.error('Unable to load your submissions.', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+      throw new Error(['Unable to load your submissions.', error.message, error.details, error.hint].filter(Boolean).join(' '));
+    }
     return data ?? [];
   }
 
@@ -38,7 +46,15 @@ export class ServiceSubmissionService {
       .eq('id', id)
       .eq('service_providers.owner_user_id', user.id)
       .maybeSingle<SubmissionRow>();
-    if (error) throw new Error('Unable to load this submission.');
+    if (error) {
+      console.error('Unable to load this submission.', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+      throw new Error(['Unable to load this submission.', error.message, error.details, error.hint].filter(Boolean).join(' '));
+    }
     return data;
   }
 
@@ -57,6 +73,7 @@ export class ServiceSubmissionService {
   async save(input: SubmissionFormInput): Promise<string> {
     const user = this.requireUser();
     this.validateInput(input);
+    const contacts = this.normalizeContacts(input.contacts);
     let providerId = input.providerId;
     if (providerId) {
       const { error } = await this.supabase.client.from('service_providers').update({
@@ -70,7 +87,7 @@ export class ServiceSubmissionService {
         latitude: input.provider.latitude,
         longitude: input.provider.longitude,
       }).eq('id', providerId).eq('owner_user_id', user.id);
-      if (error) throw new Error('Unable to save provider details.');
+      if (error) throw this.databaseError('Unable to save provider details.', error);
     } else {
       const { data, error } = await this.supabase.client.from('service_providers').insert({
         owner_user_id: user.id,
@@ -85,7 +102,14 @@ export class ServiceSubmissionService {
         latitude: input.provider.latitude,
         longitude: input.provider.longitude,
       }).select('id').single<{ id: string }>();
-      if (error || !data) throw new Error('Unable to create provider details.');
+      if (error) {
+        const databaseError = this.databaseError('Unable to create provider details.', error);
+        if (error.code === 'PGRST204' || error.code === '42703') {
+          throw new Error('The submission database schema is out of date. Ask your administrator to reconcile and apply the pending user submission workflow migration, then refresh the Supabase schema cache.');
+        }
+        throw databaseError;
+      }
+      if (!data) throw new Error('Unable to create provider details: the database returned no provider ID.');
       providerId = data.id;
     }
 
@@ -103,7 +127,7 @@ export class ServiceSubmissionService {
         status: input.submitForReview ? 'pending_review' : 'draft',
         submitted_at: input.submitForReview ? new Date().toISOString() : null,
       }).eq('id', listingId);
-      if (error) throw new Error('Unable to save the service listing.');
+      if (error) throw this.databaseError('Unable to save the service listing.', error);
     } else {
       const { data, error } = await this.supabase.client.from('service_listings').insert({
         provider_id: providerId,
@@ -113,11 +137,12 @@ export class ServiceSubmissionService {
         status: input.submitForReview ? 'pending_review' : 'draft',
         submitted_at: input.submitForReview ? new Date().toISOString() : null,
       }).select('id').single<{ id: string }>();
-      if (error || !data) throw new Error('Unable to create the service listing.');
+      if (error) throw this.databaseError('Unable to create the service listing.', error);
+      if (!data) throw new Error('Unable to create the service listing: the database returned no listing ID.');
       listingId = data.id;
     }
 
-    await this.replaceContacts(listingId, input.contacts);
+    await this.replaceContacts(listingId, contacts);
     await this.replaceLocations(listingId, input.locations);
     return listingId;
   }
@@ -128,9 +153,10 @@ export class ServiceSubmissionService {
     const existing = await this.getMine(input.listingId);
     if (!existing || existing.status !== 'published') throw new Error('Only a published listing can create an approved update.');
     this.validateInput(input);
+    const contacts = this.normalizeContacts(input.contacts);
     const { data: versions, error: versionError } = await this.supabase.client
       .from('service_listing_revisions')
-      .select('version_number')
+      .select('version_number, status')
       .eq('listing_id', input.listingId)
       .order('version_number', { ascending: false })
       .range(0, 0)
@@ -143,7 +169,7 @@ export class ServiceSubmissionService {
       version_number: versionNumber,
       submitted_by: user.id,
       status: 'pending_review',
-      snapshot: { provider: input.provider, listing: input.listing, contacts: input.contacts, locations: input.locations },
+      snapshot: { provider: input.provider, listing: input.listing, contacts, locations: input.locations },
       submitted_at: new Date().toISOString(),
     });
     if (error) throw new Error('Unable to submit this listing update for review.');
@@ -152,26 +178,45 @@ export class ServiceSubmissionService {
 
   private async replaceContacts(listingId: string, contacts: SubmissionFormInput['contacts']): Promise<void> {
     const { error: deleteError } = await this.supabase.client.from('listing_contacts').delete().eq('listing_id', listingId);
-    if (deleteError) throw new Error('Unable to update contact details.');
+    if (deleteError) throw this.databaseError('Unable to update contact details.', deleteError);
     if (!contacts.length) return;
     const { error } = await this.supabase.client.from('listing_contacts').insert(contacts.map(contact => ({ ...contact, listing_id: listingId })));
-    if (error) throw new Error('Unable to save contact details.');
+    if (error) throw this.databaseError('Unable to save contact details.', error);
   }
 
   private async replaceLocations(listingId: string, locations: SubmissionLocationInput[]): Promise<void> {
     const { error: deleteError } = await this.supabase.client.from('listing_locations').delete().eq('listing_id', listingId);
-    if (deleteError) throw new Error('Unable to update service coverage.');
+    if (deleteError) throw this.databaseError('Unable to update service coverage.', deleteError);
     if (!locations.length) return;
     const { error } = await this.supabase.client.from('listing_locations').insert(locations.map(location => ({ ...location, listing_id: listingId })));
-    if (error) throw new Error('Unable to save service coverage.');
+    if (error) throw this.databaseError('Unable to save service coverage.', error);
   }
 
   private validateInput(input: SubmissionFormInput): void {
     if (!input.listing.title.trim() || !input.listing.description.trim() || !input.listing.category_id) throw new Error('Complete the service details before saving.');
     if (!input.provider.display_name.trim()) throw new Error('Enter a provider or business name.');
     for (const contact of input.contacts) {
-      if (!contactHref(contact.contact_type, contact.contact_value)) throw new Error('One of the contact details is invalid.');
+      const message = contactValidationMessage(contact.contact_type, contact.contact_value);
+      if (message) throw new Error(message);
     }
+  }
+
+  private normalizeContacts(contacts: SubmissionFormInput['contacts']): SubmissionFormInput['contacts'] {
+    return contacts.flatMap(contact => {
+      const contact_value = normalizeContactValue(contact.contact_type, contact.contact_value);
+      return contact_value ? [{ ...contact, contact_value }] : [];
+    });
+  }
+
+  private databaseError(context: string, error: { code: string; message: string; details: string; hint: string }): Error {
+    console.error(context, {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    const info = [error.code && `(${error.code})`, error.message, error.details, error.hint].filter(Boolean).join(' ');
+    return new Error(`${context} ${info}`);
   }
 
   private requireUser() {

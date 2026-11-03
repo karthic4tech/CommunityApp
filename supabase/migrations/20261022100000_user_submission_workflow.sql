@@ -11,7 +11,8 @@ alter table public.service_providers
 
 alter table public.service_providers
   drop constraint if exists service_providers_latitude_check,
-  drop constraint if exists service_providers_longitude_check;
+  drop constraint if exists service_providers_longitude_check,
+  drop constraint if exists service_providers_postal_code_check;
 
 alter table public.service_providers
   add constraint service_providers_latitude_check
@@ -105,6 +106,7 @@ create index if not exists ix_service_listing_revisions_submitter
 
 alter table public.service_listing_revisions enable row level security;
 
+drop policy if exists "owners read own listing revisions" on public.service_listing_revisions;
 create policy "owners read own listing revisions"
 on public.service_listing_revisions for select to authenticated
 using (
@@ -117,6 +119,7 @@ using (
   or public.is_admin()
 );
 
+drop policy if exists "owners create own listing revisions" on public.service_listing_revisions;
 create policy "owners create own listing revisions"
 on public.service_listing_revisions for insert to authenticated
 with check (
@@ -128,6 +131,7 @@ with check (
   )
 );
 
+drop policy if exists "owners update editable listing revisions" on public.service_listing_revisions;
 create policy "owners update editable listing revisions"
 on public.service_listing_revisions for update to authenticated
 using (
@@ -145,6 +149,7 @@ with check (
   )
 );
 
+drop policy if exists "admins manage listing revisions" on public.service_listing_revisions;
 create policy "admins manage listing revisions"
 on public.service_listing_revisions for delete to authenticated
 using (public.is_admin());

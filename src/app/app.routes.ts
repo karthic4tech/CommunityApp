@@ -14,6 +14,7 @@ export const routes: Routes = [
       { path: 'admin/categories/:id/edit', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-category-form.component').then((m) => m.AdminCategoryFormComponent) },
       { path: 'admin/categories', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-category-management.component').then((m) => m.AdminCategoryManagementComponent) },
       { path: 'admin/listings/review', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-review.component').then((m) => m.AdminReviewComponent) },
+      { path: 'admin/media', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-media.component').then((m) => m.AdminMediaComponent) },
       { path: 'admin', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-dashboard.component').then((m) => m.AdminDashboardComponent) },
       { path: 'auth/sign-up', loadComponent: () => import('./auth/auth-sign-up.component').then((m) => m.AuthSignUpComponent) },
       { path: 'auth/sign-in', loadComponent: () => import('./auth/auth-sign-in.component').then((m) => m.AuthSignInComponent) },

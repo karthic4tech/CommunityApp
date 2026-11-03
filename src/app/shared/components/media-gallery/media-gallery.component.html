@@ -1,0 +1,36 @@
+<div class="gallery" [class.gallery-list]="layout() === 'list'" [attr.aria-busy]="loading()">
+  @if (loading()) {
+    <p class="gallery-state" role="status">Loading images…</p>
+  } @else if (error(); as errorMessage) {
+    <div class="gallery-state" role="alert">
+      <p>{{ errorMessage }}</p>
+      <button type="button" class="retry-button" (click)="reload()">Try again</button>
+    </div>
+  } @else if (!visibleItems().length) {
+    <p class="gallery-state" role="status">No images yet.</p>
+  } @else {
+    <ul class="gallery-items" [class.gallery-items-list]="layout() === 'list'">
+      @for (item of visibleItems(); track item.asset.id) {
+        <li class="gallery-item">
+          @if (broken().has(item.asset.id)) {
+            <div class="gallery-fallback" role="img" [attr.aria-label]="'Image unavailable: ' + item.alt">
+              <i class="bi bi-image" aria-hidden="true"></i>
+              <span>Image unavailable</span>
+            </div>
+          } @else {
+            <button type="button" class="gallery-button" (click)="openPreview(goodItems().indexOf(item))" [attr.aria-label]="'View image: ' + item.alt">
+              <img class="gallery-image" [ngSrc]="item.url" fill [alt]="item.alt" [sizes]="imageSizes()" loading="lazy" (error)="markBroken(item.asset.id)" />
+            </button>
+          }
+          @if (showPrimaryBadge() && item.primary) {
+            <span class="primary-badge">Primary</span>
+          }
+        </li>
+      }
+    </ul>
+  }
+
+  @if (previewIndex() !== null && goodItems().length) {
+    <app-media-preview [items]="goodItems()" [index]="previewIndex()!" (closed)="closePreview()" />
+  }
+</div>

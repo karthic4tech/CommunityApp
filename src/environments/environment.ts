@@ -5,6 +5,4 @@ export const environment = {
   // Set this to an allow-listed Supabase Auth redirect URL for production.
   supabaseAuthRedirectUrl: '',
   supabasePasswordResetRedirectUrl: '',
-  // Set this only when a public/private Storage bucket and its policies exist.
-  supabaseStorageBucket: '',
 };
