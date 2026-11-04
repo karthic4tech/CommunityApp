@@ -1,0 +1,179 @@
+<section class="account-page container-xl" aria-labelledby="account-title" [attr.aria-busy]="profileLoading() || activityLoading()">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">CDM360 <span aria-hidden="true">/</span> {{ copy().eyebrow }}</p>
+      <h1 id="account-title">{{ copy().title }}</h1>
+      <p class="page-intro">{{ copy().intro }}</p>
+    </div>
+    <div class="account-status" [class.is-verified]="auth.emailVerified()" role="status">
+      <span class="status-indicator" aria-hidden="true"></span>
+      {{ auth.emailVerified() ? copy().verified : copy().verifyNeeded }}
+    </div>
+  </header>
+
+  @if (!auth.emailVerified()) {
+    <section class="verification-notice" aria-labelledby="verification-title">
+      <span class="notice-icon bi bi-envelope-exclamation" aria-hidden="true"></span>
+      <div>
+        <h2 id="verification-title">{{ copy().verifyTitle }}</h2>
+        <p>{{ copy().verifyBody }}</p>
+      </div>
+      <a routerLink="/auth/verify-email" class="notice-action">{{ copy().verifyAction }} <span aria-hidden="true">→</span></a>
+    </section>
+  }
+
+  <div class="dashboard-grid row g-3">
+    <div class="main-column col-12 col-lg-8">
+      <section class="identity-card" aria-label="{{ copy().member }}">
+        @if (avatarUrl(); as avatar) {
+          <img class="profile-avatar" [src]="avatar" [alt]="copy().profilePhoto" />
+        } @else {
+          <div class="profile-avatar initials" aria-hidden="true">{{ initials() }}</div>
+        }
+        <div class="identity-copy">
+          <span class="member-label"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> {{ copy().member }}</span>
+          <h2>{{ displayName() || auth.user()?.email?.split('@')?.[0] || 'CDM360 member' }}</h2>
+          <p>{{ auth.user()?.email }}</p>
+        </div>
+        @if (!editing()) {
+          <button type="button" class="text-action text-button" (click)="startEditing()"><i class="bi bi-pencil" aria-hidden="true"></i> {{ copy().editProfile }}</button>
+        }
+      </section>
+
+      <section id="profile-form" class="panel profile-panel" aria-labelledby="profile-heading">
+        <div class="panel-heading">
+          <div><h2 id="profile-heading">{{ copy().profile }}</h2><p>{{ copy().profileHint }}</p></div>
+          <span class="panel-icon bi bi-person-vcard" aria-hidden="true"></span>
+        </div>
+
+        @if (profileLoading()) {
+          <p class="state-message" role="status">{{ copy().loadingProfile }}</p>
+        } @else if (profileError(); as error) {
+          <div class="error-state" role="alert"><p>{{ error }}</p><button type="button" class="account-secondary text-button" (click)="loadProfile()">{{ copy().retry }}</button></div>
+        } @else {
+          <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+            <div class="form-grid">
+              <label class="field full-width">
+                <span>{{ copy().email }}</span>
+                <input type="email" [value]="auth.user()?.email ?? ''" readonly aria-describedby="email-help" autocomplete="email" />
+                <small id="email-help">{{ copy().emailHelp }}</small>
+              </label>
+              <label class="field">
+                <span>{{ copy().fullName }}</span>
+                <input #fullNameInput formControlName="full_name" (input)="onNameInput()" autocomplete="name" maxlength="160" required [readOnly]="!editing()"
+                  [attr.aria-invalid]="form.controls.full_name.touched && form.controls.full_name.invalid ? 'true' : null"
+                  [attr.aria-describedby]="form.controls.full_name.touched && form.controls.full_name.invalid ? 'name-error' : null" />
+                @if (form.controls.full_name.touched && form.controls.full_name.hasError('required')) {
+                  <small id="name-error" class="field-error">{{ copy().invalidName }}</small>
+                } @else if (form.controls.full_name.touched && form.controls.full_name.hasError('maxlength')) {
+                  <small id="name-error" class="field-error">{{ copy().invalidNameLength }}</small>
+                }
+              </label>
+              <label class="field">
+                <span>{{ copy().phone }}</span>
+                <input type="tel" formControlName="phone" autocomplete="tel" maxlength="40" [readOnly]="!editing()" />
+              </label>
+              <label class="field">
+                <span>{{ copy().preferredLanguage }}</span>
+                <select formControlName="preferred_language" [disabled]="!editing()">
+                  <option value="ta">தமிழ்</option>
+                  <option value="en">English</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>{{ copy().preferredLocality }}</span>
+                <select formControlName="preferred_locality_id" [disabled]="!editing()">
+                  <option value="">{{ copy().notSelected }}</option>
+                  @for (place of places(); track place.id) { <option [value]="place.id">{{ place.label }}</option> }
+                </select>
+              </label>
+            </div>
+
+            @if (editing() && auth.user()?.id; as userId) {
+              <div class="photo-upload">
+                <div class="photo-upload-heading"><h3>{{ copy().profilePhoto }}</h3><p>{{ copy().photoHint }}</p></div>
+                <app-media-upload entityType="profile" [entityId]="userId" [multiple]="false" [maxFiles]="1" [maxFileSizeMb]="5"
+                  (uploaded)="refreshAvatar()" (deleted)="refreshAvatar()" />
+              </div>
+            }
+
+            @if (message(); as text) {
+              <p class="save-message" [class.is-error]="messageIsError()" role="status" aria-live="polite">{{ text }}</p>
+            }
+            @if (editing()) {
+              <div class="form-footer">
+                <span class="form-note"><i class="bi bi-shield-lock" aria-hidden="true"></i> {{ copy().emailHelp }}</span>
+                <div class="edit-actions">
+                  <button type="button" class="account-secondary text-button" (click)="cancelEdit()" [disabled]="saving()">{{ copy().cancel }}</button>
+                  <button type="submit" class="save-button text-button" [disabled]="form.invalid || saving()">
+                    <i class="bi" [class.bi-check2]="!saving()" [class.bi-arrow-repeat]="saving()" aria-hidden="true"></i>
+                    {{ saving() ? copy().saving : copy().save }}
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <p class="readonly-hint"><i class="bi bi-lock" aria-hidden="true"></i> {{ copy().readOnlyHint }}</p>
+            }
+          </form>
+        }
+      </section>
+    </div>
+
+    <aside class="side-column col-12 col-lg-4" aria-label="{{ copy().activity }}">
+      <section class="stats-panel" aria-labelledby="stats-heading">
+        <div class="section-heading"><div><p class="eyebrow">{{ copy().activity }}</p><h2 id="stats-heading">{{ copy().summary }}</h2></div><i class="bi bi-bar-chart-line" aria-hidden="true"></i></div>
+        <div class="stats-grid" [attr.aria-busy]="activityLoading()">
+          <article class="stat-card"><span class="stat-value">{{ activityLoading() || activityError() ? '—' : totalSubmissions() }}</span><span>{{ copy().totalSubmissions }}</span></article>
+          <article class="stat-card"><span class="stat-value">{{ activityLoading() || activityError() ? '—' : publishedListings() }}</span><span>{{ copy().publishedListings }}</span></article>
+          <article class="stat-card"><span class="stat-value">{{ activityLoading() || activityError() ? '—' : pendingApprovals() }}</span><span>{{ copy().pendingApprovals }}</span></article>
+        </div>
+      </section>
+
+      <nav class="panel quick-links" aria-labelledby="quick-links-heading">
+        <div class="panel-heading"><div><h2 id="quick-links-heading">{{ copy().shortcuts }}</h2></div><span class="panel-icon bi bi-arrow-up-right" aria-hidden="true"></span></div>
+        <a routerLink="/services/submit" class="quick-link primary-link"><span class="quick-link-icon"><i class="bi bi-plus-lg" aria-hidden="true"></i></span><span><strong>{{ copy().addService }}</strong><small>CDM360</small></span><i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+        <a routerLink="/my-submissions" class="quick-link"><span class="quick-link-icon"><i class="bi bi-card-checklist" aria-hidden="true"></i></span><span><strong>{{ copy().listings }}</strong><small>{{ copy().listingsHint }}</small></span><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+        <a routerLink="/services" class="quick-link"><span class="quick-link-icon"><i class="bi bi-search" aria-hidden="true"></i></span><span><strong>{{ copy().browseServices }}</strong><small>CDM360</small></span><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+      </nav>
+
+      <section class="panel submissions-panel" aria-labelledby="submissions-heading">
+        <div class="panel-heading">
+          <div><h2 id="submissions-heading">{{ copy().recentSubmissions }}</h2><p>{{ copy().approvalProgress }}</p></div>
+          <a class="icon-action" routerLink="/my-submissions" [attr.aria-label]="copy().viewAll"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+        </div>
+        @if (activityLoading()) {
+          <p class="state-message" role="status">{{ copy().loadingActivity }}</p>
+        } @else if (activityError(); as error) {
+          <div class="error-state" role="alert"><p>{{ error }}</p><button type="button" class="account-secondary text-button" (click)="loadActivity()">{{ copy().retry }}</button></div>
+        } @else if (!submissions().length) {
+          <div class="empty-state"><span class="empty-icon bi bi-inbox" aria-hidden="true"></span><h3>{{ copy().noSubmissions }}</h3><p>{{ copy().noSubmissionsHint }}</p><a routerLink="/services/submit">{{ copy().addService }} <span aria-hidden="true">→</span></a></div>
+        } @else {
+          <div class="submission-list">
+            @for (submission of recentSubmissions(); track submission.id) {
+              <article class="mini-submission">
+                <div class="submission-title-row"><div><h3>{{ submission.title }}</h3><p>{{ submission.service_providers.display_name }}</p></div><span class="status-chip" [class]="'status-' + submission.status">{{ statusLabel(submission.status) }}</span></div>
+                @if (approvalStep(submission.status) > 0) {
+                  <div class="progress-wrap" role="img" [attr.aria-label]="copy().approvalProgress + ': ' + statusLabel(submission.status)">
+                    <div class="progress-labels"><span>{{ copy().stepDraft }}</span><span>{{ copy().stepReview }}</span><span>{{ copy().stepPublished }}</span></div>
+                    <div class="progress-track">@for (step of approvalSteps; track step) { <span [class.is-complete]="approvalStep(submission.status) >= step"></span> }</div>
+                  </div>
+                }
+                <div class="submission-meta"><span>{{ copy().updated }} {{ submission.updated_at | date:'mediumDate' }}</span><a [routerLink]="['/services/submit', submission.id]">{{ copy().openSubmission }}</a></div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+
+      <section class="panel settings-panel" aria-labelledby="settings-heading">
+        <div class="panel-heading"><div><h2 id="settings-heading">{{ copy().accountSettings }}</h2></div><span class="panel-icon bi bi-gear" aria-hidden="true"></span></div>
+        <div class="setting-row"><span class="setting-icon bi bi-calendar3" aria-hidden="true"></span><span><small>{{ copy().memberSince }}</small><strong>{{ auth.user()?.created_at | date:'mediumDate' }}</strong></span></div>
+        <a routerLink="/auth/forgot-password" class="setting-row setting-link"><span class="setting-icon bi bi-shield-lock" aria-hidden="true"></span><span><strong>{{ copy().resetPassword }}</strong><small>{{ copy().resetHint }}</small></span><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+        @if (signOutError(); as error) { <p class="save-message is-error" role="alert">{{ error }}</p> }
+        <button type="button" class="account-secondary sign-out-button text-button" (click)="signOut()" [disabled]="signingOut()">
+          <i class="bi bi-box-arrow-right" aria-hidden="true"></i> {{ signingOut() ? copy().signingOut : copy().signOut }}
+        </button>
+      </section>
+    </aside>
+  </div>
+</section>

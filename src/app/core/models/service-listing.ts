@@ -42,6 +42,13 @@ export interface ServiceListing {
     latitude?: number | null;
     longitude?: number | null;
   };
+  service_categories?: {
+    id: string;
+    is_active: boolean;
+    name_ta: string;
+    name_en: string;
+    slug: string;
+  } | null;
   listing_locations: {
     coverage_type: 'based_here' | 'serves_here';
     locations: DirectoryLocation | null;

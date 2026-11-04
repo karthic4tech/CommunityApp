@@ -13,20 +13,23 @@ import { ListingSummaryComponent } from '../listing-summary/listing-summary.comp
   imports: [ReactiveFormsModule, RouterLink, ListingSummaryComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section aria-labelledby="directory-title" [attr.aria-busy]="loading()">
-      <h2 id="directory-title">{{ i18n.language() === 'ta' ? 'உள்ளூர் சேவை வழங்குநர்கள்' : 'Local service providers' }}</h2>
-      <form [formGroup]="form" (ngSubmit)="apply()">
-        <label>{{ i18n.language() === 'ta' ? 'தேடல்' : 'Keyword' }}
-          <input type="search" formControlName="q" maxlength="200" [placeholder]="i18n.language() === 'ta' ? 'பெயர் அல்லது சேவை' : 'Business name or service'">
+    <section class="listing-directory" aria-labelledby="directory-title" [attr.aria-busy]="loading()">
+      <header class="directory-header">
+        <div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'உள்ளூர் அடைவு' : 'LOCAL DIRECTORY' }}</p><h2 id="directory-title">{{ i18n.language() === 'ta' ? 'உள்ளூர் சேவை வழங்குநர்கள்' : 'Local service providers' }}</h2></div>
+        @if (!loading() && !error() && result().listings.length) { <span class="result-count" aria-live="polite">{{ result().listings.length }} {{ i18n.language() === 'ta' ? 'இந்தப் பக்கத்தில்' : 'on this page' }}</span> }
+      </header>
+      <form class="directory-search" [formGroup]="form" (ngSubmit)="apply()">
+        <label class="keyword-label">{{ i18n.language() === 'ta' ? 'பெயர் அல்லது சேவை' : 'Search services and providers' }}
+          <span class="keyword-input"><i class="bi bi-search" aria-hidden="true"></i><input type="search" formControlName="q" maxlength="200" [placeholder]="i18n.language() === 'ta' ? 'சேவை அல்லது வணிகப் பெயர்' : 'Service or business name'"></span>
         </label>
         <label>{{ i18n.language() === 'ta' ? 'இடம்' : 'Location' }}
           <select formControlName="location">
             <option value="">{{ i18n.language() === 'ta' ? 'அனைத்து இடங்கள்' : 'All locations' }}</option>
-            @for (place of places(); track place.id) { <option [value]="place.id">{{ place.label }}</option> }
+            @for (place of places(); track place.id) { <option [value]="place.id" [selected]="form.controls.location.value === place.id">{{ place.label }}</option> }
           </select>
         </label>
-        <button type="submit">{{ i18n.language() === 'ta' ? 'தேடுக' : 'Search' }}</button>
-        <button class="secondary" type="button" (click)="clear()">{{ i18n.language() === 'ta' ? 'வடிகட்டிகளை நீக்கு' : 'Clear filters' }}</button>
+        <button type="submit" class="primary-action"><i class="bi bi-search" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'தேடுக' : 'Search' }}</button>
+        <button class="secondary-action" type="button" (click)="clear()">{{ i18n.language() === 'ta' ? 'வடிகட்டிகளை நீக்கு' : 'Clear filters' }}</button>
       </form>
       @if (loading()) {
         <p class="state" role="status">{{ i18n.language() === 'ta' ? 'சேவைகள் ஏற்றப்படுகின்றன…' : 'Loading services…' }}</p>
@@ -38,15 +41,16 @@ import { ListingSummaryComponent } from '../listing-summary/listing-summary.comp
           <a class="browse-link" routerLink="/services">{{ i18n.language() === 'ta' ? 'வேறு வகையைப் பார்க்க' : 'Browse another category' }}</a>
         </div>
       } @else {
-        <p role="status">{{ i18n.language() === 'ta' ? 'இந்தப் பக்கத்தில்' : 'Showing' }} {{ result().listings.length }} {{ i18n.language() === 'ta' ? 'சேவைகள் • பக்கம்' : 'services on page' }} {{ page() + 1 }}</p>
+        <p class="page-status" aria-live="polite">{{ i18n.language() === 'ta' ? 'பக்கம்' : 'Page' }} {{ page() + 1 }} · {{ result().listings.length }} {{ i18n.language() === 'ta' ? 'வெளியிடப்பட்ட சேவைகள்' : 'published services' }}</p>
         <div class="listings">
           @for (listing of result().listings; track listing.id) { <app-listing-summary [listing]="listing" /> }
         </div>
       }
       @if (!loading() && !error() && (page() > 0 || result().hasMore)) {
         <nav class="pagination" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவை பக்கங்கள்' : 'Listing pages'">
-          <button type="button" [disabled]="page() === 0" (click)="goToPage(page() - 1)">{{ i18n.language() === 'ta' ? 'முந்தைய' : 'Previous' }}</button>
-          <button type="button" [disabled]="!result().hasMore" (click)="goToPage(page() + 1)">{{ i18n.language() === 'ta' ? 'அடுத்த' : 'Next' }}</button>
+          <button class="secondary-action" type="button" [disabled]="page() === 0" (click)="goToPage(page() - 1)">{{ i18n.language() === 'ta' ? 'முந்தைய' : 'Previous' }}</button>
+          <span>{{ i18n.language() === 'ta' ? 'பக்கம்' : 'Page' }} {{ page() + 1 }}</span>
+          <button class="secondary-action" type="button" [disabled]="!result().hasMore" (click)="goToPage(page() + 1)">{{ i18n.language() === 'ta' ? 'அடுத்த' : 'Next' }}</button>
         </nav>
       }
     </section>
@@ -77,7 +81,8 @@ export class ListingDirectoryComponent {
     effect(onCleanup => {
       const categoryId = this.category().id;
       const keyword = (this.params().get('q') ?? '').slice(0, 200);
-      const location = this.params().get('location') ?? '';
+      const locationParam = this.params().get('location');
+      const location = locationParam ?? '';
       const page = this.page();
       this.attempts();
       this.form.setValue({ q: keyword, location }, { emitEvent: false });
@@ -90,10 +95,12 @@ export class ListingDirectoryComponent {
       void this.locationRequest.then(async places => {
         if (!current) return;
         this.locations.set(places);
-        if (location && !locationOptions(places, 'en').some(place => place.id === location)) {
+        const selectedLocation = locationParam === null ? this.defaultChidambaramLocation(places) : location;
+        if (locationParam === null && selectedLocation) this.form.controls.location.setValue(selectedLocation, { emitEvent: false });
+        if (selectedLocation && !locationOptions(places, 'en').some(place => place.id === selectedLocation)) {
           throw new Error('Invalid location');
         }
-        const result = await this.directory.search(categoryId, location || null, keyword, page);
+        const result = await this.directory.search(categoryId, selectedLocation || null, keyword, page);
         if (current) this.result.set(result);
       }).catch(() => { if (current) this.error.set(true); })
         .finally(() => { if (current) this.loading.set(false); });
@@ -103,10 +110,18 @@ export class ListingDirectoryComponent {
   protected retry(): void { this.attempts.update(value => value + 1); }
   protected apply(): void {
     const { q, location } = this.form.getRawValue();
-    void this.router.navigate([], { relativeTo: this.route, queryParams: { q: q.trim() || null, location: location || null, page: null } });
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { q: q.trim() || null, location, page: null } });
   }
   protected clear(): void { this.form.setValue({ q: '', location: '' }); this.apply(); }
   protected goToPage(page: number): void {
     void this.router.navigate([], { relativeTo: this.route, queryParamsHandling: 'merge', queryParams: { page: page + 1 } });
+  }
+
+  private defaultChidambaramLocation(places: readonly DirectoryLocation[]): string {
+    const matchesChidambaram = (place: DirectoryLocation): boolean =>
+      place.name_en?.trim().toLocaleLowerCase() === 'chidambaram' || place.name_ta.trim() === 'சிதம்பரம்';
+    return places.find((place) => place.location_type === 'town' && matchesChidambaram(place))?.id
+      ?? places.find(matchesChidambaram)?.id
+      ?? '';
   }
 }

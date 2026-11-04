@@ -4,7 +4,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 export type Language = 'ta' | 'en';
 const TEXT = {
   ta: {
-    skip: 'உள்ளடக்கத்திற்குச் செல்ல', brand: 'நம் சிதம்பரம்', secondaryBrand: 'Nam Chidambaram',
+    skip: 'உள்ளடக்கத்திற்குச் செல்ல', brand: 'CDM360', secondaryBrand: 'நம் சிதம்பரம்',
     tagline: 'நம் ஊர் · நம் மக்கள் · நம் சேவைகள்', title: 'உங்களுக்குத் தேவையான சேவைகள்',
     intro: 'சேவை வகையைத் தேர்ந்தெடுத்து அதன் உட்பிரிவுகளைப் பாருங்கள்.', categories: 'சேவை வகைகள்',
     loading: 'சேவை வகைகள் ஏற்றப்படுகின்றன…', error: 'சேவை வகைகளை ஏற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்.',
@@ -12,7 +12,7 @@ const TEXT = {
     refresh: 'புதுப்பிக்கவும்', noChildren: 'தற்போது உட்பிரிவுகள் எதுவும் இல்லை.', footer: 'நம் சமூகத்தை இணைப்போம்.',
   },
   en: {
-    skip: 'Skip to content', brand: 'Nam Chidambaram', secondaryBrand: 'நம் சிதம்பரம்',
+    skip: 'Skip to content', brand: 'CDM360', secondaryBrand: 'நம் சிதம்பரம்',
     tagline: 'Our town · Our people · Our services', title: 'Find the services you need',
     intro: 'Select a service category to explore its subcategories.', categories: 'Service categories',
     loading: 'Loading service categories…', error: 'Unable to load service categories. Please try again.',
@@ -52,6 +52,6 @@ export class LanguageService {
   private updateDocument(): void {
     this.document.documentElement.lang = this.language();
     this.document.title = this.language() === 'ta'
-      ? 'நம் சிதம்பரம் | Nam Chidambaram' : 'Nam Chidambaram | நம் சிதம்பரம்';
+      ? 'CDM360 | நம் சிதம்பரம்' : 'CDM360 | நம் சிதம்பரம்';
   }
 }

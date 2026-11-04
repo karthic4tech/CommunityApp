@@ -1,0 +1,76 @@
+// Bootstrap remains the layout and component foundation; these overrides apply CDM360 tokens.
+.btn {
+  --bs-btn-font-weight: 700;
+  --bs-btn-border-radius: var(--cdm-radius-md);
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--cdm-green);
+  --bs-btn-border-color: var(--cdm-green);
+  --bs-btn-hover-bg: #104d39;
+  --bs-btn-hover-border-color: #104d39;
+  --bs-btn-active-bg: #0e4534;
+  --bs-btn-active-border-color: #0e4534;
+  --bs-btn-disabled-bg: var(--cdm-green);
+  --bs-btn-disabled-border-color: var(--cdm-green);
+}
+
+.btn-secondary {
+  --bs-btn-bg: var(--cdm-navy);
+  --bs-btn-border-color: var(--cdm-navy);
+  --bs-btn-hover-bg: #102b46;
+  --bs-btn-hover-border-color: #102b46;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--cdm-green);
+  --bs-btn-border-color: var(--cdm-green);
+  --bs-btn-hover-bg: var(--cdm-green);
+  --bs-btn-hover-border-color: var(--cdm-green);
+}
+
+.btn-warning {
+  --bs-btn-color: #3d2c00;
+  --bs-btn-hover-color: #3d2c00;
+  --bs-btn-active-color: #3d2c00;
+  --bs-btn-font-weight: 750;
+}
+
+.form-control,
+.form-select {
+  min-height: var(--cdm-control-height);
+  border-color: #cbd8d1;
+  border-radius: var(--cdm-radius-md);
+  color: var(--cdm-text);
+  box-shadow: var(--cdm-shadow-sm);
+}
+
+.form-control::placeholder { color: #64748b; opacity: 1; }
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--cdm-green-accent);
+  box-shadow: 0 0 0 0.22rem rgba(22, 128, 91, 0.18);
+}
+
+.form-check-input:checked {
+  border-color: var(--cdm-green);
+  background-color: var(--cdm-green);
+}
+
+.card {
+  --bs-card-border-color: var(--cdm-border);
+  --bs-card-border-radius: var(--cdm-radius-lg);
+  --bs-card-bg: var(--cdm-white);
+  box-shadow: var(--cdm-shadow-sm);
+}
+
+.badge { font-weight: 700; }
+.alert { --bs-alert-border-radius: var(--cdm-radius-md); }
+.table { --bs-table-border-color: var(--cdm-border); }
+.table thead th { color: var(--cdm-navy); background: #f4f8f5; }
+.pagination { --bs-pagination-color: var(--cdm-green); --bs-pagination-active-bg: var(--cdm-green); --bs-pagination-active-border-color: var(--cdm-green); }

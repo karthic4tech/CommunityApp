@@ -1,8 +1,8 @@
 :host {
   display: block;
-  --green: #176346;
-  --deep: #103b2c;
-  --line: #dfe7e2;
+  --green: var(--cdm-green);
+  --deep: var(--cdm-navy-deep);
+  --line: var(--cdm-border);
 }
 
 .skip-link {
@@ -29,15 +29,17 @@
 .header-inner,
 .main-nav,
 main {
-  width: min(1240px, calc(100% - 48px));
+  width: 100%;
   margin-inline: auto;
 }
+
+.header-inner, .main-nav { max-width: var(--cdm-content-width); }
 
 .header-inner {
   display: flex;
   align-items: center;
   gap: clamp(1rem, 3vw, 2.5rem);
-  min-height: 190px;
+  min-height: 112px;
 }
 
 .brand {
@@ -52,16 +54,16 @@ main {
 
 .brand-logo {
   display: block;
-  flex: 0 0 150px;
-  width: 150px;
-  height: 150px;
+  flex: 0 0 82px;
+  width: 82px;
+  height: 82px;
   object-fit: contain;
   border-radius: 50%;
 }
 
 .brand-wordmark {
   display: block;
-  height: 150px;
+  height: 86px;
   width: auto;
   max-width: 52vw;
   object-fit: contain;
@@ -99,7 +101,7 @@ main {
   display: flex;
   align-items: center;
   gap: clamp(.8rem, 2.5vw, 2rem);
-  min-height: 49px;
+  min-height: 48px;
   overflow-x: auto;
   scrollbar-width: thin;
 }
@@ -128,7 +130,7 @@ main { min-height: 38vh; padding-bottom: 1.25rem; }
 .site-footer {
   width: 100%;
   margin: 0;
-  padding: 2.5rem max(24px, calc((100% - 1240px) / 2)) 1rem;
+  padding: 2.5rem max(24px, calc((100% - var(--cdm-content-width)) / 2)) 1rem;
   color: #e5eee8;
   background: #103b2c;
 }
@@ -137,7 +139,7 @@ main { min-height: 38vh; padding-bottom: 1.25rem; }
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(150px, .7fr));
   gap: 3rem;
-  max-width: 1240px;
+  max-width: var(--cdm-content-width);
   margin-inline: auto;
   padding-bottom: 2rem;
 }
@@ -150,23 +152,23 @@ main { min-height: 38vh; padding-bottom: 1.25rem; }
 .footer-links strong { margin-bottom: .3rem; color: #e4d39e; font-size: .78rem; letter-spacing: .04em; }
 .footer-links a { color: #d0dfd5; font-size: .82rem; text-decoration: none; }
 .footer-links a:hover { color: #fff; text-decoration: underline; text-underline-offset: .2em; }
-.footer-bottom { display: flex; justify-content: space-between; gap: 1rem; max-width: 1240px; margin-inline: auto; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, .16); color: #b5cbbd; font-size: .75rem; }
+ .footer-bottom { display: flex; justify-content: space-between; gap: 1rem; max-width: var(--cdm-content-width); margin-inline: auto; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, .16); color: #b5cbbd; font-size: .75rem; }
 
 @media (max-width: 920px) {
-  .header-inner, .main-nav, main { width: min(100% - 32px, 900px); }
-  .header-inner { gap: 1rem; flex-wrap: wrap; padding-block: .5rem; min-height: 126px; }
+  .header-inner, .main-nav { max-width: 900px; }
+  .header-inner { gap: 1rem; flex-wrap: wrap; padding-block: .5rem; min-height: 100px; }
   .brand { min-width: 0; }
-  .brand-logo { flex-basis: 104px; width: 104px; height: 104px; }
-  .brand-wordmark { height: 92px; }
+  .brand-logo { flex-basis: 72px; width: 72px; height: 72px; }
+  .brand-wordmark { height: 68px; }
   .language-switch { margin-left: auto; }
 }
 
 @media (max-width: 600px) {
-  .header-inner, .main-nav, main { width: calc(100% - 28px); }
+  .header-inner, .main-nav { max-width: 600px; }
   .header-inner { gap: .6rem; min-height: 0; padding-block: .35rem; }
   .brand { flex: 0 1 auto; }
-  .brand-logo { flex-basis: clamp(56px, 16vw, 104px); width: clamp(56px, 16vw, 104px); height: clamp(56px, 16vw, 104px); }
-  .brand-wordmark { display: block; height: clamp(48px, 14vw, 92px); max-width: 52vw; }
+  .brand-logo { flex-basis: clamp(56px, 16vw, 76px); width: clamp(56px, 16vw, 76px); height: clamp(56px, 16vw, 76px); }
+  .brand-wordmark { display: block; height: clamp(48px, 14vw, 70px); max-width: 52vw; }
   .language-switch button { padding-inline: .4rem; font-size: .68rem; min-height: 32px; }
   .main-nav { gap: 1rem; min-height: 46px; }
   .main-nav a { font-size: .76rem; }

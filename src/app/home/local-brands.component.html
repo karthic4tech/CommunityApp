@@ -1,0 +1,65 @@
+<section class="local-brands" aria-labelledby="local-brands-title" [attr.aria-busy]="loading()">
+  <header class="brands-heading">
+    <div>
+      <p class="eyebrow">{{ copy().eyebrow }}</p>
+      <h2 id="local-brands-title">{{ copy().title }}</h2>
+      <p class="brands-description">{{ copy().description }}</p>
+    </div>
+    <a class="view-all" routerLink="/businesses">{{ copy().viewAll }} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+  </header>
+
+  @if (loading()) {
+    <p class="brands-state" role="status">{{ copy().loading }}</p>
+  } @else if (error(); as message) {
+    <div class="brands-state error-state" role="alert"><span>{{ message }}</span><button type="button" class="retry-button" (click)="load()">{{ copy().retry }}</button></div>
+  } @else if (!brands().length) {
+    <p class="brands-state empty-state" role="status">{{ copy().empty }}</p>
+  } @else {
+    <div class="brand-carousel" [class.is-marquee]="marqueeEnabled()">
+      <button type="button" class="carousel-control previous" [attr.aria-label]="copy().previous" [disabled]="brands().length < 2" (click)="scroll(brandViewport, -1)">
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </button>
+      <div #brandViewport class="brand-viewport" tabindex="0" [attr.aria-label]="copy().title">
+        <div class="brand-track" [class.marquee-track]="marqueeEnabled()">
+          <div class="brand-group">
+            @for (brand of brands(); track brand.id) {
+              <a class="brand-card" [routerLink]="['/providers', brand.listingId]" [attr.aria-label]="copy().open + ': ' + brand.displayName">
+                <span class="logo-frame">
+                  @if (brand.logoUrl) {
+                    <img [src]="brand.logoUrl" [alt]="brand.logoAlt" width="156" height="84" loading="lazy" decoding="async" />
+                  } @else {
+                    <span class="logo-fallback" role="img" [attr.aria-label]="copy().fallback + ': ' + brand.displayName">
+                      <i class="bi bi-shop-window" aria-hidden="true"></i><strong>{{ initials(brand.displayName) }}</strong>
+                    </span>
+                  }
+                </span>
+                <strong class="brand-name">{{ brand.displayName }}</strong>
+                <span class="brand-link-label">{{ copy().open }} <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+              </a>
+            }
+          </div>
+          @if (marqueeEnabled()) {
+            <div class="brand-group duplicate-group" aria-hidden="true" inert>
+              @for (brand of brands(); track brand.id) {
+                <span class="brand-card" tabindex="-1">
+                  <span class="logo-frame">
+                    @if (brand.logoUrl) {
+                      <img [src]="brand.logoUrl" alt="" width="156" height="84" loading="lazy" decoding="async" />
+                    } @else {
+                      <span class="logo-fallback"><i class="bi bi-shop-window" aria-hidden="true"></i><strong>{{ initials(brand.displayName) }}</strong></span>
+                    }
+                  </span>
+                  <strong class="brand-name">{{ brand.displayName }}</strong>
+                  <span class="brand-link-label">{{ copy().open }} <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+                </span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+      <button type="button" class="carousel-control next" [attr.aria-label]="copy().next" [disabled]="brands().length < 2" (click)="scroll(brandViewport, 1)">
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </button>
+    </div>
+  }
+</section>

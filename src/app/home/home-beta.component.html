@@ -1,12 +1,13 @@
-<main>
+<div class="home-content">
   <!-- Hero Section -->
-  <section class="hero-section" role="region" aria-label="Hero carousel">
+  <section class="hero-section" role="region" aria-label="Hero carousel"
+    (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)" (touchcancel)="onTouchCancel()">
     <div class="hero-slides-container">
-      @for (slide of heroSlides(); track $index; let i = $index) {
-        <div class="hero-slide" 
+      @for (slide of heroSlides; track $index; let i = $index) {
+        <div class="hero-slide"
              [class.active]="i === heroIndex()"
-             [attr.data-index]="i"
-             [style.background-image]="'url(' + slide + ')'">
+             [attr.data-index]="i">
+          <img class="hero-slide-image" [ngSrc]="slide" fill [priority]="i === 0" [alt]="heroSlideAlts[i]" />
         </div>
       }
     </div>
@@ -16,10 +17,10 @@
     <div class="container hero-inner">
     </div>
     
-    <div class="hero-controls" role="navigation" aria-label="Slide navigation">
+    <div class="hero-controls" role="group" aria-label="Slide navigation">
       <button type="button" class="hero-arrow hero-arrow-prev" aria-label="Previous slide" (click)="prevSlide()"><i class="bi bi-chevron-left"></i></button>
-      <div class="hero-dots-wrapper">
-        @for (slide of heroSlides(); track $index; let i = $index) {
+      <div class="hero-dots-wrapper" role="group" aria-label="Choose a slide">
+        @for (slide of heroSlides; track $index; let i = $index) {
           <button type="button" class="slide-dot" [class.active]="i === heroIndex()" [attr.aria-label]="'Go to slide ' + (i + 1)" [attr.aria-current]="i === heroIndex() ? 'true' : 'false'" (click)="heroIndex.set(i)">{{ i + 1 }}</button>
         }
       </div>
@@ -35,8 +36,8 @@
         <div class="orange-panel intro-panel">
           <span class="eyebrow light">OUR COMMUNITY</span>
           <h2>People. Services. A Stronger Chidambaram.</h2>
-          <p>Nam Chidambaram brings together local services, businesses, events and useful information to make everyday life easier for residents and for people connected to Chidambaram around the world.</p>
-          <a href="#about" class="btn-light">Learn More</a>
+          <p>CDM360 brings together local services, businesses, events and useful information to make everyday life easier for residents and for people connected to Chidambaram around the world.</p>
+          <a href="#about" class="btn btn-light">Learn More</a>
         </div>
         <div class="benefits-list">
           <div class="benefit-item">
@@ -73,7 +74,7 @@
           <span class="eyebrow">MADE FOR OUR TOWN</span>
           <h2 class="display-heading">Local Services for a Better Chidambaram</h2>
           <p>From trusted professionals to everyday needs, find everything you need in one place. Our platform helps you connect with service providers in your community.</p>
-          <a href="#categories" class="btn-orange">Browse Services</a>
+          <a href="#categories" class="btn btn-primary btn-orange">Browse Services</a>
         </div>
         <div class="services-center">
           <div class="circle-photo-wrap">
@@ -86,12 +87,14 @@
             <i class="bi bi-handshake panel-symbol"></i>
             <h3>WE SUPPORT LOCAL BUSINESSES</h3>
             <p>Be part of a growing community that values local talent and trusted businesses. List your business and reach more people in Chidambaram.</p>
-            <a href="#contact" class="btn-light">List Your Business</a>
+            <a href="#contact" class="btn btn-light">List Your Business</a>
           </div>
         </div>
       </div>
     </div>
   </section>
+
+  <app-local-brands />
 
   <!-- Categories Section -->
   <section class="categories-section" id="categories">
@@ -101,7 +104,7 @@
         <h2>Explore What You Need</h2>
         <p>Find trusted local services, businesses, events and more — all in one place.</p>
       </div>
-      <div class="categories-grid">
+      <div class="categories-grid row row-cols-2 row-cols-sm-3 row-cols-lg-4 g-3">
         <a class="category-card" href="#services">
           <span><i class="bi bi-house-door-fill"></i></span>
           <h3>Local Services</h3>
@@ -284,7 +287,7 @@
               <label for="message">Message</label>
               <textarea class="form-control" id="message" name="message" rows="3" placeholder="How can we help?" required></textarea>
             </div>
-            <button class="btn-orange w-100" type="submit">Send Message</button>
+            <button class="btn btn-primary btn-orange w-100" type="submit">Send Message</button>
           </form>
         </div>
         <div class="contact-info">
@@ -329,25 +332,4 @@
       </div>
     </div>
   </section>
-</main>
-
-<footer class="site-footer">
-  <div class="container">
-    <a class="footer-brand" href="#">
-      <i class="bi bi-bank2"></i>
-      <span>
-        <strong>நம் சிதம்பரம்</strong>
-        <small>Nam Chidambaram</small>
-      </span>
-    </a>
-    <nav class="footer-nav">
-      <a href="#">Home</a>
-      <a href="#services">Services</a>
-      <a href="#categories">Categories</a>
-      <a href="#events">Events</a>
-      <a href="#community">Community</a>
-      <a href="#about">About</a>
-    </nav>
-    <p class="copyright">&copy; <span id="year"></span> Nam Chidambaram. All rights reserved.</p>
-  </div>
-</footer>
+</div>

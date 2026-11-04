@@ -1,0 +1,18 @@
+app-root .state,
+app-root .notice,
+app-root .success,
+app-root .preview,
+app-root .detail,
+app-root .published article {
+  border-radius: var(--cdm-radius-lg);
+}
+
+app-root table { border-color: var(--cdm-border); }
+app-root table thead th { color: var(--cdm-navy); background: #f4f8f5; }
+app-root code { color: var(--cdm-green); }
+app-root a { text-underline-offset: 0.18em; }
+
+@media (max-width: 650px) {
+  app-root input:not([type='checkbox']):not([type='radio']):not(.hero-search input):not(.header-search input):not(.search-input-wrap input):not(.subcategory-search input):not(.keyword-input input):not(.form-control),
+  app-root select:not(.form-select):not(.location-select-wrap select) { min-height: 2.75rem; }
+}

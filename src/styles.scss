@@ -1,4 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Noto+Sans+Tamil:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+@use './styles/variables';
+@use './styles/bootstrap-overrides';
+@use './styles/typography';
+@use './styles/utilities';
+@use './styles/components';
+@use './styles/responsive';
 
 @font-face {
   font-family: 'bootstrap-icons';
@@ -8,55 +13,30 @@
   font-display: swap;
 }
 
-:root {
-  color-scheme: light;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  --bs-primary: #176346;
-  --bs-primary-rgb: 23, 99, 70;
-  --bs-link-color: #14563d;
-  --bs-link-hover-color: #0b3928;
-  --bs-body-color: #203b30;
-  --bs-body-font-family: 'Noto Sans Tamil', Inter, system-ui, sans-serif;
-  --bs-border-color: #dfe7e2;
-  --bs-border-radius: .75rem;
-  --bs-border-radius-lg: 1rem;
-  --bs-focus-ring-color: rgba(23, 99, 70, .28);
-}
-
-html { scroll-behavior: smooth; background: #fbfaf6; }
-body { margin: 0; background: #fbfaf6; color: #203b30; font-family: 'Noto Sans Tamil', Inter, system-ui, sans-serif; }
-* { box-sizing: border-box; }
-:focus-visible { outline: 3px solid #17583f; outline-offset: 3px; }
-button, input, select, textarea { font: inherit; }
-::selection { background: #cde8d5; color: #123f30; }
-
 /* Shared Bootstrap-inspired form controls and actions for every route. */
-app-root input:not([type='checkbox']):not([type='radio']):not(.hero-search input):not(.header-search input),
-app-root select,
-app-root textarea {
-  min-height: 46px;
-  border: 1px solid #c3d0c8;
-  border-radius: .65rem;
+app-root input:not([type='checkbox']):not([type='radio']):not(.hero-search input):not(.header-search input):not(.search-input-wrap input):not(.subcategory-search input):not(.keyword-input input):not(.form-control),
+app-root select:not(.form-select):not(.location-select-wrap select),
+app-root textarea:not(.form-control) {
+  min-height: var(--cdm-control-height);
+  border: 1px solid #cbd8d1;
+  border-radius: var(--cdm-radius-md);
   padding: .7rem .85rem;
-  color: #203b30;
+  color: var(--cdm-text);
   background-color: #fff;
-  box-shadow: 0 1px 2px rgba(20, 55, 39, .04);
+  box-shadow: var(--cdm-shadow-sm);
   transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
 }
 
-app-root textarea { min-height: 110px; }
+app-root textarea:not(.form-control) { min-height: 110px; }
 app-root input::placeholder,
-app-root textarea::placeholder { color: #66786f; opacity: 1; }
+app-root textarea::placeholder { color: var(--cdm-muted); opacity: 1; }
 
-app-root input:not([type='checkbox']):not([type='radio']):not(.hero-search input):not(.header-search input):focus,
-app-root select:focus,
-app-root textarea:focus {
-  border-color: #43876a;
+app-root input:not([type='checkbox']):not([type='radio']):not(.hero-search input):not(.header-search input):not(.search-input-wrap input):not(.subcategory-search input):not(.keyword-input input):not(.form-control):focus,
+app-root select:not(.form-select):not(.location-select-wrap select):focus,
+app-root textarea:not(.form-control):focus {
+  border-color: var(--cdm-green-accent);
   outline: 0;
-  box-shadow: 0 0 0 .22rem rgba(23, 99, 70, .17);
+  box-shadow: 0 0 0 .22rem rgba(22, 128, 91, .18);
 }
 
 app-root select {
@@ -65,39 +45,39 @@ app-root select {
   background-image: none;
 }
 
-app-root select option {
+app-root select:not(.form-select):not(.location-select-wrap select) option {
   padding: .5rem 0.85rem;
-  color: #203b30;
+  color: var(--cdm-text);
   background-color: #fff;
-  font-family: 'Noto Sans Tamil', Inter, system-ui, sans-serif;
+  font-family: var(--cdm-font-sans);
   font-size: 0.95rem;
   line-height: 1.5;
 }
 
-app-root select[multiple] { min-height: 130px; background-image: none; padding: .5rem; }
+app-root select[multiple]:not(.form-select):not(.location-select-wrap select) { min-height: 130px; background-image: none; padding: .5rem; }
 app-root input[type='checkbox'],
-app-root input[type='radio'] { width: 1.1rem; height: 1.1rem; accent-color: #176346; }
+app-root input[type='radio'] { width: 1.1rem; height: 1.1rem; accent-color: var(--cdm-green); }
 app-root input[type='file'] { min-height: auto; padding: .55rem; }
 
-app-root button:not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button) {
-  min-height: 44px;
-  border: 1px solid #176346;
-  border-radius: .65rem;
+app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):not(.hero-arrow):not(.slide-dot) {
+  min-height: 2.75rem;
+  border: 1px solid var(--cdm-green);
+  border-radius: var(--cdm-radius-md);
   padding: .65rem 1rem;
   color: #fff;
-  background: #176346;
+  background: var(--cdm-green);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
   transition: color .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
 
-app-root button:not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):hover:not(:disabled) {
-  border-color: #104a34;
-  background: #104a34;
+app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):not(.hero-arrow):not(.slide-dot):hover:not(:disabled) {
+  border-color: #104d39;
+  background: #104d39;
 }
 
-app-root button:not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):disabled {
+app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):not(.hero-arrow):not(.slide-dot):disabled {
   cursor: not-allowed;
   opacity: .58;
 }
@@ -107,7 +87,7 @@ app-root button.oauth-button,
 app-root button.secondary-action,
 app-root .actions button.secondary {
   border-color: #b8c9bf;
-  color: #14563d;
+  color: var(--cdm-green);
   background: #fff;
 }
 
@@ -163,30 +143,7 @@ app-submit-service .btn-check:focus-visible + .btn {
   outline: 3px solid #17583f;
   outline-offset: 2px;
 }
-app-root .state,
-app-root .notice,
-app-root .success,
-app-root .preview,
-app-root .card,
-app-root .detail,
-app-root .published article {
-  border-radius: .9rem;
-}
-
-app-root table { border-color: #e5ebe5; }
-app-root table thead th { color: #52665b; background: #f6f9f5; }
-app-root code { color: #4b6458; }
-app-root a { text-underline-offset: .18em; }
-
-@media (max-width: 650px) {
-  app-root input:not([type='checkbox']):not([type='radio']):not(.hero-search input):not(.header-search input), app-root select { min-height: 44px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
-}
-/* Nam Chidambaram reference-matched landing page. All rules are scoped to app-landing. */
+/* CDM360 reference-matched landing page. All rules are scoped to app-landing. */
 app-landing { display:block; --nc-orange:#f56b2e; --nc-orange-dark:#e95b20; --nc-ink:#17232e; --nc-dark:#25282e; --nc-muted:#59616b; --nc-cream:#f7f3ec; }
 app-landing .nc-home { color:var(--nc-ink); background:#fff; overflow:hidden; font-family:Arial,Helvetica,sans-serif; }
 app-landing .nc-kicker { margin:0 0 10px; color:var(--nc-orange-dark); font-size:11px; font-weight:800; letter-spacing:1.6px; }

@@ -1,0 +1,113 @@
+<section class="services-page container-xl" aria-labelledby="services-title" [attr.aria-busy]="service.loading() || listingsLoading() || locationsLoading()">
+  <header class="discovery-hero">
+    <p class="eyebrow">{{ i18n.language() === 'ta' ? 'உங்கள் சமூகத்திற்காக' : 'MADE FOR YOUR COMMUNITY' }}</p>
+    <div class="hero-copy">
+      <div>
+        <h1 id="services-title">{{ i18n.language() === 'ta' ? 'உங்களுக்குத் தேவையான சேவைகள்' : 'Find the services you need' }}</h1>
+        <p>{{ i18n.language() === 'ta' ? 'சிதம்பரத்தில் நம்பகமான உள்ளூர் நிபுணர்களையும் வணிகங்களையும் கண்டறியுங்கள்.' : 'Discover trusted local professionals and businesses in Chidambaram.' }}</p>
+      </div>
+      <span class="hero-mark" aria-hidden="true"><i class="bi bi-compass"></i></span>
+    </div>
+
+    <form class="service-search" (submit)="applyFilters($event, query.value, category.value, location.value)">
+      <div class="search-row">
+        <label class="keyword-field" for="service-query">
+          <span>{{ i18n.language() === 'ta' ? 'எந்த சேவையைத் தேடுகிறீர்கள்?' : 'Search services' }}</span>
+          <span class="search-input-wrap">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input #query id="service-query" type="search" maxlength="200" autocomplete="off" [value]="searchTerm()"
+              [placeholder]="i18n.language() === 'ta' ? 'சேவை, நிபுணர் அல்லது வணிகம்' : 'What service are you looking for?'" />
+          </span>
+        </label>
+        <label class="location-field" for="service-location-filter">
+          <span>{{ i18n.language() === 'ta' ? 'இடம்' : 'Location' }}</span>
+          <span class="location-select-wrap">
+            <i class="bi bi-geo-alt" aria-hidden="true"></i>
+            <select #location id="service-location-filter" [value]="locationSelection()" [disabled]="locationsLoading() || locationsError()">
+              <option value="">{{ i18n.language() === 'ta' ? 'அனைத்து இடங்களும்' : 'All locations' }}</option>
+                @for (place of places(); track place.id) { <option [value]="place.id" [selected]="locationSelection() === place.id">{{ place.label }}</option> }
+            </select>
+          </span>
+          @if (locationsError()) { <small class="field-note" role="status">{{ i18n.language() === 'ta' ? 'இடங்களை ஏற்ற முடியவில்லை.' : 'Locations could not be loaded.' }}</small> }
+        </label>
+        <button class="search-button" type="submit"><i class="bi bi-search" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'தேடுக' : 'Search' }}</span></button>
+      </div>
+
+      <details class="advanced-filters" [open]="!!categoryFilter()">
+        <summary><i class="bi bi-sliders2" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'வகை மற்றும் துணைவகை' : 'Category and subcategory' }}@if (categoryFilter()) { <span class="filter-selected">{{ selectedCategoryLabel() }}</span> }</summary>
+        <div class="advanced-controls">
+          <label for="service-category-filter">
+            <span>{{ i18n.language() === 'ta' ? 'சேவை வகை' : 'Service category' }}</span>
+            <select #category id="service-category-filter" [value]="categoryFilter()">
+              <option value="">{{ i18n.language() === 'ta' ? 'அனைத்து வகைகள் மற்றும் துணைவகைகள்' : 'All categories and subcategories' }}</option>
+              @for (option of categoryOptions(); track option.id) { <option [value]="option.id" [selected]="categoryFilter() === option.id">{{ option.label }}</option> }
+            </select>
+          </label>
+          <button class="clear-button" type="button" (click)="clearFilters()">{{ i18n.language() === 'ta' ? 'வடிகட்டிகளை நீக்கு' : 'Clear filters' }}</button>
+        </div>
+      </details>
+    </form>
+
+    @if (activeFilterCount()) {
+      <div class="active-filters" [attr.aria-label]="i18n.language() === 'ta' ? 'செயலில் உள்ள வடிகட்டிகள்' : 'Active filters'">
+        <span class="active-label">{{ i18n.language() === 'ta' ? 'வடிகட்டிகள்' : 'Filters' }}</span>
+        @if (searchTerm().trim()) { <button type="button" class="filter-chip" (click)="removeFilter('q')">{{ i18n.language() === 'ta' ? 'தேடல்' : 'Search' }}: {{ searchTerm() }} <i class="bi bi-x" aria-hidden="true"></i></button> }
+        @if (categoryFilter()) { <button type="button" class="filter-chip" (click)="removeFilter('category')">{{ selectedCategoryLabel() }} <i class="bi bi-x" aria-hidden="true"></i></button> }
+        @if (locationParam()) { <button type="button" class="filter-chip" (click)="removeFilter('location')">{{ selectedLocationLabel() }} <i class="bi bi-x" aria-hidden="true"></i></button> }
+      </div>
+    }
+  </header>
+
+  @if (hasDirectoryFilters()) {
+    <section class="listing-results" aria-labelledby="listing-results-title" [attr.aria-busy]="listingsLoading()">
+      <div class="section-heading results-heading">
+        <div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'உங்கள் தேடல்' : 'YOUR SEARCH' }}</p><h2 id="listing-results-title">{{ i18n.language() === 'ta' ? 'பொருந்தும் சேவைகள்' : 'Matching services' }}</h2></div>
+        @if (!listingsLoading() && !listingsError()) { <span class="result-count" aria-live="polite">{{ listingResults().listings.length }} {{ i18n.language() === 'ta' ? 'இந்தப் பக்கத்தில்' : 'on this page' }}</span> }
+      </div>
+      @if (listingsLoading()) {
+        <div class="state" role="status"><span class="state-icon bi bi-hourglass-split" aria-hidden="true"></span>{{ i18n.language() === 'ta' ? 'வெளியிடப்பட்ட சேவைகள் தேடப்படுகின்றன…' : 'Searching published services…' }}</div>
+      } @else if (listingsError()) {
+        <div class="state error-state"><p role="alert">{{ i18n.language() === 'ta' ? 'சேவைகளைத் தேட முடியவில்லை. மீண்டும் முயற்சிக்கவும்.' : 'Unable to search services. Please try again.' }}</p><button class="secondary-button" type="button" (click)="retrySearch()">{{ i18n.text().retry }}</button></div>
+      } @else if (!listingResults().listings.length) {
+        <div class="state empty-state"><span class="state-icon bi bi-search" aria-hidden="true"></span><p role="status">{{ i18n.language() === 'ta' ? 'பொருந்தும் சேவைகள் இல்லை. வேறு சேவை, வகை அல்லது இடத்தை முயற்சிக்கவும்.' : 'No matching services. Try another service, category, or location.' }}</p><button class="secondary-button" type="button" (click)="clearFilters()">{{ i18n.language() === 'ta' ? 'அனைத்து வடிகட்டிகளையும் நீக்கு' : 'Clear all filters' }}</button></div>
+      } @else {
+        <div class="listings row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+          @for (listing of listingResults().listings; track listing.id) { <app-listing-summary class="col" [listing]="listing" /> }
+        </div>
+        @if (listingPage() > 0 || listingResults().hasMore) {
+          <nav class="pagination" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவை பக்கங்கள்' : 'Service pages'">
+            <button class="secondary-button" type="button" [disabled]="listingPage() === 0 || listingsLoading()" (click)="changePage(listingPage() - 1)">{{ i18n.language() === 'ta' ? 'முந்தைய' : 'Previous' }}</button>
+            <span>{{ i18n.language() === 'ta' ? 'பக்கம்' : 'Page' }} {{ listingPage() + 1 }}</span>
+            <button class="secondary-button" type="button" [disabled]="!listingResults().hasMore || listingsLoading()" (click)="changePage(listingPage() + 1)">{{ i18n.language() === 'ta' ? 'அடுத்த' : 'Next' }}</button>
+          </nav>
+        }
+      }
+    </section>
+  }
+
+  <section class="category-results" aria-labelledby="category-results-title" [attr.aria-busy]="service.loading()">
+    <header class="section-heading category-heading">
+      <div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'சேவைகளை ஆராயுங்கள்' : 'EXPLORE LOCAL SERVICES' }}</p><h2 id="category-results-title">{{ i18n.language() === 'ta' ? 'சேவை வகைகள்' : 'Explore Categories' }}</h2><p>{{ i18n.language() === 'ta' ? 'உங்கள் அன்றாட தேவைகளுக்கு சரியான நிபுணர்களையும் சேவைகளையும் கண்டறியுங்கள்.' : 'Find the right professionals and services for your everyday needs.' }}</p></div>
+      @if (!service.loading() && !service.error()) { <span class="category-count" aria-live="polite">{{ filteredCategories().length }} {{ i18n.language() === 'ta' ? 'வகைகள்' : 'categories' }}</span> }
+    </header>
+    @if (service.loading()) {
+      <div class="state" role="status">{{ i18n.text().loading }}</div>
+    } @else if (service.error()) {
+      <div class="state error-state"><p role="alert">{{ i18n.text().error }}</p><button class="secondary-button" type="button" (click)="retryCategories()">{{ i18n.text().retry }}</button></div>
+    } @else if (filteredCategories().length) {
+      <div class="categories row row-cols-2 row-cols-sm-3 row-cols-lg-4 row-cols-xl-5 g-3">
+        @for (categoryItem of filteredCategories(); track categoryItem.id) { <app-category-card class="col" [category]="categoryItem" variant="marketplace" /> }
+      </div>
+    } @else {
+      <div class="state empty-state"><span class="state-icon bi bi-grid" aria-hidden="true"></span>
+        @if (searchTerm().trim()) {
+          <p role="status">{{ i18n.language() === 'ta' ? 'பொருந்தும் வகைகள் இல்லை. வேறு சொல்லை முயற்சிக்கவும்.' : 'No matching categories. Try another search.' }}</p>
+          <button class="secondary-button" type="button" (click)="clearFilters()">{{ i18n.language() === 'ta' ? 'வடிகட்டிகளை நீக்கு' : 'Clear filters' }}</button>
+        } @else {
+          <p role="status">{{ i18n.text().empty }}</p>
+          <button class="secondary-button" type="button" (click)="retryCategories()">{{ i18n.text().refresh }}</button>
+        }
+      </div>
+    }
+  </section>
+</section>

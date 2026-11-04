@@ -10,7 +10,7 @@ import { LanguageService } from '../core/services/language.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="auth-card" aria-labelledby="sign-up-title">
-      <p class="eyebrow">NAM CHIDAMBARAM</p><h1 id="sign-up-title">Create your account</h1>
+      <p class="eyebrow">CDM360</p><h1 id="sign-up-title">Create your account</h1>
       <p class="intro">Create an account to submit and manage your community service listings.</p>
       @if (created()) {
         <div class="success" role="status"><h2>Check your email</h2><p>We sent a verification link to <strong>{{ emailSentTo() }}</strong>. Verify your email before submitting a service.</p><a routerLink="/auth/verify-email">Continue to verification</a></div>

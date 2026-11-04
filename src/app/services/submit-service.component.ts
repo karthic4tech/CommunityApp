@@ -28,7 +28,7 @@ import { ListingMediaService } from '../core/services/listing-media.service';
               <div class="page-header mb-4 mb-lg-5">
                 <p class="eyebrow text-uppercase fw-bold mb-2">Community service</p>
                 <h1 class="page-title fw-bold mb-3">{{ editing() ? 'Edit your submission' : 'Add your service' }}</h1>
-                <p class="page-intro mb-0">Share accurate service information with the Nam Chidambaram community. Submissions are reviewed before publication.</p>
+                <p class="page-intro mb-0">Share accurate service information with the CDM360 community. Submissions are reviewed before publication.</p>
               </div>
             }
 

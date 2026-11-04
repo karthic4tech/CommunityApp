@@ -1,76 +1,249 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../core/auth/auth.service';
-import { DirectoryLocation, locationOptions } from '../core/models/service-listing';
+import { locationOptions } from '../core/models/service-listing';
+import { SubmissionRow, SubmissionStatus } from '../core/models/service-submission';
 import { LanguageService } from '../core/services/language.service';
+import { MediaService } from '../core/services/media.service';
 import { ProfileService } from '../core/services/profile.service';
 import { ServiceDirectoryService } from '../core/services/service-directory.service';
+import { ServiceSubmissionService } from '../core/services/service-submission.service';
 import { MediaUploadComponent } from '../shared/components/media-upload/media-upload.component';
+
+const ACCOUNT_COPY = {
+  en: {
+    eyebrow: 'ACCOUNT OVERVIEW', title: 'My account', intro: 'Your profile, listings and community activity in one place.',
+    verified: 'Email verified', verifyNeeded: 'Email verification needed', verifyTitle: 'Verify your email to publish services',
+    verifyBody: 'You can complete your profile now. Email verification is required before submitting a service for review.', verifyAction: 'Verify email',
+    member: 'Community member', editProfile: 'Edit profile', profile: 'Profile information', profileHint: 'Keep your details up to date so the community can recognize you.',
+    fullName: 'Full name', email: 'Email address', emailHelp: 'Managed securely through Supabase Auth.', phone: 'Phone number',
+    preferredLanguage: 'Preferred language', preferredLocality: 'Preferred locality', notSelected: 'Not selected',
+    profilePhoto: 'Profile photo', photoHint: 'Upload a square photo. Your existing profile image can be replaced here.',
+    save: 'Save changes', cancel: 'Cancel', readOnlyHint: 'Your profile details are read-only. Select Edit profile to make changes.',
+    saving: 'Saving changes…', saved: 'Your profile was saved.', saveFailed: 'Unable to save your profile.',
+    loadingProfile: 'Loading your profile…', loadingActivity: 'Loading your activity…', profileLoadFailed: 'Unable to load your profile.', retry: 'Try again',
+    totalSubmissions: 'Total submissions', publishedListings: 'Published listings', pendingApprovals: 'Pending approvals',
+    activity: 'Community activity', summary: 'Your activity at a glance', shortcuts: 'Quick links', addService: 'Add your service', listings: 'My service listings',
+    listingsHint: 'Manage drafts, submissions and review feedback.', browseServices: 'Browse services', recentSubmissions: 'Recent submissions',
+    viewAll: 'View all submissions', noSubmissions: 'No submissions yet', noSubmissionsHint: 'Your service submissions and their review progress will appear here.',
+    updated: 'Updated', openSubmission: 'Manage', approvalProgress: 'Approval progress', stepDraft: 'Draft', stepReview: 'Review', stepPublished: 'Published',
+    statuses: { draft: 'Draft', pending_review: 'Pending review', published: 'Published', rejected: 'Changes requested', suspended: 'Suspended', archived: 'Unpublished' },
+    accountSettings: 'Account settings', memberSince: 'Community member since', security: 'Password and security', resetPassword: 'Reset password',
+    resetHint: 'Send a secure password reset link to your email.', signOut: 'Sign out', signingOut: 'Signing out…',
+    invalidName: 'Please enter your name.', invalidNameLength: 'Your name must be 160 characters or fewer.',
+  },
+  ta: {
+    eyebrow: 'கணக்கு கண்ணோட்டம்', title: 'எனது கணக்கு', intro: 'உங்கள் சுயவிவரம், சேவைகள் மற்றும் சமூகச் செயல்பாடுகள் ஒரே இடத்தில்.',
+    verified: 'மின்னஞ்சல் சரிபார்க்கப்பட்டது', verifyNeeded: 'மின்னஞ்சலைச் சரிபார்க்கவும்', verifyTitle: 'சேவைகளை வெளியிட மின்னஞ்சலைச் சரிபார்க்கவும்',
+    verifyBody: 'இப்போது உங்கள் சுயவிவரத்தைப் பூர்த்தி செய்யலாம். சேவையை மதிப்பாய்வுக்கு அனுப்ப மின்னஞ்சல் சரிபார்ப்பு அவசியம்.', verifyAction: 'மின்னஞ்சலைச் சரிபார்க்கவும்',
+    member: 'சமூக உறுப்பினர்', editProfile: 'சுயவிவரத்தைத் திருத்து', profile: 'சுயவிவரத் தகவல்', profileHint: 'சமூகத்தினர் உங்களை அடையாளம் காண உங்கள் தகவல்களைப் புதுப்பித்த நிலையில் வைத்திருங்கள்.',
+    fullName: 'முழுப் பெயர்', email: 'மின்னஞ்சல் முகவரி', emailHelp: 'Supabase Auth மூலம் பாதுகாப்பாக நிர்வகிக்கப்படுகிறது.', phone: 'தொலைபேசி எண்',
+    preferredLanguage: 'விருப்ப மொழி', preferredLocality: 'விருப்பமான பகுதி', notSelected: 'தேர்ந்தெடுக்கப்படவில்லை',
+    profilePhoto: 'சுயவிவரப் படம்', photoHint: 'சதுர வடிவப் படத்தைப் பதிவேற்றவும். ஏற்கனவே உள்ள படத்தையும் இங்கே மாற்றலாம்.',
+    save: 'மாற்றங்களைச் சேமி', cancel: 'ரத்து செய்', readOnlyHint: 'உங்கள் சுயவிவர விவரங்கள் படிக்க மட்டும். மாற்ற “சுயவிவரத்தைத் திருத்து” என்பதைத் தேர்ந்தெடுக்கவும்.',
+    saving: 'சேமிக்கப்படுகிறது…', saved: 'உங்கள் சுயவிவரம் சேமிக்கப்பட்டது.', saveFailed: 'சுயவிவரத்தைச் சேமிக்க முடியவில்லை.',
+    loadingProfile: 'சுயவிவரம் ஏற்றப்படுகிறது…', loadingActivity: 'செயல்பாடுகள் ஏற்றப்படுகின்றன…', profileLoadFailed: 'சுயவிவரத்தை ஏற்ற முடியவில்லை.', retry: 'மீண்டும் முயற்சி',
+    totalSubmissions: 'மொத்த சமர்ப்பிப்புகள்', publishedListings: 'வெளியிடப்பட்ட சேவைகள்', pendingApprovals: 'மதிப்பாய்வில் உள்ளவை',
+    activity: 'சமூகச் செயல்பாடு', summary: 'உங்கள் செயல்பாடுகள்', shortcuts: 'விரைவு இணைப்புகள்', addService: 'உங்கள் சேவையைச் சேர்க்கவும்', listings: 'எனது சேவைகள்',
+    listingsHint: 'வரைவுகள், சமர்ப்பிப்புகள் மற்றும் மதிப்பாய்வு கருத்துகளை நிர்வகிக்கவும்.', browseServices: 'சேவைகளைப் பாருங்கள்', recentSubmissions: 'சமீபத்திய சமர்ப்பிப்புகள்',
+    viewAll: 'அனைத்து சமர்ப்பிப்புகளையும் காண்க', noSubmissions: 'சமர்ப்பிப்புகள் இல்லை', noSubmissionsHint: 'உங்கள் சேவைகள் மற்றும் அவற்றின் மதிப்பாய்வு நிலை இங்கே தோன்றும்.',
+    updated: 'புதுப்பிக்கப்பட்டது', openSubmission: 'நிர்வகிக்கவும்', approvalProgress: 'ஒப்புதல் முன்னேற்றம்', stepDraft: 'வரைவு', stepReview: 'மதிப்பாய்வு', stepPublished: 'வெளியீடு',
+    statuses: { draft: 'வரைவு', pending_review: 'மதிப்பாய்வில்', published: 'வெளியிடப்பட்டது', rejected: 'மாற்றங்கள் கோரப்பட்டன', suspended: 'இடைநிறுத்தப்பட்டது', archived: 'வெளியீடு நீக்கப்பட்டது' },
+    accountSettings: 'கணக்கு அமைப்புகள்', memberSince: 'சமூகத்தில் இணைந்த நாள்', security: 'கடவுச்சொல் மற்றும் பாதுகாப்பு', resetPassword: 'கடவுச்சொல்லை மீட்டமை',
+    resetHint: 'பாதுகாப்பான கடவுச்சொல் மீட்டமைப்பு இணைப்பை மின்னஞ்சலில் பெறுங்கள்.', signOut: 'வெளியேறு', signingOut: 'வெளியேறுகிறது…',
+    invalidName: 'உங்கள் பெயரை உள்ளிடவும்.', invalidNameLength: 'பெயர் 160 எழுத்துகளுக்குள் இருக்க வேண்டும்.',
+  },
+} as const;
+
+interface AccountProfileValues {
+  full_name: string;
+  phone: string;
+  preferred_language: 'ta' | 'en';
+  preferred_locality_id: string;
+}
 
 @Component({
   selector: 'app-account',
-  imports: [ReactiveFormsModule, RouterLink, MediaUploadComponent],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, MediaUploadComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <section class="account-page" aria-labelledby="account-title" [attr.aria-busy]="loading() || saving()">
-      <header><p class="eyebrow">ACCOUNT</p><h1 id="account-title">Your account</h1><p class="intro">Manage your profile and community submissions.</p></header>
-      @if (!auth.emailVerified()) { <div class="notice" role="status"><strong>Email verification required.</strong><p>Verify your email before submitting a service.</p><a routerLink="/auth/verify-email">Verify email</a></div> }
-      @if (loading()) { <p class="state" role="status">Loading your profile…</p> } @else {
-        <div class="account-grid">
-          <form class="card" [formGroup]="form" (ngSubmit)="save()"><h2>Profile</h2>
-            <label>Email<input [value]="auth.user()?.email ?? ''" readonly aria-describedby="email-help" /></label><small id="email-help">Email is managed by Supabase Auth.</small>
-            <label>Full name<input formControlName="full_name" autocomplete="name" maxlength="160" required /></label>
-            <label>Phone<input formControlName="phone" autocomplete="tel" maxlength="40" /></label>
-            <label>Preferred language<select formControlName="preferred_language"><option value="ta">தமிழ்</option><option value="en">English</option></select></label>
-            <label>Preferred locality<select formControlName="preferred_locality_id"><option value="">Not selected</option>@for (place of places(); track place.id) { <option [value]="place.id">{{ place.label }}</option> }</select></label>
-            @if (message(); as text) { <p class="message" role="status">{{ text }}</p> }
-            <button type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Saving…' : 'Save profile' }}</button>
-          </form>
-          <aside class="card actions-card"><h2>Community services</h2><a routerLink="/services/submit"><i class="bi bi-plus-circle" aria-hidden="true"></i> Add your service</a><a routerLink="/my-submissions"><i class="bi bi-card-list" aria-hidden="true"></i> View my submissions</a><button type="button" class="secondary" (click)="signOut()"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sign out</button></aside>
-        </div>
-        @if (auth.user()?.id; as userId) {
-          <section class="card photo-card" aria-labelledby="photo-title">
-            <div><h2 id="photo-title">Profile photo</h2><p class="intro">Upload a square photo. Replacing the photo swaps it in after the new one is saved.</p></div>
-            <app-media-upload entityType="profile" [entityId]="userId" [multiple]="false" [maxFiles]="1" [maxFileSizeMb]="5" />
-          </section>
-        }
-      }
-    </section>
-  `,
-  styles: `
-    :host { display:block; padding-block:2rem; }.account-page { display:grid; gap:1.25rem; }.eyebrow { margin:0 0 .35rem; color:#52665b; font-size:.72rem; font-weight:800; letter-spacing:.12em; } h1 { margin:0; color:#173f32; font-size:clamp(1.7rem,4vw,2.5rem); }.intro,small { color:#52665b; line-height:1.7; }.notice { padding:1rem; border:1px solid #e7d9ae; border-radius:14px; background:#fffaf0; color:#625329; line-height:1.7; }.notice a,.actions-card a { color:#075541; }.account-grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(240px,1fr); gap:1rem; }.card { display:grid; align-content:start; gap:1rem; padding:1.25rem; border:1px solid #dfe7e2; border-radius:16px; background:white; }.card h2 { margin:0; color:#173f32; font-size:1.2rem; }.card label { display:grid; gap:.4rem; color:#173f32; font-weight:650; }.card input,.card select { min-height:44px; border:1px solid #b8c9bf; border-radius:9px; padding:.7rem; background:white; color:#173f32; font:inherit; }.card button { min-height:44px; border:1px solid #075541; border-radius:9px; padding:.7rem 1rem; background:#075541; color:white; font:inherit; font-weight:700; }.actions-card a { display:flex; align-items:center; min-height:44px; }.actions-card .secondary { background:white; color:#075541; }.message { color:#275b3c; line-height:1.7; }.state { padding:1.25rem; border:1px solid #dfe7e2; border-radius:14px; background:white; color:#52665b; }.card :is(a,button,input,select):focus-visible { outline:3px solid #17583f; outline-offset:3px; } .photo-card { max-width: 640px; align-self: start; } @media(max-width:700px) { .account-grid { grid-template-columns:1fr; } }
-  `,
+  templateUrl: './account.component.html',
+  styleUrl: './account.component.scss',
 })
 export class AccountComponent implements OnInit {
   protected readonly auth = inject(AuthService);
   private readonly profiles = inject(ProfileService);
   private readonly directory = inject(ServiceDirectoryService);
+  private readonly submissionService = inject(ServiceSubmissionService);
+  private readonly media = inject(MediaService);
   private readonly router = inject(Router);
-  protected readonly form = inject(NonNullableFormBuilder).group({ full_name: ['', [Validators.required, Validators.maxLength(160)]], phone: ['', Validators.maxLength(40)], preferred_language: 'ta' as 'ta' | 'en', preferred_locality_id: '' });
-  protected readonly loading = signal(true);
+  private readonly formBuilder = inject(NonNullableFormBuilder);
+  protected readonly i18n = inject(LanguageService);
+  private readonly fullNameInput = viewChild<ElementRef<HTMLInputElement>>('fullNameInput');
+
+  protected readonly form = this.formBuilder.group({
+    full_name: ['', [Validators.required, Validators.maxLength(160)]],
+    phone: ['', Validators.maxLength(40)],
+    preferred_language: 'ta' as 'ta' | 'en',
+    preferred_locality_id: '',
+  });
+  protected readonly copy = computed(() => this.i18n.language() === 'ta' ? ACCOUNT_COPY.ta : ACCOUNT_COPY.en);
+  protected readonly profileLoading = signal(true);
+  protected readonly activityLoading = signal(true);
+  protected readonly profileError = signal<string | null>(null);
+  protected readonly activityError = signal<string | null>(null);
   protected readonly saving = signal(false);
+  protected readonly editing = signal(false);
+  protected readonly signingOut = signal(false);
   protected readonly message = signal<string | null>(null);
+  protected readonly messageIsError = signal(false);
+  protected readonly signOutError = signal<string | null>(null);
   protected readonly places = signal<{ id: string; label: string }[]>([]);
-
-  ngOnInit(): void { void this.load(); }
-
-  protected async save(): Promise<void> {
-    if (this.form.invalid) return;
-    this.saving.set(true); this.message.set(null);
-    try { await this.profiles.save(this.form.getRawValue()); this.message.set('Profile saved.'); }
-    catch (error) { this.message.set(error instanceof Error ? error.message : 'Unable to save your profile.'); }
-    finally { this.saving.set(false); }
+  private readonly savedProfileValues = signal<AccountProfileValues | null>(null);
+  protected readonly submissions = signal<SubmissionRow[]>([]);
+  protected readonly displayName = signal('');
+  protected readonly avatarUrl = signal<string | null>(null);
+  protected readonly initials = computed(() => {
+    const name = this.displayName().trim() || this.auth.user()?.email?.split('@')[0] || 'CDM360';
+    const parts = name.split(/\s+/).filter(Boolean).slice(0, 2);
+    return parts.map((part) => part.charAt(0).toLocaleUpperCase()).join('') || 'CD';
+  });
+  protected readonly totalSubmissions = computed(() => this.submissions().length);
+  protected readonly publishedListings = computed(() => this.submissions().filter((submission) => submission.status === 'published').length);
+  protected readonly pendingApprovals = computed(() => this.submissions().filter((submission) =>
+    submission.status === 'pending_review' || submission.service_listing_revisions?.some((revision) => revision.status === 'pending_review'),
+  ).length);
+  protected readonly recentSubmissions = computed(() => this.submissions().slice(0, 3));
+  protected readonly approvalSteps = [1, 2, 3] as const;
+  ngOnInit(): void {
+    void this.loadProfile();
+    void this.loadActivity();
   }
 
-  protected async signOut(): Promise<void> { await this.auth.signOut(); await this.router.navigateByUrl('/auth/sign-in'); }
-
-  private async load(): Promise<void> {
+  protected async save(): Promise<void> {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+    this.saving.set(true);
+    this.message.set(null);
     try {
-      const [profile, locations] = await Promise.all([this.profiles.ensure(this.auth.user()?.user_metadata?.['full_name'] as string | null ?? null), this.directory.locations()]);
-      this.form.reset({ full_name: profile.full_name ?? '', phone: profile.phone ?? '', preferred_language: profile.preferred_language, preferred_locality_id: profile.preferred_locality_id ?? '' });
+      const profile = await this.profiles.save(this.form.getRawValue());
+      const savedValues: AccountProfileValues = {
+        full_name: profile.full_name ?? '',
+        phone: profile.phone ?? '',
+        preferred_language: profile.preferred_language,
+        preferred_locality_id: profile.preferred_locality_id ?? '',
+      };
+      this.form.reset(savedValues);
+      this.savedProfileValues.set(savedValues);
+      this.displayName.set(savedValues.full_name);
+      this.editing.set(false);
+      this.messageIsError.set(false);
+      this.message.set(this.copy().saved);
+    } catch (error) {
+      this.messageIsError.set(true);
+      this.message.set(error instanceof Error ? error.message : this.copy().saveFailed);
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  protected async loadProfile(): Promise<void> {
+    this.profileLoading.set(true);
+    this.profileError.set(null);
+    try {
+      const metadataName = this.auth.user()?.user_metadata?.['full_name'];
+      const fallbackName = typeof metadataName === 'string' ? metadataName : null;
+      const [profile, locations] = await Promise.all([this.profiles.ensure(fallbackName), this.directory.locations()]);
+      const savedValues: AccountProfileValues = {
+        full_name: profile.full_name ?? '',
+        phone: profile.phone ?? '',
+        preferred_language: profile.preferred_language,
+        preferred_locality_id: profile.preferred_locality_id ?? '',
+      };
+      this.form.reset(savedValues);
+      this.savedProfileValues.set(savedValues);
+      this.displayName.set(savedValues.full_name);
+      this.editing.set(false);
       this.places.set(locationOptions(locations, profile.preferred_language));
-    } catch (error) { this.message.set(error instanceof Error ? error.message : 'Unable to load your profile.'); }
-    finally { this.loading.set(false); }
+      void this.refreshAvatar();
+    } catch (error) {
+      this.profileError.set(error instanceof Error ? error.message : this.copy().profileLoadFailed);
+    } finally {
+      this.profileLoading.set(false);
+    }
+  }
+
+  protected async loadActivity(): Promise<void> {
+    this.activityLoading.set(true);
+    this.activityError.set(null);
+    try {
+      this.submissions.set(await this.submissionService.listMine());
+    } catch (error) {
+      this.activityError.set(error instanceof Error ? error.message : this.copy().loadingActivity);
+    } finally {
+      this.activityLoading.set(false);
+    }
+  }
+
+  protected async refreshAvatar(): Promise<void> {
+    const userId = this.auth.user()?.id;
+    if (!userId) {
+      this.avatarUrl.set(null);
+      return;
+    }
+    try {
+      const gallery = await this.media.getMediaGallery('profile', userId);
+      this.avatarUrl.set(gallery[0]?.url ?? null);
+    } catch {
+      this.avatarUrl.set(null);
+    }
+  }
+
+  protected onNameInput(): void {
+    this.displayName.set(this.form.controls.full_name.value);
+  }
+
+  protected startEditing(): void {
+    if (this.profileLoading() || this.profileError()) return;
+    this.message.set(null);
+    this.editing.set(true);
+    this.fullNameInput()?.nativeElement.focus();
+  }
+
+  protected cancelEdit(): void {
+    const savedValues = this.savedProfileValues();
+    if (savedValues) {
+      this.form.reset(savedValues);
+      this.displayName.set(savedValues.full_name);
+    }
+    this.message.set(null);
+    this.editing.set(false);
+  }
+
+  protected statusLabel(status: SubmissionStatus): string {
+    return this.copy().statuses[status];
+  }
+
+  protected approvalStep(status: SubmissionStatus): number {
+    if (status === 'draft') return 1;
+    if (status === 'pending_review') return 2;
+    if (status === 'published') return 3;
+    return 0;
+  }
+
+  protected async signOut(): Promise<void> {
+    this.signOutError.set(null);
+    this.signingOut.set(true);
+    try {
+      await this.auth.signOut();
+      await this.router.navigateByUrl('/auth/sign-in');
+    } catch (error) {
+      this.signOutError.set(error instanceof Error ? error.message : 'Unable to sign out. Please try again.');
+    } finally {
+      this.signingOut.set(false);
+    }
   }
 }

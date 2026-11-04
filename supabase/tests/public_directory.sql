@@ -61,6 +61,18 @@ begin
   if (select count(*) from public.directory_listings('de000000-0000-4000-8000-000000000020', null, '100%')) <> 1 then
     raise exception 'Keyword must be literal, not a wildcard expression';
   end if;
+  if not exists (select 1 from public.directory_listings(null, null, '') where id = 'de000000-0000-4000-8000-000000000044') then
+    raise exception 'A null category must search across active categories';
+  end if;
+  if not exists (select 1 from public.directory_listings(null, null, 'directory-regression-child') where id = 'de000000-0000-4000-8000-000000000040') then
+    raise exception 'Keyword search must include an active subcategory slug';
+  end if;
+  if (select count(*) from public.directory_listings(null, null, '')) <> 3 then
+    raise exception 'An unfiltered directory query must return all verified active-category published listings';
+  end if;
+  if (select count(*) from public.directory_listings(null, null, 'Test child')) <> 1 then
+    raise exception 'Keyword search must include active subcategory names';
+  end if;
   if exists (select 1 from public.service_listings where id in ('de000000-0000-4000-8000-000000000042', 'de000000-0000-4000-8000-000000000043')) then
     raise exception 'Anonymous direct reads exposed unpublished data';
   end if;

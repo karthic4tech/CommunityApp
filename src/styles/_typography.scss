@@ -1,0 +1,24 @@
+html { scroll-behavior: smooth; scroll-padding-top: 1.5rem; background: var(--cdm-warm-white); }
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--cdm-warm-white);
+  color: var(--cdm-text);
+  font-family: var(--cdm-font-sans);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--cdm-navy-deep);
+  font-family: var(--cdm-font-sans);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+h1 { font-size: clamp(1.75rem, 3.2vw, 2.5rem); }
+h2 { font-size: clamp(1.35rem, 2.3vw, 1.8rem); }
+h3 { font-size: clamp(1.1rem, 1.8vw, 1.35rem); }
+small, .small { line-height: 1.45; }
+button, input, select, textarea { font: inherit; }
+* { box-sizing: border-box; }

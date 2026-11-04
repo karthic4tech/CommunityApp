@@ -71,7 +71,7 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
   template: `
     <a class="skip-link" href="#main">{{ i18n.text().skip }}</a>
     <header class="site-header">
-      <div class="header-inner">
+      <div class="header-inner container-xl">
         <a routerLink="/" class="brand" aria-label="CDM360 — Chidambaram Community Platform home">
           <img ngSrc="assets/images/cdm360-logo.jpeg" width="288" height="288" priority
             alt="" aria-hidden="true" class="brand-logo" />
@@ -83,7 +83,7 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
           <button type="button" lang="en" [class.active]="i18n.language() === 'en'" [attr.aria-pressed]="i18n.language() === 'en'" (click)="i18n.setLanguage('en')">English</button>
         </div>
       </div>
-      <nav class="main-nav" [attr.aria-label]="i18n.language() === 'ta' ? 'முதன்மை வழிசெலுத்தல்' : 'Main navigation'">
+      <nav class="main-nav container-xl" [attr.aria-label]="i18n.language() === 'ta' ? 'முதன்மை வழிசெலுத்தல்' : 'Main navigation'">
         <a routerLink="/" routerLinkActive="nav-active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page"><i class="bi bi-house-door" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'முகப்பு' : 'Home' }}</span></a>
         <a routerLink="/services" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-grid" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'சேவைகள்' : 'Explore Services' }}</span></a>
         <a routerLink="/" fragment="about"><i class="bi bi-compass" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'நம் கதை' : 'Our story' }}</span></a>
@@ -93,9 +93,9 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
       </nav>
     </header>
 
-    <main id="main" tabindex="-1"><router-outlet (activate)="focusContent()" /></main>
+    <main id="main" class="container-fluid p-0" tabindex="-1"><router-outlet (activate)="focusContent()" /></main>
     <footer class="site-footer">
-      <div class="footer-inner">
+      <div class="footer-inner container-xl">
         <div class="footer-intro">
           <a routerLink="/" class="footer-brand">{{ i18n.text().brand }} <small [lang]="i18n.secondaryLanguage()">{{ i18n.text().secondaryBrand }}</small></a>
           <p>{{ i18n.language() === 'ta' ? 'நம் ஊரையும், நம் மக்களையும், நம் சேவைகளையும் இணைக்கும் ஒரு சமூகத் தளம்.' : 'A welcoming local directory connecting our town, our people, and the services we share.' }}</p>
@@ -113,7 +113,7 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
           <a routerLink="/admin/login">{{ i18n.language() === 'ta' ? 'நிர்வாக உள்நுழைவு' : 'Admin login' }}</a>
         </div>
       </div>
-      <div class="footer-bottom"><span>{{ i18n.text().footer }}</span><span>© {{ i18n.language() === 'ta' ? 'நம் சிதம்பரம்' : 'Nam Chidambaram' }}</span></div>
+      <div class="footer-bottom container-xl"><span>{{ i18n.text().footer }}</span><span>© CDM360</span></div>
     </footer>
   `,
   styleUrl: './site-layout.component.scss',
@@ -137,7 +137,7 @@ export class HomeComponent {
         <div class="nc-hero-photo" role="img" aria-label="Chidambaram temple street"></div>
         <div class="nc-hero-copy">
           <p class="nc-kicker">{{ i18n.language() === 'ta' ? 'நம் ஊருக்கு வரவேற்கிறோம்' : 'WELCOME TO' }}</p>
-          <h1 id="home-title"><span lang="ta">நம் சிதம்பரம்</span><br><span>Nam Chidambaram</span></h1>
+          <h1 id="home-title"><span>CDM360</span></h1>
           <p>{{ i18n.language() === 'ta' ? 'உள்ளூர் சேவைகள், வணிகங்கள், நிகழ்வுகள் மற்றும் சமூகத் தகவல்களை ஒரே இடத்தில் கண்டறியுங்கள்.' : 'Discover local services, businesses, events and community updates in Chidambaram.' }}</p>
           <a class="nc-button" routerLink="/services">{{ i18n.language() === 'ta' ? 'இப்போதே பாருங்கள்' : 'Explore Now' }} <i class="bi bi-arrow-right"></i></a>
         </div>
@@ -145,7 +145,7 @@ export class HomeComponent {
 
       <section class="nc-intro" id="about">
         <div class="nc-photo nc-family-photo" role="img" aria-label="Chidambaram community"></div>
-        <div class="nc-intro-card"><p class="nc-kicker">{{ i18n.language() === 'ta' ? 'நம் சமூகம்' : 'OUR COMMUNITY' }}</p><h2>{{ i18n.language() === 'ta' ? 'மக்கள். சேவைகள். வலுவான சிதம்பரம்.' : 'People. Services. A Stronger Chidambaram.' }}</h2><p>{{ i18n.language() === 'ta' ? 'உள்ளூர் சேவைகள், வணிகங்கள் மற்றும் நிகழ்வுகளை ஒரே இடத்தில் இணைக்கிறோம்.' : 'Nam Chidambaram brings together local services, businesses, events and useful information to make everyday life easier.' }}</p><a class="nc-button nc-button-light" routerLink="/services">{{ i18n.language() === 'ta' ? 'மேலும் அறிய' : 'Learn More' }} <i class="bi bi-arrow-right"></i></a></div>
+        <div class="nc-intro-card"><p class="nc-kicker">{{ i18n.language() === 'ta' ? 'நம் சமூகம்' : 'OUR COMMUNITY' }}</p><h2>{{ i18n.language() === 'ta' ? 'மக்கள். சேவைகள். வலுவான சிதம்பரம்.' : 'People. Services. A Stronger Chidambaram.' }}</h2><p>{{ i18n.language() === 'ta' ? 'உள்ளூர் சேவைகள், வணிகங்கள் மற்றும் நிகழ்வுகளை ஒரே இடத்தில் இணைக்கிறோம்.' : 'CDM360 brings together local services, businesses, events and useful information to make everyday life easier.' }}</p><a class="nc-button nc-button-light" routerLink="/services">{{ i18n.language() === 'ta' ? 'மேலும் அறிய' : 'Learn More' }} <i class="bi bi-arrow-right"></i></a></div>
         <div class="nc-benefits">
           <article><span><i class="bi bi-people-fill"></i></span><div><h3>{{ i18n.language() === 'ta' ? 'உள்ளூரை ஆதரியுங்கள்' : 'Support Local' }}</h3><p>{{ i18n.language() === 'ta' ? 'உள்ளூர் வணிகங்கள் மற்றும் சேவை வழங்குநர்களைக் கண்டறியுங்கள்.' : 'Discover and support local businesses and service providers.' }}</p></div></article>
           <article><span><i class="bi bi-newspaper"></i></span><div><h3>{{ i18n.language() === 'ta' ? 'தகவலுடன் இருங்கள்' : 'Stay Updated' }}</h3><p>{{ i18n.language() === 'ta' ? 'சமூகச் செய்திகள் மற்றும் நிகழ்வுகளை அறியுங்கள்.' : 'Get the latest community news, events and important announcements.' }}</p></div></article>
@@ -235,7 +235,7 @@ export class HomeComponent {
 
       <section class="nc-trust" id="community"><div class="nc-trust-card"><p class="nc-kicker">{{ i18n.language() === 'ta' ? 'நம் சமூகத்தின் நம்பிக்கை' : 'TRUSTED BY OUR COMMUNITY' }}</p><h2>{{ i18n.language() === 'ta' ? 'இன்றிலிருந்து ஒன்றாக வளர்வோம்' : 'Growing Together Since Today' }}</h2><p>{{ i18n.language() === 'ta' ? 'உள்ளூர் திறமைகளை ஆதரிக்கும், நம் பண்பாட்டைக் கொண்டாடும் சமூகத்தில் இணையுங்கள்.' : 'Our platform is built by and for the people of Chidambaram. Join a community that supports local talent, celebrates our culture and creates new opportunities.' }}</p><a class="nc-button" routerLink="/services/submit">{{ i18n.language() === 'ta' ? 'சமூகத்தில் இணையுங்கள்' : 'Join Our Community' }} <i class="bi bi-arrow-right"></i></a></div><div class="nc-photo nc-people-photo" role="img" aria-label="People in Chidambaram"></div><div class="nc-stats"><div><i class="bi bi-people"></i><strong>Local</strong><small>{{ i18n.language() === 'ta' ? 'சமூக உறுப்பினர்கள்' : 'Community Members' }}</small></div><div><i class="bi bi-shop"></i><strong>Local</strong><small>{{ i18n.language() === 'ta' ? 'உள்ளூர் வணிகங்கள்' : 'Local Businesses' }}</small></div><div><i class="bi bi-calendar-event"></i><strong>Events</strong><small>{{ i18n.language() === 'ta' ? 'சமூக நிகழ்வுகள்' : 'Community Events' }}</small></div><div><i class="bi bi-heart"></i><strong>{{ i18n.language() === 'ta' ? 'ஒன்றாக' : 'Together' }}</strong><small>{{ i18n.language() === 'ta' ? 'வலுவான சிதம்பரம்' : 'A Stronger Chidambaram' }}</small></div></div></section>
 
-      <section class="nc-testimonial"><div class="nc-photo nc-testimonial-photo" role="img" aria-label="Chidambaram resident"></div><blockquote><i class="bi bi-quote"></i><p>{{ i18n.language() === 'ta' ? 'நம் சிதம்பரம் உள்ளூர் சேவைகளைக் கண்டறியவும், நம் ஊருடன் இணைந்திருக்கவும் உதவுகிறது.' : 'Nam Chidambaram makes it easy to find trusted local services, discover new businesses, know about upcoming events and stay connected with my town.' }}</p><cite>— {{ i18n.language() === 'ta' ? 'சிதம்பரம் குடியிருப்பாளர்' : 'A Chidambaram Resident' }}</cite></blockquote></section>
+      <section class="nc-testimonial"><div class="nc-photo nc-testimonial-photo" role="img" aria-label="Chidambaram resident"></div><blockquote><i class="bi bi-quote"></i><p>{{ i18n.language() === 'ta' ? 'நம் சிதம்பரம் உள்ளூர் சேவைகளைக் கண்டறியவும், நம் ஊருடன் இணைந்திருக்கவும் உதவுகிறது.' : 'CDM360 makes it easy to find trusted local services, discover new businesses, know about upcoming events and stay connected with my town.' }}</p><cite>— {{ i18n.language() === 'ta' ? 'சிதம்பரம் குடியிருப்பாளர்' : 'A Chidambaram Resident' }}</cite></blockquote></section>
 
       <section class="nc-contact" id="contact"><div class="nc-contact-form"><p class="nc-kicker">{{ i18n.language() === 'ta' ? 'தொடர்பு கொள்ளுங்கள்' : 'GET IN TOUCH' }}</p><h2>{{ i18n.language() === 'ta' ? 'எங்களைத் தொடர்பு கொள்ளுங்கள்' : 'Contact Us' }}</h2><form (submit)="$event.preventDefault()"><label>{{ i18n.language() === 'ta' ? 'பெயர்' : 'Name' }}<input type="text" [placeholder]="i18n.language() === 'ta' ? 'உங்கள் பெயர்' : 'Enter your name'"></label><label>{{ i18n.language() === 'ta' ? 'மின்னஞ்சல்' : 'Email Address' }}<input type="email" placeholder="Enter a valid email address"></label><label>{{ i18n.language() === 'ta' ? 'செய்தி' : 'Message' }}<textarea rows="3" placeholder="How can we help?"></textarea></label><button type="submit" class="nc-button">{{ i18n.language() === 'ta' ? 'செய்தி அனுப்புங்கள்' : 'Send Message' }} <i class="bi bi-arrow-right"></i></button></form></div><div class="nc-contact-info"><h3>{{ i18n.language() === 'ta' ? 'தொடர்பு விவரங்கள்' : 'CONTACT INFORMATION' }}</h3><p><i class="bi bi-geo-alt"></i> Chidambaram, Cuddalore District<br>Tamil Nadu, India</p><p><i class="bi bi-envelope"></i> support@namchidambaram.org</p><h3>{{ i18n.language() === 'ta' ? 'எங்களைப் பின்தொடருங்கள்' : 'FOLLOW US' }}</h3><div class="nc-social"><span>f</span><span>▶</span><span>◎</span><span>◉</span></div></div></section>
     </div>

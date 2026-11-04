@@ -15,7 +15,7 @@ import { SupabaseService } from './supabase.service';
  * browsing flow.
  */
 const LISTING_COLUMNS = `id,category_id,title,description,status,published_at,
-  service_categories!inner(id,is_active),
+  service_categories!inner(id,is_active,name_ta,name_en,slug),
   service_providers!inner(id,display_name,description,verification_status,public_email,website_url,address,postal_code,latitude,longitude),
   listing_locations(coverage_type,locations!inner(id,parent_id,name_ta,name_en,location_type,is_active)),
   listing_contacts(contact_type,contact_value,is_public,sort_order),

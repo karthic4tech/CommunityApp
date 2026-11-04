@@ -1,0 +1,20 @@
+:focus-visible { outline: 3px solid var(--cdm-green-accent); outline-offset: 3px; }
+::selection { color: var(--cdm-navy-deep); background: #d7eadf; }
+
+.cdm-page {
+  width: 100%;
+  max-width: var(--cdm-content-width);
+  margin-inline: auto;
+  padding-inline: var(--bs-gutter-x, 0.75rem);
+}
+
+.cdm-surface { border: 1px solid var(--cdm-border); border-radius: var(--cdm-radius-lg); background: var(--cdm-white); box-shadow: var(--cdm-shadow-sm); }
+.cdm-eyebrow { color: var(--cdm-green); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.text-cdm-navy { color: var(--cdm-navy-deep) !important; }
+.text-cdm-muted { color: var(--cdm-muted) !important; }
+.bg-cdm-soft { background-color: var(--cdm-green-soft) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}

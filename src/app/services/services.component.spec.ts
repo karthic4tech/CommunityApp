@@ -64,7 +64,7 @@ describe('ServicesComponent advanced listing filters', () => {
     harness.detectChanges();
 
     expect(directorySearch).toHaveBeenCalledWith(categoryId, locationId, 'plumber', 0);
-    expect(harness.routeNativeElement?.querySelector('#listing-results-title')?.textContent).toContain('Matching service listings');
+    expect(harness.routeNativeElement?.querySelector('#listing-results-title')?.textContent).toContain('Matching services');
     expect(harness.routeNativeElement?.querySelector<HTMLSelectElement>('#service-category-filter')?.value).toBe(categoryId);
     expect(harness.routeNativeElement?.querySelector<HTMLSelectElement>('#service-location-filter')?.value).toBe(locationId);
   });
@@ -88,5 +88,20 @@ describe('ServicesComponent advanced listing filters', () => {
     expect(url).toContain(`category=${categoryId}`);
     expect(url).toContain(`location=${locationId}`);
     expect(directorySearch).toHaveBeenCalledWith(categoryId, locationId, 'electrician', 0);
+  });
+
+  it('uses the Chidambaram row from the locations query as the default search location', async () => {
+    const harness = await RouterTestingHarness.create('/services');
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    const element = harness.routeNativeElement!;
+    const location = element.querySelector<HTMLSelectElement>('#service-location-filter')!;
+    expect(location.value).toBe(locationId);
+    expect(directorySearch).not.toHaveBeenCalled();
+
+    element.querySelector<HTMLFormElement>('.service-search')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await harness.fixture.whenStable();
+    expect(directorySearch).toHaveBeenCalledWith(null, locationId, '', 0);
   });
 });

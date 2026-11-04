@@ -1,0 +1,50 @@
+:root {
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --cdm-navy: #16385b;
+  --cdm-navy-deep: #12345a;
+  --cdm-green: #17634b;
+  --cdm-green-accent: #16805b;
+  --cdm-saffron: #f2a900;
+  --cdm-warm-white: #fafaf7;
+  --cdm-white: #ffffff;
+  --cdm-text: #173a50;
+  --cdm-muted: #64748b;
+  --cdm-border: #e3eae5;
+  --cdm-green-soft: #edf5f0;
+  --cdm-saffron-soft: #fff6e2;
+
+  --cdm-font-sans: Inter, 'Noto Sans Tamil', system-ui, sans-serif;
+  --cdm-font-tamil: 'Noto Sans Tamil', Inter, system-ui, sans-serif;
+
+  --cdm-radius-sm: 0.5rem;
+  --cdm-radius-md: 0.75rem;
+  --cdm-radius-lg: 1rem;
+  --cdm-radius-xl: 1.25rem;
+  --cdm-shadow-sm: 0 2px 8px rgba(22, 56, 91, 0.04);
+  --cdm-shadow-md: 0 8px 24px rgba(22, 56, 91, 0.07);
+  --cdm-content-width: 82.5rem;
+  --cdm-control-height: 2.875rem;
+
+  --bs-primary: var(--cdm-green);
+  --bs-primary-rgb: 23, 99, 75;
+  --bs-secondary: var(--cdm-navy);
+  --bs-secondary-rgb: 22, 56, 91;
+  --bs-success: var(--cdm-green-accent);
+  --bs-success-rgb: 22, 128, 91;
+  --bs-warning: var(--cdm-saffron);
+  --bs-warning-rgb: 242, 169, 0;
+  --bs-link-color: var(--cdm-green);
+  --bs-link-hover-color: #104d39;
+  --bs-body-color: var(--cdm-text);
+  --bs-body-bg: var(--cdm-warm-white);
+  --bs-body-font-family: var(--cdm-font-sans);
+  --bs-border-color: var(--cdm-border);
+  --bs-border-radius: var(--cdm-radius-md);
+  --bs-border-radius-lg: var(--cdm-radius-lg);
+  --bs-focus-ring-color: rgba(22, 128, 91, 0.28);
+}

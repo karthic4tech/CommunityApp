@@ -1,0 +1,8 @@
+img, video, canvas, svg { max-width: 100%; }
+app-root { display: block; min-width: 320px; overflow-x: clip; }
+
+@media (max-width: 575.98px) {
+  .container, .container-fluid, .container-sm, .container-md, .container-lg, .container-xl, .container-xxl {
+    --bs-gutter-x: 1.25rem;
+  }
+}

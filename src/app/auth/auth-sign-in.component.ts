@@ -10,7 +10,7 @@ import { LanguageService } from '../core/services/language.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="auth-card" aria-labelledby="sign-in-title">
-      <p class="eyebrow">{{ i18n.language() === 'ta' ? 'நம் சிதம்பரம்' : 'NAM CHIDAMBARAM' }}</p>
+      <p class="eyebrow">CDM360</p>
       <h1 id="sign-in-title">{{ i18n.language() === 'ta' ? 'உள்நுழைக' : 'Sign in' }}</h1>
       <p class="intro">{{ i18n.language() === 'ta' ? 'உங்கள் கணக்கில் உள்நுழைந்து உங்கள் சேவைகளை நிர்வகிக்கவும்.' : 'Sign in to manage your account and service submissions.' }}</p>
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>

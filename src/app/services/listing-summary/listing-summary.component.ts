@@ -10,13 +10,16 @@ import { ServiceDirectoryService } from '../../core/services/service-directory.s
   imports: [RouterLink, NgOptimizedImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <article>
+    <article [class.detail-view]="detail()">
       @if (detail()) {
         <h1 #heading tabindex="-1">{{ listing().service_providers.display_name }}</h1>
         <h2>{{ listing().title }}</h2>
       } @else {
         <h3><a [routerLink]="['/providers', listing().id]">{{ listing().title }}</a></h3>
         <p class="provider">{{ listing().service_providers.display_name }}</p>
+        @if (listing().service_categories; as category) {
+          <span class="category-label">{{ i18n.language() === 'ta' ? category.name_ta : category.name_en }}</span>
+        }
       }
       @if (listing().service_providers.verification_status === 'verified') {
         <span class="verified" [attr.aria-label]="i18n.language() === 'ta' ? 'சரிபார்க்கப்பட்ட சேவை வழங்குநர்' : 'Verified provider'"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> {{ i18n.language() === 'ta' ? 'சரிபார்க்கப்பட்டது' : 'Verified' }}</span>
@@ -65,14 +68,23 @@ import { ServiceDirectoryService } from '../../core/services/service-directory.s
   `,
   styles: `
     :host { display:block; min-width:0; }
-    article { height:100%; box-sizing:border-box; padding:1.25rem; background:white; border:1px solid #dfe7e2; border-radius:16px; color:#173f32; overflow-wrap:anywhere; }
-    h1 { font-size:clamp(1.5rem,3vw,2rem); } h2,h3 { font-size:1.15rem; } h1,h3 { margin:0 0 .75rem; }
-    a { color:#075541; } .provider { margin:.15rem 0 .65rem; font-weight:650; color:#244f3e; } .verified { display:inline-flex; align-items:center; gap:.25rem; margin-bottom:.5rem; color:#176044; font-size:.82rem; font-weight:700; }
-    .description { white-space:pre-line; line-height:1.8; } p,.places { color:#52665b; line-height:1.7; } .address { white-space:pre-line; }
-    .places { padding-left:1.25rem; } .image { position:relative; aspect-ratio:4/3; margin-block:1rem; } .image-placeholder { display:flex; align-items:center; justify-content:center; gap:.5rem; min-height:130px; margin-block:1rem; border:1px dashed #b8c9bf; border-radius:10px; background:#f7faf7; color:#52665b; text-align:center; }
-    img { object-fit:contain; border-radius:10px; } .gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:1rem; }
-    .actions { display:flex; flex-wrap:wrap; gap:.6rem; } .actions a { display:inline-flex; flex-direction:column; justify-content:center; min-height:44px; padding:.5rem .75rem; border:1px solid #b8c9bf; border-radius:9px; text-decoration:none; font-weight:600; }
-    .contact-value { font-size:.8rem; font-weight:400; } a:focus-visible { outline:3px solid #176044; outline-offset:3px; }
+    article { display:grid; align-content:start; height:100%; min-width:0; box-sizing:border-box; padding:1.1rem; background:#fff; border:1px solid #e3eae5; border-radius:14px; color:#173a50; overflow-wrap:anywhere; }
+    h1 { font-size:clamp(1.5rem,3vw,2rem); } h2,h3 { font-size:1.05rem; } h1,h3 { margin:0 0 .35rem; }
+    h3 a { color:#12345a; line-height:1.4; text-decoration:none; } h3 a:hover { color:#17634b; }
+    a { color:#17634b; } .provider { margin:.1rem 0 .5rem; color:#64748b; font-size:.84rem; font-weight:600; }
+    .category-label { justify-self:start; margin-bottom:.45rem; padding:.25rem .55rem; border:1px solid #e3eae5; border-radius:999px; background:#f7faf8; color:#17634b; font-size:.72rem; font-weight:650; }
+    .verified { display:inline-flex; align-items:center; justify-self:start; gap:.25rem; margin-bottom:.45rem; color:#17634b; font-size:.77rem; font-weight:700; }
+    .description { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:3; white-space:pre-line; line-height:1.65; }
+    p,.places { color:#64748b; line-height:1.65; font-size:.86rem; } .address { white-space:pre-line; }
+    .places { padding-left:1.15rem; } .image { position:relative; aspect-ratio:16/10; margin-block:.7rem; overflow:hidden; border-radius:10px; background:#f3f6f4; } .image-placeholder { display:flex; align-items:center; justify-content:center; gap:.5rem; min-height:130px; margin-block:.7rem; border:1px dashed #cfdbd4; border-radius:10px; background:#f7faf8; color:#64748b; text-align:center; }
+    img { object-fit:cover; border-radius:10px; } .gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:1rem; }
+    .detail-view { padding:clamp(1.1rem,3vw,1.75rem); border-radius:16px; }
+    .detail-view h1 { color:#12345a; font-weight:760; }
+    .detail-view h2 { color:#12345a; margin-bottom:.75rem; }
+    .actions { display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.4rem; }
+    .actions a { display:inline-flex; flex-direction:column; justify-content:center; min-height:42px; padding:.5rem .7rem; border:1px solid #d4dfd9; border-radius:9px; color:#12345a; background:#fff; text-decoration:none; font-size:.8rem; font-weight:650; }
+    .actions a:hover { border-color:#a9cdb9; background:#f6faf7; }
+    .contact-value { font-size:.8rem; font-weight:400; } a:focus-visible { outline:3px solid #16805b50; outline-offset:3px; }
   `,
 })
 export class ListingSummaryComponent {

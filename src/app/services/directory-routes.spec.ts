@@ -29,7 +29,7 @@ describe('Directory routes', () => {
     TestBed.configureTestingModule({ providers: [provideRouter(routes),
       { provide: ServiceCategoryService, useValue: {
         categories: signal(buildCategoryHierarchy([
-          row('parent', { name_en: 'Home Services' }),
+          row('parent', { name_en: 'Home Services', icon_name: 'house' }),
           row('child', { parent_id: 'parent', name_en: 'Plumber' }),
           row('sibling', { parent_id: 'parent', name_en: 'Electrician' }),
         ])),
@@ -56,9 +56,25 @@ describe('Directory routes', () => {
     expect(child.getAttribute('href')).toBe('/services/parent/child');
     child.click();
     await settle(harness);
-    expect(search).toHaveBeenLastCalledWith('child', null, '', 0);
+    expect(search).toHaveBeenLastCalledWith('child', 'town', '', 0);
     expect(harness.routeNativeElement!.querySelector('app-listing-summary')?.textContent).toContain('Local Plumbing');
     expect(harness.routeNativeElement!.querySelector('app-category-card')).toBeNull();
+  });
+
+  it('filters dynamic subcategories by the selected-language name', async () => {
+    const harness = await RouterTestingHarness.create('/services/parent');
+    await settle(harness);
+    const element = harness.routeNativeElement!;
+    expect(element.querySelectorAll('.subcategories app-category-card')).toHaveLength(2);
+    expect(element.querySelector('.subcategories .marketplace-card .icon i')?.className).toContain('bi-house-heart');
+
+    const searchInput = element.querySelector<HTMLInputElement>('#subcategory-search')!;
+    searchInput.value = 'plumb';
+    searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+    harness.detectChanges();
+
+    expect(element.querySelectorAll('.subcategories app-category-card')).toHaveLength(1);
+    expect(element.querySelector('.subcategories')?.textContent).toContain('Plumber');
   });
 
   it('restores keyword/location filters from URL and submits changes without losing the subcategory', async () => {
