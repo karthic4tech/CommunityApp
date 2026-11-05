@@ -6,6 +6,10 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AdminCategoryService, CategoryMutation } from '../core/services/admin-category.service';
 import { ServiceCategoryRow } from '../core/models/service-category';
 import { LanguageService } from '../core/services/language.service';
+import { FormActionsComponent } from '../shared/forms/form-actions.component';
+import { FormSectionComponent } from '../shared/forms/form-section.component';
+import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select.component';
+import { SearchableSelectOption } from '../shared/components/searchable-select/searchable-select.models';
 
 export function suggestCategorySlug(value: string): string {
   return value.normalize('NFKD')
@@ -18,7 +22,7 @@ export function suggestCategorySlug(value: string): string {
 
 @Component({
   selector: 'app-admin-category-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, FormActionsComponent, FormSectionComponent, SearchableSelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="admin-form-page" aria-labelledby="category-form-title" [attr.aria-busy]="loading() || saving()">
@@ -38,7 +42,8 @@ export function suggestCategorySlug(value: string): string {
           <h1 id="category-form-title">{{ editing() ? (i18n.language() === 'ta' ? 'வகையைத் திருத்து' : 'Edit category') : (i18n.language() === 'ta' ? 'வகையை உருவாக்கு' : 'Create category') }}</h1>
           <p class="intro">{{ i18n.language() === 'ta' ? 'வகை அல்லது உட்பிரிவின் தகவல்களை நிர்வகிக்கவும்.' : 'Manage the category or subcategory information.' }}</p>
         </header>
-        <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+        <form class="cdm-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+          <app-form-section title="Category details" description="Set the public names, hierarchy and display order for this directory category." icon="bi bi-grid">
           <div class="form-grid">
             <label>
               <span>English name <strong aria-hidden="true">*</strong></span>
@@ -56,16 +61,10 @@ export function suggestCategorySlug(value: string): string {
               <small class="help">Lowercase letters, numbers and hyphens only.</small>
               @if (form.controls.slug.touched && form.controls.slug.invalid) { <small class="field-error">Use a unique lowercase slug such as <code>home-services</code>.</small> }
             </label>
-            <label>
-              <span>Parent category</span>
-              <select formControlName="parent_id">
-                <option value="">Root category</option>
-                @for (parent of parentOptions(); track parent.id) {
-                  <option [value]="parent.id">{{ parent.name_en }} — {{ parent.name_ta }}{{ parent.is_active ? '' : ' (inactive)' }}</option>
-                }
-              </select>
-              <small class="help">Leave empty to create a root category.</small>
-            </label>
+            <app-searchable-select label="Parent category" controlId="category-parent" formControlName="parent_id"
+              [options]="parentSearchOptions()" [emptyValue]="''" [clearable]="true"
+              placeholder="Root category" searchPlaceholder="Search category names or slugs…"
+              hint="Leave empty to create a root category." />
             <label>
               <span>Icon name</span>
               <input type="text" formControlName="icon_name" maxlength="80" placeholder="house" autocomplete="off" />
@@ -84,10 +83,11 @@ export function suggestCategorySlug(value: string): string {
             <span>Active and visible in the public directory</span>
           </label>
           @if (errorMessage(); as message) { <p class="error" role="alert">{{ message }}</p> }
-          <div class="actions">
-            <a class="secondary-action" routerLink="/admin/categories">Cancel</a>
-            <button type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save category' }}</button>
-          </div>
+          </app-form-section>
+          <app-form-actions>
+            <a formSecondaryAction class="secondary-action" routerLink="/admin/categories">Cancel</a>
+            <button formPrimaryAction type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save category' }}</button>
+          </app-form-actions>
         </form>
       }
     </section>
@@ -95,24 +95,24 @@ export function suggestCategorySlug(value: string): string {
   styles: `
     :host { display:block; padding-block:1.5rem 2.5rem; }
     .admin-form-page { display:grid; gap:1.25rem; }
-    .back-link, .secondary-action { display:inline-flex; align-items:center; min-height:44px; color:#075541; }
-    .eyebrow { margin:0 0 .35rem; color:#52665b; font-size:.72rem; font-weight:800; letter-spacing:.12em; }
-    h1 { margin:0; color:#173f32; font-size:clamp(1.7rem,4vw,2.5rem); overflow-wrap:anywhere; }
-    .intro, .help { color:#52665b; line-height:1.7; }
+    .back-link, .secondary-action { display:inline-flex; align-items:center; min-height:44px; color:var(--cdm-royal-blue); }
+    .eyebrow { margin:0 0 .35rem; color:var(--cdm-muted); font-size:.72rem; font-weight:800; letter-spacing:.12em; }
+    h1 { margin:0; color:var(--cdm-navy); font-size:clamp(1.7rem,4vw,2.5rem); overflow-wrap:anywhere; }
+    .intro, .help { color:var(--cdm-muted); line-height:1.7; }
     .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
-    form { display:grid; gap:1rem; padding:clamp(1rem,3vw,1.5rem); border:1px solid #dfe7e2; border-radius:16px; background:white; }
-    label { display:grid; gap:.4rem; color:#173f32; font-weight:650; min-width:0; }
-    input, select, textarea { width:100%; min-width:0; border:1px solid #b8c9bf; border-radius:9px; padding:.7rem; background:white; color:#173f32; font:inherit; }
+    form { display:grid; gap:1rem; padding:clamp(1rem,3vw,1.5rem); border:1px solid var(--cdm-border); border-radius:16px; background:white; }
+    label { display:grid; gap:.4rem; color:var(--cdm-navy); font-weight:650; min-width:0; }
+    input, select, textarea { width:100%; min-width:0; border:1px solid var(--cdm-border); border-radius:9px; padding:.7rem; background:white; color:var(--cdm-navy); font:inherit; }
     textarea { resize:vertical; line-height:1.6; }
     label small { font-weight:400; }
-    .field-error, .error { color:#8a261f; line-height:1.6; }
+    .field-error, .error { color:#C92A2A; line-height:1.6; }
     .checkbox-label { display:flex; grid-template-columns:none; align-items:center; gap:.6rem; }
-    .checkbox-label input { width:1.1rem; height:1.1rem; accent-color:#075541; }
+    .checkbox-label input { width:1.1rem; height:1.1rem; accent-color:var(--cdm-royal-blue); }
     .actions { display:flex; justify-content:flex-end; align-items:center; flex-wrap:wrap; gap:1rem; margin-top:.5rem; }
-    button { min-height:46px; border:1px solid #075541; border-radius:9px; padding:.7rem 1.1rem; background:#075541; color:white; font:inherit; font-weight:700; cursor:pointer; }
+    button { min-height:46px; border:1px solid var(--cdm-btn-primary); border-radius:9px; padding:.7rem 1.1rem; background:var(--cdm-btn-primary); color:var(--cdm-white); font:inherit; font-weight:700; cursor:pointer; }
     button:disabled { cursor:default; opacity:.6; }
-    .state { padding:1.25rem; border:1px solid #dfe7e2; border-radius:14px; background:white; color:#52665b; line-height:1.7; }
-    :is(a,button,input,select,textarea):focus-visible { outline:3px solid #17583f; outline-offset:3px; }
+    .state { padding:1.25rem; border:1px solid var(--cdm-border); border-radius:14px; background:white; color:var(--cdm-muted); line-height:1.7; }
+    :is(a,button,input,select,textarea):focus-visible { outline:3px solid var(--cdm-royal-blue); outline-offset:3px; }
     @media (max-width:700px) { .form-grid { grid-template-columns:1fr; } .actions { justify-content:stretch; } .actions > * { flex:1 1 180px; justify-content:center; } }
   `,
 })
@@ -147,6 +147,11 @@ export class AdminCategoryFormComponent implements OnInit {
     const descendants = currentId ? this.descendantIds(currentId) : new Set<string>();
     return this.rows().filter(row => row.id !== currentId && !descendants.has(row.id));
   });
+  protected readonly parentSearchOptions = computed<readonly SearchableSelectOption[]>(() => this.parentOptions().map(row => ({
+    value: row.id,
+    label: `${row.name_en} — ${row.name_ta}${row.is_active ? '' : ' (inactive)'}`,
+    searchText: `${row.name_en} ${row.name_ta} ${row.slug}`,
+  })));
 
   constructor() {
     this.form.controls.name_en.valueChanges

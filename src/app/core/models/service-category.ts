@@ -9,6 +9,13 @@ export interface ServiceCategoryRow {
   icon_name: string | null;
   sort_order: number;
   is_active: boolean;
+  is_essential?: boolean;
+  essential_order?: number | null;
+  show_as_shortcut?: boolean;
+  shortcut_order?: number | null;
+  show_on_homepage?: boolean;
+  homepage_order?: number | null;
+  is_emergency?: boolean;
 }
 
 export interface ServiceCategory {
@@ -20,6 +27,13 @@ export interface ServiceCategory {
   description: string | null;
   icon: string | null;
   sortOrder: number;
+  isEssential?: boolean;
+  essentialOrder?: number | null;
+  showAsShortcut?: boolean;
+  shortcutOrder?: number | null;
+  showOnHomepage?: boolean;
+  homepageOrder?: number | null;
+  isEmergency?: boolean;
   subcategories: ServiceCategory[];
 }
 
@@ -41,9 +55,10 @@ export function findCategoryPathById(
   return undefined;
 }
 
-export function buildCategoryHierarchy(rows: readonly ServiceCategoryRow[]): ServiceCategory[] {
+export function buildCategoryHierarchy(rows: readonly ServiceCategoryRow[], essentialOrder = false): ServiceCategory[] {
   const sorted = rows.filter((row) => row.is_active).slice().sort((a, b) =>
-    a.sort_order - b.sort_order || a.slug.localeCompare(b.slug) || a.id.localeCompare(b.id),
+    (essentialOrder ? (a.essential_order ?? a.sort_order) - (b.essential_order ?? b.sort_order) : a.sort_order - b.sort_order)
+      || a.sort_order - b.sort_order || a.slug.localeCompare(b.slug) || a.id.localeCompare(b.id),
   );
   const categories = new Map<string, ServiceCategory>();
   for (const row of sorted) {
@@ -51,7 +66,11 @@ export function buildCategoryHierarchy(rows: readonly ServiceCategoryRow[]): Ser
       categories.set(row.id, {
         id: row.id, parentCategoryId: row.parent_id, nameTamil: row.name_ta,
         nameEnglish: row.name_en, slug: row.slug, description: row.description,
-        icon: row.icon_name, sortOrder: row.sort_order, subcategories: [],
+        icon: row.icon_name, sortOrder: row.sort_order,
+        isEssential: row.is_essential ?? false, essentialOrder: row.essential_order ?? null,
+        showAsShortcut: row.show_as_shortcut ?? false, shortcutOrder: row.shortcut_order ?? null,
+        showOnHomepage: row.show_on_homepage ?? false, homepageOrder: row.homepage_order ?? null,
+        isEmergency: row.is_emergency ?? false, subcategories: [],
       });
     }
   }

@@ -70,9 +70,18 @@ describe('AuthService', () => {
     expect(inFilter).toHaveBeenCalledWith('role_code', ['super_admin', 'district_admin', 'moderator']);
   });
 
-  it('rejects a valid sign-in without an administrator role', async () => {
+  it('allows a regular user to sign in without an administrator role', async () => {
     const service = await createService();
-    await expect(service.signIn('user@example.com', 'password')).rejects.toThrow('administrator access');
+    await service.signIn('user@example.com', 'password');
+    expect(signInWithPassword).toHaveBeenCalledWith({ email: 'user@example.com', password: 'password' });
+    expect(signOut).not.toHaveBeenCalled();
+    expect(service.isAuthenticated()).toBe(true);
+    expect(service.isAdmin()).toBe(false);
+  });
+
+  it('rejects admin sign-in without an administrator role', async () => {
+    const service = await createService();
+    await expect(service.signInAdmin('user@example.com', 'password')).rejects.toThrow('administrator access');
     expect(signInWithPassword).toHaveBeenCalledWith({ email: 'user@example.com', password: 'password' });
     expect(signOut).toHaveBeenCalledTimes(1);
     expect(service.isAuthenticated()).toBe(false);
@@ -82,7 +91,7 @@ describe('AuthService', () => {
   it('accepts a sign-in with an administrator role', async () => {
     const service = await createService();
     returns.mockResolvedValue({ data: [{ role_code: 'super_admin' }], error: null });
-    await service.signIn('admin@example.com', 'password');
+    await service.signInAdmin('admin@example.com', 'password');
     expect(service.isAuthenticated()).toBe(true);
     expect(service.isAdmin()).toBe(true);
   });

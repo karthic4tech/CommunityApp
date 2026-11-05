@@ -74,7 +74,11 @@
           <span class="eyebrow">MADE FOR OUR TOWN</span>
           <h2 class="display-heading">Local Services for a Better Chidambaram</h2>
           <p>From trusted professionals to everyday needs, find everything you need in one place. Our platform helps you connect with service providers in your community.</p>
-          <a href="#categories" class="btn btn-primary btn-orange">Browse Services</a>
+          <div class="service-actions">
+            <a routerLink="/essential-services" class="btn btn-primary btn-orange">Explore Essential Services</a>
+            <a routerLink="/services" class="btn btn-outline-light">View All Services</a>
+            <a routerLink="/marketplace" class="btn btn-outline-light"><i class="bi bi-shop-window" aria-hidden="true"></i> Buy & Sell Locally</a>
+          </div>
         </div>
         <div class="services-center">
           <div class="circle-photo-wrap">
@@ -95,67 +99,7 @@
   </section>
 
   <app-local-brands />
-
-  <!-- Categories Section -->
-  <section class="categories-section" id="categories">
-    <div class="container section-pad">
-      <div class="section-heading">
-        <span class="eyebrow">BROWSE BY CATEGORY</span>
-        <h2>Explore What You Need</h2>
-        <p>Find trusted local services, businesses, events and more — all in one place.</p>
-      </div>
-      <div class="categories-grid row row-cols-2 row-cols-sm-3 row-cols-lg-4 g-3">
-        <a class="category-card" href="#services">
-          <span><i class="bi bi-house-door-fill"></i></span>
-          <h3>Local Services</h3>
-          <p>Home, repair, professionals and more</p>
-          <b>Explore</b>
-        </a>
-        <a class="category-card" href="#services">
-          <span><i class="bi bi-shop"></i></span>
-          <h3>Shops & Businesses</h3>
-          <p>Local shops, stores and traders</p>
-          <b>Explore</b>
-        </a>
-        <a class="category-card" href="#events">
-          <span><i class="bi bi-calendar-event-fill"></i></span>
-          <h3>Events & Functions</h3>
-          <p>Upcoming events and community programs</p>
-          <b>Explore</b>
-        </a>
-        <a class="category-card" href="#community">
-          <span><i class="bi bi-newspaper"></i></span>
-          <h3>Community News</h3>
-          <p>Latest updates and announcements</p>
-          <b>Explore</b>
-        </a>
-        <a class="category-card" href="#about">
-          <span><i class="bi bi-bank2"></i></span>
-          <h3>Temples & Culture</h3>
-          <p>Heritage, culture and local traditions</p>
-          <b>Explore</b>
-        </a>
-        <a class="category-card" href="#services">
-          <span><i class="bi bi-cup-hot-fill"></i></span>
-          <h3>Food & Stay</h3>
-          <p>Restaurants, food, hotels and stay options</p>
-          <b>Explore</b>
-        </a>
-        <a class="category-card" href="#contact">
-          <span><i class="bi bi-airplane-fill"></i></span>
-          <h3>NRI Assistance</h3>
-          <p>Support services for NRIs and their families</p>
-          <b>Explore</b>
-        </a>
-        <a class="category-card" href="#contact">
-          <span><i class="bi bi-chat-heart-fill"></i></span>
-          <h3>Community Help</h3>
-          <p>Connect with local support and resources</p>
-          <b>Explore</b>
-        </a>
-      </div>
-    </div>
-  </section>
+  <app-service-discovery-preview />
 
   <!-- Heritage Section -->
   <section class="heritage-section" id="about">
@@ -274,7 +218,7 @@
         <div class="contact-form-wrap">
           <span class="eyebrow">GET IN TOUCH</span>
           <h2>Contact Us</h2>
-          <form (ngSubmit)="onSubmitContact()">
+          <form class="cdm-form" (ngSubmit)="onSubmitContact()">
             <div class="form-group">
               <label for="name">Your Name</label>
               <input class="form-control" id="name" name="name" placeholder="Enter your name" required>

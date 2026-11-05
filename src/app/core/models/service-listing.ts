@@ -10,6 +10,7 @@ export interface DirectoryLocation {
 
 export interface DirectoryListingRow {
   id: string;
+  slug?: string;
   category_id: string;
   published_at?: string | null;
 }
@@ -25,6 +26,7 @@ type ContactType = ListingContact['contact_type'];
 
 export interface ServiceListing {
   id: string;
+  slug?: string;
   category_id: string;
   title: string;
   description: string;
@@ -74,23 +76,47 @@ export function findCategory(categories: readonly ServiceCategory[], slug: strin
   return undefined;
 }
 
-export function locationOptions(locations: readonly DirectoryLocation[], language: 'ta' | 'en') {
-  const byParent = new Map<string | null, DirectoryLocation[]>();
-  for (const place of locations) byParent.set(place.parent_id, [...(byParent.get(place.parent_id) ?? []), place]);
-  const result: { id: string; label: string }[] = [];
-  const seen = new Set<string>();
-  function visit(parent: string | null, prefix: string): void {
-    for (const place of byParent.get(parent) ?? []) {
-      if (seen.has(place.id)) continue;
-      seen.add(place.id);
-      const name = language === 'ta' ? place.name_ta : place.name_en ?? place.name_ta;
-      const label = prefix ? `${prefix} / ${name}` : name;
-      result.push({ id: place.id, label });
-      visit(place.id, label);
-    }
+const STRUCTURAL_LOCATION_TYPES = new Set(['country', 'state', 'district']);
+
+function locationName(place: DirectoryLocation, language: 'ta' | 'en'): string {
+  return language === 'ta' ? place.name_ta : place.name_en?.trim() || place.name_ta;
+}
+
+function isSelectableLocation(place: DirectoryLocation): boolean {
+  return !STRUCTURAL_LOCATION_TYPES.has(place.location_type.toLocaleLowerCase());
+}
+
+function locationSearchText(place: DirectoryLocation, byId: ReadonlyMap<string, DirectoryLocation>): string {
+  const names = [place.name_en, place.name_ta, place.location_type];
+  const seen = new Set<string>([place.id]);
+  let parentId = place.parent_id;
+  while (parentId && !seen.has(parentId)) {
+    const parent = byId.get(parentId);
+    if (!parent) break;
+    names.push(parent.name_en, parent.name_ta, parent.location_type);
+    seen.add(parent.id);
+    parentId = parent.parent_id;
   }
-  visit(null, '');
-  return result;
+  return names.filter((part): part is string => Boolean(part?.trim())).join(' ');
+}
+
+export function locationOptions(locations: readonly DirectoryLocation[], language: 'ta' | 'en') {
+  return locations
+    .filter(isSelectableLocation)
+    .map(place => ({ id: place.id, label: locationName(place, language) }))
+    .sort((a, b) => a.label.localeCompare(b.label, language === 'ta' ? 'ta' : 'en', { sensitivity: 'base' }));
+}
+
+export function locationSearchOptions(locations: readonly DirectoryLocation[], language: 'ta' | 'en') {
+  const byId = new Map(locations.map(place => [place.id, place]));
+  const options = locations
+    .filter(isSelectableLocation)
+    .map(place => ({
+      value: place.id,
+      label: locationName(place, language),
+      searchText: locationSearchText(place, byId),
+    }));
+  return options.sort((a, b) => a.label.localeCompare(b.label, language === 'ta' ? 'ta' : 'en', { sensitivity: 'base' }));
 }
 
 export function publicListing(listing: ServiceListing): boolean {

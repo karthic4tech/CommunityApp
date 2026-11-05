@@ -1,9 +1,9 @@
 :host { display: block; }
 .gallery { display: block; }
 
-.gallery-state { display: grid; gap: .5rem; justify-items: center; padding: 1.5rem; border: 1px dashed #dfe7e2; border-radius: 12px; color: #52665b; }
-.retry-button { min-height: 44px; border: 1px solid #075541; border-radius: 9px; padding: .5rem 1rem; background: #075541; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
-.retry-button:focus-visible { outline: 3px solid #17583f; outline-offset: 2px; }
+.gallery-state { display: grid; gap: .5rem; justify-items: center; padding: 1.5rem; border: 1px dashed var(--cdm-border); border-radius: 12px; color: var(--cdm-muted); }
+.retry-button { min-height: 44px; border: 1px solid var(--cdm-btn-primary); border-radius: 9px; padding: .5rem 1rem; background: var(--cdm-btn-primary); color:var(--cdm-white); font: inherit; font-weight: 700; cursor: pointer; }
+.retry-button:focus-visible { outline: 3px solid var(--cdm-royal-blue); outline-offset: 2px; }
 
 .gallery-items {
   list-style: none; margin: 0; padding: 0;
@@ -13,18 +13,18 @@
 
 .gallery-item { position: relative; }
 .gallery-button {
-  position: relative; display: block; width: 100%; padding: 0; border: 1px solid #dfe7e2;
-  border-radius: 12px; overflow: hidden; background: #eef2ee; cursor: pointer;
+  position: relative; display: block; width: 100%; padding: 0; border: 1px solid var(--cdm-border);
+  border-radius: 12px; overflow: hidden; background: var(--cdm-page); cursor: pointer;
   aspect-ratio: 4 / 3;
 }
 .gallery-items-list .gallery-button { aspect-ratio: 16 / 9; }
 .gallery-image { object-fit: cover; }
-.gallery-button:hover { border-color: #075541; }
-.gallery-button:focus-visible { outline: 3px solid #17583f; outline-offset: 2px; }
+.gallery-button:hover { border-color:var(--cdm-royal-blue); }
+.gallery-button:focus-visible { outline: 3px solid var(--cdm-royal-blue); outline-offset: 2px; }
 
 .gallery-fallback {
   display: grid; place-items: center; gap: .35rem; aspect-ratio: 4 / 3;
-  border: 1px dashed #dfe7e2; border-radius: 12px; background: #f7faf7; color: #52665b; text-align: center;
+  border: 1px dashed var(--cdm-border); border-radius: 12px; background: var(--cdm-blue-soft); color: var(--cdm-muted); text-align: center;
 }
 .gallery-fallback .bi { font-size: 1.5rem; }
 .gallery-items-list .gallery-fallback { aspect-ratio: 16 / 9; }

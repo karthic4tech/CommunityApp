@@ -1,22 +1,25 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
-import { DirectoryLocation, DirectoryPage, locationOptions } from '../core/models/service-listing';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { DirectoryLocation, DirectoryPage, locationOptions, locationSearchOptions } from '../core/models/service-listing';
 import { ServiceCategory } from '../core/models/service-category';
 import { LanguageService } from '../core/services/language.service';
 import { ServiceCategoryService } from '../core/services/service-category.service';
 import { ServiceDirectoryService } from '../core/services/service-directory.service';
 import { CategoryCardComponent } from '../home/category-card.component';
 import { ListingSummaryComponent } from './listing-summary/listing-summary.component';
+import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select.component';
+import { SearchableSelectOption } from '../shared/components/searchable-select/searchable-select.models';
 
 @Component({
-  selector: 'app-services',
-  imports: [CategoryCardComponent, ListingSummaryComponent],
+  selector: 'app-all-services',
+  imports: [CategoryCardComponent, ListingSummaryComponent, RouterLink, FormsModule, SearchableSelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './services.component.html',
   styleUrl: './services.component.scss',
 })
-export class ServicesComponent implements OnInit {
+export class AllServicesComponent implements OnInit {
   protected readonly service = inject(ServiceCategoryService);
   protected readonly i18n = inject(LanguageService);
   private readonly directory = inject(ServiceDirectoryService);
@@ -61,7 +64,21 @@ export class ServicesComponent implements OnInit {
     visit(this.service.categories());
     return options;
   });
+  protected readonly searchableCategoryOptions = computed<readonly SearchableSelectOption[]>(() => {
+    const options: SearchableSelectOption[] = [];
+    const visit = (items: readonly ServiceCategory[], parentLabel = ''): void => {
+      for (const item of items) {
+        const label = `${item.nameEnglish} — ${item.nameTamil}`;
+        options.push({ value: item.id, label: parentLabel ? `${parentLabel} / ${label}` : label, searchText: `${item.nameEnglish} ${item.nameTamil} ${item.slug} ${parentLabel}` });
+        visit(item.subcategories, label);
+      }
+    };
+    visit(this.service.categories());
+    return options;
+  });
+  protected readonly categoryCount = computed(() => this.categoryOptions().length);
   protected readonly places = computed(() => locationOptions(this.locationRows(), this.i18n.language()));
+  protected readonly searchablePlaces = computed(() => locationSearchOptions(this.locationRows(), this.i18n.language()));
   protected readonly selectedCategoryLabel = computed(() => this.categoryOptions().find((option) => option.id === this.categoryFilter())?.label ?? '');
   protected readonly selectedLocationLabel = computed(() => this.places().find((place) => place.id === this.locationFilter())?.label ?? '');
   protected readonly listingResults = signal<DirectoryPage>({ listings: [], hasMore: false });
@@ -116,6 +133,10 @@ export class ServicesComponent implements OnInit {
     });
   }
 
+  protected selectCategory(categoryId: string): void {
+    void this.router.navigate([], { relativeTo: this.route, queryParamsHandling: 'merge', queryParams: { category: categoryId || null, page: null } });
+  }
+
   protected clearFilters(): void {
     void this.router.navigate([], { relativeTo: this.route, queryParams: { q: null, category: null, location: '', page: null } });
   }
@@ -162,3 +183,6 @@ export class ServicesComponent implements OnInit {
       || category.subcategories.some((child) => this.matchesCategory(child, term));
   }
 }
+
+// Keep the previous symbol available to existing tests and integrations.
+export { AllServicesComponent as ServicesComponent };

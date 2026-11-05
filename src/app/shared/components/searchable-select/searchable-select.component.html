@@ -1,0 +1,68 @@
+<div class="searchable-select" [class.invalid]="invalid() || !!error()" [class.open]="isOpen()">
+  @if (label()) {
+    <label class="select-label" [for]="inputId()">{{ label() }}@if (required()) { <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden"> (required)</span> }@else { <span class="optional-mark">Optional</span> }</label>
+  }
+
+  <div class="select-control" [class.has-value]="selectedSingle() !== null">
+    <input #searchInput
+      class="select-input"
+      type="text"
+      role="combobox"
+      [id]="inputId()"
+      [value]="displayedValue()"
+      [placeholder]="isOpen() ? searchPlaceholder() : placeholder()"
+      [disabled]="isDisabled()"
+      [readOnly]="readOnly() || !searchable()"
+      [required]="required()"
+      [attr.aria-required]="required() ? 'true' : null"
+      [attr.aria-invalid]="invalid() || error() ? 'true' : null"
+      [attr.aria-describedby]="describedBy()"
+      [attr.aria-expanded]="isOpen()"
+      [attr.aria-controls]="isOpen() ? listId() : null"
+      [attr.aria-activedescendant]="isOpen() ? activeOptionId() : null"
+      aria-autocomplete="list"
+      aria-haspopup="listbox"
+      autocomplete="off"
+      (focus)="onFocus()"
+      (input)="onInput($event)"
+      (keydown)="onKeydown($event)"
+      (blur)="onBlur()" />
+
+    <span class="suffix-actions">
+      @if (isBusy()) { <span class="control-spinner spinner-border spinner-border-sm" aria-hidden="true"></span> }
+      @if (showClear()) { <button class="clear-selection suffix-button" type="button" aria-label="Clear selection" (mousedown)="$event.preventDefault(); $event.stopPropagation()" (click)="clearSelection($event)"><i class="bi bi-x suffix-icon" aria-hidden="true"></i></button> }
+      <button class="toggle-select suffix-button" type="button" [disabled]="isDisabled()" [attr.aria-label]="isOpen() ? 'Close options' : 'Open options'" [attr.aria-expanded]="isOpen()" [attr.aria-controls]="listId()" (mousedown)="$event.preventDefault(); $event.stopPropagation()" (click)="toggle()"><i class="bi bi-chevron-down suffix-icon chevron-icon" aria-hidden="true"></i></button>
+    </span>
+  </div>
+
+  @if (hint()) { <small class="select-hint" [id]="inputId() + '-hint'">{{ hint() }}</small> }
+  @if (error()) { <small class="select-error" [id]="inputId() + '-error'" role="alert">{{ error() }}</small> }
+
+  @if (isOpen()) {
+    <div class="options-panel"
+      [class.opens-above]="panelPosition().above"
+      [style.top.px]="panelPosition().top"
+      [style.left.px]="panelPosition().left"
+      [style.width.px]="panelPosition().width"
+      [attr.aria-busy]="isBusy()">
+      <ul class="option-list" [id]="listId()" role="listbox" [attr.aria-label]="label() || 'Options'">
+        @if (isBusy()) {
+          <li class="panel-state" role="status"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span>{{ loadingText() }}</li>
+        } @else if (remoteError()) {
+          <li class="panel-state panel-error" role="alert">Unable to load options.<button type="button" (mousedown)="$event.preventDefault()" (click)="retryRemoteSearch()">Retry</button></li>
+        } @else if (needsMoreChars()) {
+          <li class="panel-state" role="status">{{ minCharsText() }} {{ minSearchLength() }} characters to search.</li>
+        } @else if (!results().length) {
+          <li class="panel-state" role="status">{{ noResultsText() }}<button type="button" (mousedown)="$event.preventDefault()" (click)="clearSearch()">Clear search</button></li>
+        } @else {
+          @for (option of results(); track option.value; let i = $index) {
+            <li class="option-row" [id]="optionId(i)" role="option" [class.active]="activeIndex() === i" [class.selected]="isSelected(option)" [class.option-disabled]="option.disabled" [attr.aria-selected]="isSelected(option)" [attr.aria-disabled]="option.disabled ? 'true' : null" (mouseenter)="onOptionHover(i)" (mousedown)="$event.preventDefault()" (click)="select(option)">
+              <span class="option-label">@for (part of optionLabelParts(option); track $index) {@if (part.match) {<mark>{{part.text}}</mark>}@else {<span class="option-text">{{part.text}}</span>}}</span>
+              @if (isSelected(option)) { <i class="bi bi-check2 option-selected-icon" aria-hidden="true"></i> }
+            </li>
+          }
+        }
+      </ul>
+    </div>
+  }
+</div>

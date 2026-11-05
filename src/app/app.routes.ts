@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/auth/admin.guard';
 import { userGuard } from './core/auth/user.guard';
+import { serviceCategorySlugGuard } from './services/service-category-slug.guard';
+import { serviceListingSlugGuard } from './services/service-listing-slug.guard';
 
 export const routes: Routes = [
   {
@@ -12,6 +14,8 @@ export const routes: Routes = [
       { path: 'admin/login', loadComponent: () => import('./admin/admin-login.component').then((m) => m.AdminLoginComponent) },
       { path: 'admin/categories/new', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-category-form.component').then((m) => m.AdminCategoryFormComponent) },
       { path: 'admin/categories/:id/edit', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-category-form.component').then((m) => m.AdminCategoryFormComponent) },
+      { path: 'admin/essential-services', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-essential-services.component').then((m) => m.AdminEssentialServicesComponent) },
+      { path: 'admin/marketplace', canActivate: [adminGuard], loadComponent: () => import('./marketplace/marketplace-admin.component').then((m) => m.MarketplaceAdminComponent) },
       { path: 'admin/categories', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-category-management.component').then((m) => m.AdminCategoryManagementComponent) },
       { path: 'admin/local-brands', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-local-brands.component').then((m) => m.AdminLocalBrandsComponent) },
       { path: 'admin/listings/review', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-review.component').then((m) => m.AdminReviewComponent) },
@@ -26,12 +30,24 @@ export const routes: Routes = [
       { path: 'my-submissions', canActivate: [userGuard], loadComponent: () => import('./services/my-submissions.component').then((m) => m.MySubmissionsComponent) },
       { path: 'services/submit/:id', canActivate: [userGuard], loadComponent: () => import('./services/submit-service.component').then((m) => m.SubmitServiceComponent) },
       { path: 'services/submit', canActivate: [userGuard], loadComponent: () => import('./services/submit-service.component').then((m) => m.SubmitServiceComponent) },
-      { path: 'services', loadComponent: () => import('./services/services.component').then((m) => m.ServicesComponent) },
+      { path: 'services', loadComponent: () => import('./services/services.component').then((m) => m.AllServicesComponent) },
       { path: 'businesses', loadComponent: () => import('./services/business-directory.component').then((m) => m.BusinessDirectoryComponent) },
+      { path: 'marketplace', pathMatch: 'full', loadComponent: () => import('./marketplace/marketplace-home.component').then((m) => m.MarketplaceHomeComponent) },
+      { path: 'marketplace/sell', canActivate: [userGuard], loadComponent: () => import('./marketplace/marketplace-sell.component').then((m) => m.MarketplaceSellComponent) },
+      { path: 'marketplace/edit/:id', canActivate: [userGuard], loadComponent: () => import('./marketplace/marketplace-edit.component').then((m) => m.MarketplaceEditComponent) },
+      { path: 'marketplace/my-listings', canActivate: [userGuard], loadComponent: () => import('./marketplace/my-marketplace-listings.component').then((m) => m.MyMarketplaceListingsComponent) },
+      { path: 'marketplace/favourites', canActivate: [userGuard], loadComponent: () => import('./marketplace/marketplace-favourites.component').then((m) => m.MarketplaceFavouritesComponent) },
+      { path: 'marketplace/my-enquiries', canActivate: [userGuard], loadComponent: () => import('./marketplace/marketplace-enquiries.component').then((m) => m.MarketplaceEnquiriesComponent) },
+      { path: 'marketplace/item/:id/:slug', loadComponent: () => import('./marketplace/marketplace-item-detail.component').then((m) => m.MarketplaceItemDetailComponent) },
+      { path: 'marketplace/category/:slug', loadComponent: () => import('./marketplace/marketplace-category.component').then((m) => m.MarketplaceCategoryComponent) },
       { path: 'service-search', loadComponent: () => import('./services/ai-service-search/ai-service-search.component').then((m) => m.AiServiceSearchComponent) },
+      { path: 'essential-services', loadComponent: () => import('./services/essential-services.component').then((m) => m.EssentialServicesComponent) },
+      { path: 'services/category/:slug', loadComponent: () => import('./services/service-category-page.component').then((m) => m.ServiceCategoryComponent) },
       { path: 'services/:categorySlug/:subcategorySlug', loadComponent: () => import('./services/service-listings-page.component').then((m) => m.ServiceListingsPageComponent) },
-      { path: 'services/:categorySlug', loadComponent: () => import('./services/service-category-page.component').then((m) => m.ServiceCategoryPageComponent) },
-      { path: 'providers/:id', loadComponent: () => import('./services/provider-detail/provider-detail.component').then((m) => m.ProviderDetailComponent) },
+      { path: 'services/:categorySlug', canMatch: [serviceCategorySlugGuard], loadComponent: () => import('./services/service-category-page.component').then((m) => m.ServiceCategoryComponent) },
+      { path: 'services/:slug', canMatch: [serviceListingSlugGuard], loadComponent: () => import('./services/provider-detail/provider-detail.component').then((m) => m.ServiceDetailComponent) },
+      { path: 'services/:categorySlug', loadComponent: () => import('./services/service-category-page.component').then((m) => m.ServiceCategoryComponent) },
+      { path: 'providers/:id', loadComponent: () => import('./services/provider-detail/provider-detail.component').then((m) => m.ServiceDetailComponent) },
     ],
   },
 ];

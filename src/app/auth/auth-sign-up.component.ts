@@ -3,10 +3,11 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../core/auth/auth.service';
 import { LanguageService } from '../core/services/language.service';
+import { FormControlComponent } from '../shared/forms/form-control.component';
 
 @Component({
   selector: 'app-auth-sign-up',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, FormControlComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="auth-card" aria-labelledby="sign-up-title">
@@ -15,12 +16,11 @@ import { LanguageService } from '../core/services/language.service';
       @if (created()) {
         <div class="success" role="status"><h2>Check your email</h2><p>We sent a verification link to <strong>{{ emailSentTo() }}</strong>. Verify your email before submitting a service.</p><a routerLink="/auth/verify-email">Continue to verification</a></div>
       } @else {
-        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-          <label>Full name<input type="text" formControlName="fullName" autocomplete="name" maxlength="160" required /></label>
-          <label>Email<input type="email" formControlName="email" autocomplete="email" required /></label>
-          <label>Password<input type="password" formControlName="password" autocomplete="new-password" required /><small>Use at least 8 characters with uppercase, lowercase and a number.</small></label>
-          @if (form.controls.password.dirty && form.controls.password.invalid) { <p class="error" role="alert">Password must be at least 8 characters and include an uppercase letter, a lowercase letter and a number.</p> }
-          <label>Confirm password<input type="password" formControlName="confirmPassword" autocomplete="new-password" required /></label>
+        <form class="cdm-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <app-form-input label="Full name" controlId="sign-up-name" autocomplete="name" placeholder="Your full name" [maxLength]="160" [required]="true" [error]="form.controls.fullName.touched && form.controls.fullName.invalid ? 'Enter your name (up to 160 characters).' : ''" formControlName="fullName" />
+          <app-form-input label="Email" controlId="sign-up-email" type="email" autocomplete="email" placeholder="you@example.com" [required]="true" [error]="form.controls.email.touched && form.controls.email.hasError('required') ? 'Enter your email address.' : form.controls.email.touched && form.controls.email.hasError('email') ? 'Enter a valid email address.' : ''" formControlName="email" />
+          <app-form-input label="Password" controlId="sign-up-password" type="password" autocomplete="new-password" placeholder="Create a strong password" hint="Use at least 8 characters with uppercase, lowercase and a number." [required]="true" [error]="form.controls.password.touched && form.controls.password.invalid ? 'Use at least 8 characters with uppercase, lowercase and a number.' : ''" formControlName="password" />
+          <app-form-input label="Confirm password" controlId="sign-up-confirm" type="password" autocomplete="new-password" placeholder="Enter the password again" [required]="true" [error]="form.controls.confirmPassword.touched && form.controls.confirmPassword.invalid ? 'Confirm your password.' : form.controls.confirmPassword.touched && form.controls.password.value !== form.controls.confirmPassword.value ? 'Passwords do not match.' : ''" formControlName="confirmPassword" />
           @if (form.controls.confirmPassword.dirty && form.controls.password.value !== form.controls.confirmPassword.value) { <p class="error" role="alert">Passwords do not match.</p> }
           @if (errorMessage(); as message) { <p class="error" role="alert">{{ message }}</p> }
           <button type="submit" [disabled]="form.invalid || submitting() || form.controls.password.value !== form.controls.confirmPassword.value">{{ submitting() ? 'Creating account…' : 'Create account' }}</button>
@@ -30,7 +30,7 @@ import { LanguageService } from '../core/services/language.service';
     </section>
   `,
   styles: `
-    :host { display:block; padding-block:2rem; }.auth-card { width:min(100%, 560px); margin-inline:auto; padding:clamp(1.5rem,4vw,2.5rem); border:1px solid #dfe7e2; border-radius:20px; background:white; box-shadow:0 8px 24px #1d48350c; }.eyebrow { margin:0 0 .35rem; color:#52665b; font-size:.72rem; font-weight:800; letter-spacing:.12em; } h1 { margin:0; color:#173f32; font-size:clamp(1.7rem,4vw,2.4rem); }.intro, small { color:#52665b; line-height:1.7; } form { display:grid; gap:1rem; margin-top:1.5rem; } label { display:grid; gap:.4rem; color:#173f32; font-weight:650; } input { width:100%; min-height:46px; border:1px solid #b8c9bf; border-radius:9px; padding:.7rem; background:white; color:#173f32; font:inherit; } button { min-height:46px; border:1px solid #075541; border-radius:9px; padding:.7rem 1rem; background:#075541; color:white; font:inherit; font-weight:700; cursor:pointer; } button:disabled { opacity:.6; cursor:default; }.error { color:#8a261f; line-height:1.6; }.success { margin-top:1.5rem; padding:1rem; border:1px solid #bcdcc6; border-radius:12px; background:#f1faf2; color:#275b3c; line-height:1.7; }.success a, .links a { color:#075541; }.links { margin-top:1.25rem; } :is(a,button,input):focus-visible { outline:3px solid #17583f; outline-offset:3px; }
+    :host { display:block; padding-block:2rem; }.auth-card { width:min(100%, 560px); margin-inline:auto; padding:clamp(1.5rem,4vw,2.5rem); border:1px solid var(--cdm-border); border-radius:20px; background:white; box-shadow:0 8px 24px #0020500a; }.eyebrow { margin:0 0 .35rem; color:var(--cdm-muted); font-size:.72rem; font-weight:800; letter-spacing:.12em; } h1 { margin:0; color:var(--cdm-navy); font-size:clamp(1.7rem,4vw,2.4rem); }.intro, small { color:var(--cdm-muted); line-height:1.7; } form { display:grid; gap:1rem; margin-top:1.5rem; } label { display:grid; gap:.4rem; color:var(--cdm-navy); font-weight:650; } input { width:100%; min-height:46px; border:1px solid var(--cdm-border); border-radius:9px; padding:.7rem; background:white; color:var(--cdm-navy); font:inherit; } button { min-height:46px; border:1px solid var(--cdm-btn-primary); border-radius:9px; padding:.7rem 1rem; background:var(--cdm-btn-primary); color:var(--cdm-white); font:inherit; font-weight:700; cursor:pointer; } button:disabled { opacity:.6; cursor:default; }.error { color:#C92A2A; line-height:1.6; }.success { margin-top:1.5rem; padding:1rem; border:1px solid var(--cdm-btn-primary); border-radius:12px; background:var(--cdm-btn-primary-light); color:var(--cdm-navy); line-height:1.7; }.success a, .links a { color:var(--cdm-royal-blue); }.links { margin-top:1.25rem; } :is(a,button,input):focus-visible { outline:3px solid var(--cdm-royal-blue); outline-offset:3px; }
   `,
 })
 export class AuthSignUpComponent {

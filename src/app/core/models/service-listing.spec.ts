@@ -1,6 +1,6 @@
 import { buildCategoryHierarchy } from './service-category';
 import { row } from './category-test-fixtures';
-import { contactHref, findCategory, locationOptions, publicListing } from './service-listing';
+import { contactHref, findCategory, locationSearchOptions, publicListing } from './service-listing';
 import { listing, places } from './listing-test-fixtures';
 
 describe('Directory models', () => {
@@ -11,10 +11,12 @@ describe('Directory models', () => {
     expect(findCategory(categories, 'unknown')).toBeUndefined();
   });
 
-  it('builds bilingual hierarchy labels without displaying orphans or cycles', () => {
-    const options = locationOptions([...places, { ...places[0], id: 'orphan', parent_id: 'missing' }], 'en');
-    expect(options.map(place => place.label)).toEqual(['Cuddalore', 'Cuddalore / Chidambaram', 'Cuddalore / Chidambaram / Locality']);
-    expect(locationOptions(places, 'ta')[1].label).toBe('கடலூர் / சிதம்பரம்');
+  it('shows town names only while retaining district context for search', () => {
+    const options = locationSearchOptions([...places, { ...places[0], id: 'orphan', parent_id: 'missing' }], 'en');
+    expect(options.map(place => place.label)).toEqual(['Chidambaram', 'Locality']);
+    expect(locationSearchOptions(places, 'ta').map(place => place.label)).toEqual(['சிதம்பரம்', 'பகுதி']);
+    expect(options.find(place => place.label === 'Chidambaram')?.searchText).toContain('Cuddalore');
+    expect(options.find(place => place.label === 'Chidambaram')?.searchText).not.toContain('/');
   });
 
   it('only accepts published listings from verified providers', () => {

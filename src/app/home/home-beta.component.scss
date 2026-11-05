@@ -1,8 +1,12 @@
 /* CDM360 Bootstrap Professional Theme */
 :host {
   display: block;
-  --orange: var(--cdm-green);
-  --orange-dark: #104d39;
+  --home-saffron: #E3864F;
+  --home-saffron-hover: #CC7040;
+  --home-saffron-light: #FFF4EC;
+  --home-saffron-border: #F1D4C2;
+  --orange: var(--home-saffron);
+  --orange-dark: var(--home-saffron-hover);
   --ink: var(--cdm-text);
   --charcoal: var(--cdm-navy);
   --muted: var(--cdm-muted);
@@ -17,7 +21,7 @@ a { text-decoration: none; }
 main { display: block; }
 
 /* Navigation */
-.btn-orange { color: #fff; background: var(--orange); border: 1px solid var(--orange); font-size: 12px; font-weight: 700; padding: 11px 16px; border-radius: 24px; transition: all 0.2s; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; }
+.btn-orange { color: var(--cdm-white); background: var(--orange); border: 1px solid var(--orange); font-size: 12px; font-weight: 750; padding: 11px 16px; border-radius: 24px; transition: all 0.2s; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; }
 .btn-orange:hover { background: var(--orange-dark); border-color: var(--orange-dark); transform: translateY(-1px); }
 
 /* Hero carousel: mobile-first, robust approach */
@@ -31,7 +35,7 @@ main { display: block; }
   overflow: hidden;
   display: flex;
   align-items: center;
-  background: #f7f9fc;
+  background: var(--cdm-page);
   border-radius: 30px;
   isolation: isolate;
   touch-action: pan-y;
@@ -57,7 +61,7 @@ main { display: block; }
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #f7f9fc;
+  background: var(--cdm-page);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -251,7 +255,7 @@ main { display: block; }
 }
 
 .hero-card p {
-  color: #5b6570;
+  color: var(--cdm-navy);
   font-size: 14px;
   line-height: 1.7;
   max-width: 330px;
@@ -268,27 +272,35 @@ main { display: block; }
 .intro-photo { 
   height: 310px; 
   border-radius: 48% 48% 18px 18px; 
-  background-color: #e8d5c4;
+  background-color: var(--cdm-orange-soft);
   background: url('/assets/images/people-services.webp') center/cover; 
 }
-.orange-panel { color: white; background: var(--cdm-green); border-radius: var(--cdm-radius-lg); box-shadow: var(--cdm-shadow-md); }
+.orange-panel { color:var(--cdm-white); background: var(--home-saffron); border-radius: var(--cdm-radius-lg); box-shadow: var(--cdm-shadow-md); }
 .intro-panel { padding: 30px 28px; min-height: 280px; }
 .intro-panel h2 { font-family: var(--cdm-font-sans); font-weight: 700; font-size: 27px; line-height: 1.12; margin: 0 0 15px; }
 .orange-panel p { color: rgba(255,255,255,0.9); font-size: 13px; line-height: 1.65; margin: 0 0 16px; }
 .btn-light { color: var(--orange-dark); font-size: 12px; font-weight: 800; padding: 11px 16px; border-radius: 24px; background: white; border: none; cursor: pointer; }
 .benefits-list { display: flex; flex-direction: column; gap: 20px; }
 .benefit-item { display: flex; gap: 16px; align-items: flex-start; }
-.benefit-icon { display: grid; place-items: center; flex: 0 0 52px; width: 52px; height: 52px; border-radius: 50%; color: var(--cdm-green); background: var(--cdm-green-soft); font-size: 22px; }
+.benefit-icon { display: grid; place-items: center; flex: 0 0 52px; width: 52px; height: 52px; border-radius: 50%; color:var(--cdm-royal-blue); background: var(--home-saffron-light); font-size: 22px; }
 .benefit-item h3 { font-size: 14px; font-weight: 800; margin: 4px 0 5px; color: var(--ink); }
 .benefit-item p { font-size: 12px; line-height: 1.55; color: var(--muted); margin: 0; }
 
 /* Services */
 .dark-section { color: #fff; background: var(--charcoal); }
+.dark-section h1,
+.dark-section h2,
+.dark-section h3,
+.dark-section h4,
+.dark-section h5,
+.dark-section h6 { color: #fff; }
 .services-feature { background: var(--cdm-navy); }
 .services-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3rem; align-items: center; }
 .services-left { padding: 1rem 0; }
+.service-actions { display:flex; flex-wrap:wrap; gap:.65rem; margin-top:1rem; }
+.service-actions .btn { display:inline-flex; align-items:center; min-height:44px; border-radius:999px; font-size:.8rem; font-weight:750; }
 .display-heading { font-family: var(--cdm-font-sans); font-size: clamp(32px,3.2vw,44px); font-weight: 700; line-height: 1.03; margin-bottom: 20px; margin-top: 0; }
-.services-feature p { color: #e0e1e4; font-size: 13px; line-height: 1.7; max-width: 330px; margin-bottom: 22px; }
+.services-feature p { color: var(--cdm-page); font-size: 13px; line-height: 1.7; max-width: 330px; margin-bottom: 22px; }
 .services-center { display: flex; justify-content: center; }
 .circle-photo-wrap { position: relative; width: min(100%,350px); aspect-ratio: 1; }
 .orange-orb { position: absolute; width: 66%; aspect-ratio: 1; border-radius: 50%; background: var(--orange); top: 7%; left: 0; }
@@ -299,7 +311,7 @@ main { display: block; }
   width: 78%; 
   height: 88%; 
   border-radius: 48% 48% 20px 20px; 
-  background-color: #c9b8b0;
+  background-color: var(--cdm-border);
   background: url('/assets/images/support-local-business.webp') center/cover; 
   border: 6px solid var(--charcoal); 
 }
@@ -314,11 +326,11 @@ main { display: block; }
 .section-heading h2 { font-family: var(--cdm-font-sans); font-weight: 700; font-size: clamp(30px,3.4vw,43px); line-height: 1.08; margin: 0; }
 .section-heading p { color: var(--muted); font-size: 13px; margin: 12px auto 0; max-width: 620px; }
 .categories-grid { max-width: 100%; }
-.category-card { display: flex; flex-direction: column; height: 100%; min-height: 205px; padding: 19px 12px 16px; align-items: center; text-align: center; color: var(--ink); background: rgba(255,255,255,0.97); border: 1px solid rgba(28,43,57,0.08); border-radius: 17px; box-shadow: 0 7px 24px rgba(24,34,43,0.1); transition: transform 0.2s, box-shadow 0.2s; }
-.category-card:hover { transform: translateY(-5px); box-shadow: 0 14px 28px rgba(24,34,43,0.14); }
-.category-card span { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--cdm-green-soft); color: var(--cdm-green); font-size: 24px; margin-bottom: 13px; }
+.category-card { display: flex; flex-direction: column; height: 100%; min-height: 205px; padding: 19px 12px 16px; align-items: center; text-align: center; color: var(--ink); background: color-mix(in srgb, var(--cdm-white) 97%, transparent); border: 1px solid color-mix(in srgb, var(--cdm-navy) 8%, transparent); border-radius: 17px; box-shadow: 0 7px 24px color-mix(in srgb, var(--cdm-navy) 10%, transparent); transition: transform 0.2s, box-shadow 0.2s; }
+.category-card:hover { transform: translateY(-5px); box-shadow: 0 14px 28px color-mix(in srgb, var(--cdm-navy) 14%, transparent); }
+.category-card span { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--home-saffron-light); color:var(--cdm-royal-blue); font-size: 24px; margin-bottom: 13px; }
 .category-card h3 { font-size: 12px; font-weight: 850; line-height: 1.25; min-height: 30px; margin: 0 0 8px; }
-.category-card p { font-size: 10px; line-height: 1.45; color: #66717a; flex-grow: 1; margin: 0 0 12px; }
+.category-card p { font-size: 10px; line-height: 1.45; color: var(--cdm-navy); flex-grow: 1; margin: 0 0 12px; }
 .category-card b { font-size: 11px; color: var(--orange-dark); }
 
 /* Heritage */
@@ -327,25 +339,25 @@ main { display: block; }
 .heritage-photo { 
   height: 390px; 
   border-radius: 52% 0 0 52%; 
-  background-color: #d4c2b9;
+  background-color: var(--cdm-border);
   background: url('/assets/images/Golden-Hour%20Temple%20Tank%20Festival.png') center/cover; 
 }
 .heritage-copy { position: relative; padding: 20px 5% 20px 2%; }
 .heritage-copy h2 { font-family: var(--cdm-font-sans); font-weight: 700; font-size: clamp(30px,3.4vw,43px); line-height: 1.08; max-width: 580px; margin-bottom: 18px; margin-top: 0; }
 .heritage-copy p { color: var(--muted); line-height: 1.75; font-size: 14px; max-width: 570px; margin-bottom: 22px; }
-.temple-outline { position: absolute; right: -15px; bottom: -42px; color: #f8e9df; font-size: 115px; pointer-events: none; }
+.temple-outline { position: absolute; right: -15px; bottom: -42px; color: var(--cdm-orange-soft); font-size: 115px; pointer-events: none; }
 
 /* Trust */
 .trust-section { background: var(--cdm-navy); }
 .trust-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2rem; align-items: center; }
 .trust-card { width: 100%; aspect-ratio: 2 / 3; max-height: 560px; margin: 0 auto; border-radius: 22px; background: url('/assets/images/Modern%20New%20Moorthy%20Cafe%20Facade.png') center/contain no-repeat; box-shadow: 0 18px 40px rgba(0,0,0,0.35); }
 .trust-card .eyebrow { color: var(--orange-dark); }
-.trust-card .btn-orange { color: #fff; position: relative; z-index: 1; box-shadow: 0 8px 18px rgba(246,107,44,0.35); }
+.trust-card .btn-orange { color: var(--cdm-white); position: relative; z-index: 1; box-shadow: 0 8px 18px color-mix(in srgb, var(--home-saffron) 35%, transparent); }
 .trust-points { list-style: none; margin: 0 0 22px; padding: 0; display: grid; gap: 10px; position: relative; z-index: 1; }
 .trust-points li { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--ink); }
-.trust-points i { display: grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: var(--cdm-saffron-soft); color: #805a00; font-size: 13px; }
+.trust-points i { display: grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: var(--cdm-saffron-soft); color: var(--cdm-navy); font-size: 13px; }
 .trust-card h2 { font-family: var(--cdm-font-sans); font-size: 31px; font-weight: 700; line-height: 1.1; margin: 0 0 15px; color: var(--ink); }
-.trust-card p { color: #4f5963; font-size: 13.5px; line-height: 1.7; margin: 0 0 18px; }
+.trust-card p { color: var(--cdm-navy); font-size: 13.5px; line-height: 1.7; margin: 0 0 18px; }
 .community-collage { position: relative; width: min(100%,340px); aspect-ratio: 1; margin: auto; }
 .community-collage .orange-orb { width: 67%; top: 0; left: 10%; }
 .collage-photo { 
@@ -356,7 +368,7 @@ main { display: block; }
   bottom: 0; 
   border-radius: 50%; 
   border: 6px solid var(--charcoal); 
-  background-color: #c9b8b0;
+  background-color: var(--cdm-border);
   background: url('/assets/images/Ramesh%20Vegetarian%20Hotel%20Facade.png') center/cover; 
 }
 .small-round-photo { 
@@ -367,7 +379,7 @@ main { display: block; }
   bottom: 3%; 
   border-radius: 50%; 
   border: 6px solid var(--charcoal); 
-  background-color: #c9b8b0;
+  background-color: var(--cdm-border);
   background: url('/assets/images/pichavaram-image-1.png') center/cover; 
 }
 .stats-list { display: flex; flex-direction: column; gap: 19px; }
@@ -375,11 +387,11 @@ main { display: block; }
 .stat-item > span { display: grid; place-items: center; flex: 0 0 46px; width: 46px; height: 46px; border: 1px solid var(--orange); border-radius: 50%; color: var(--orange); font-size: 20px; }
 .stat-item strong, .stat-item small { display: block; }
 .stat-item strong { font-size: 14px; margin: 0; }
-.stat-item small { font-size: 11px; color: #bfc2c6; margin-top: 3px; }
+.stat-item small { font-size: 11px; color: var(--cdm-border); margin-top: 3px; }
 
 /* Testimonial */
 .testimonial-section { background: #fff; }
-.services-banner { max-width: 1100px; margin: 0 auto; border-radius: 22px; overflow: hidden; box-shadow: 0 14px 34px rgba(24,34,43,0.14); }
+.services-banner { max-width: 1100px; margin: 0 auto; border-radius: 22px; overflow: hidden; box-shadow: 0 14px 34px color-mix(in srgb, var(--cdm-navy) 14%, transparent); }
 .services-banner img { display: block; width: 100%; height: auto; }
 .testimonial-layout { display: grid; grid-template-columns: 100px minmax(250px,430px) minmax(200px,1fr); align-items: end; gap: 0; max-width: 920px; margin: auto; padding: 2rem 0; }
 .testimonial-avatar { 
@@ -389,28 +401,28 @@ main { display: block; }
   margin-top: 18px; 
   border-radius: 50%; 
   border: 4px solid var(--orange); 
-  background-color: #d4c2b9;
+  background-color: var(--cdm-border);
   background: url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=85') center/cover; 
   z-index: 1; 
 }
-.testimonial-card { position: relative; z-index: 2; margin: 0 -35px 12px 0; padding: 24px 27px; border-radius: 18px; color: #fff; background: var(--orange); }
+ .testimonial-card { position: relative; z-index: 2; margin: 0 -35px 12px 0; padding: 24px 27px; border-radius: 18px; color: var(--cdm-navy); background: var(--orange); }
 .quote-mark { font-size: 28px; display: block; line-height: 1; margin: 0; }
 .testimonial-card p { font-size: 13px; line-height: 1.7; margin: 7px 0; }
 .testimonial-card footer { font-size: 11px; color: rgba(255,255,255,0.82); margin: 0; }
 .testimonial-photo { 
   height: 285px; 
   border-radius: 48% 48% 0 0; 
-  background-color: #d4c2b9;
+  background-color: var(--cdm-border);
   background: url('https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=700&q=85') center/cover; 
 }
 
 /* Events */
-.events-section { background: #faf7f3; }
+.events-section { background: var(--cdm-page); }
 .events-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 2rem; padding: 2rem 0; }
 .event-card { height: 100%; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 25px rgba(25,36,46,0.08); }
 .event-image { height: 190px; background-size: cover; background-position: center; }
 .event-one { 
-  background: var(--cdm-green-soft);
+  background: var(--home-saffron-light);
   background-image: url('/assets/images/pichavaram-image-1.png');
   background-size: cover;
   background-position: center;
@@ -422,7 +434,7 @@ main { display: block; }
   background-position: center;
 }
 .event-three { 
-  background: #eaf1f5;
+  background: var(--cdm-page);
   background-image: url('/assets/images/Twilight%20Temple%20Festival%20Performance.png');
   background-size: cover;
   background-position: center;
@@ -434,16 +446,16 @@ main { display: block; }
 .event-body a { color: var(--orange-dark); font-size: 12px; font-weight: 800; }
 
 /* Contact */
-.contact-section { background: var(--cdm-green-soft); }
+.contact-section { background: var(--home-saffron-light); }
 .contact-panel { display: grid; grid-template-columns: 1.15fr 0.85fr; max-width: 950px; margin: auto; border-radius: 18px; overflow: hidden; box-shadow: 0 16px 45px rgba(23,34,43,0.14); }
 .contact-form-wrap { padding: 34px; background: rgba(255,255,255,0.97); }
 .contact-form-wrap h2 { font-family: var(--cdm-font-sans); font-size: 33px; font-weight: 700; margin-bottom: 20px; margin-top: 0; }
 .form-group { margin-bottom: 20px; }
-.form-group label { display: block; color: #52606a; font-size: 11px; margin-bottom: 5px; font-weight: 600; }
-.form-control { width: 100%; border-color: #e1e4e6; border-radius: 7px; font-size: 12px; padding: 11px 12px; border: 1px solid #e1e4e6; font-family: inherit; }
-.form-control:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 0.2rem rgba(246,107,44,0.12); }
+.form-group label { display: block; color: var(--cdm-navy); font-size: 11px; margin-bottom: 5px; font-weight: 600; }
+.form-control { width: 100%; border-color: var(--cdm-border); border-radius: 7px; font-size: 12px; padding: 11px 12px; border: 1px solid var(--cdm-border); font-family: inherit; }
+.form-control:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--cdm-orange) 12%, transparent); }
 .w-100 { width: 100%; }
-.contact-info { padding: 36px 32px; color: white; background: var(--cdm-green); }
+.contact-info { padding: 36px 32px; color:var(--cdm-white); background: var(--home-saffron); }
 .contact-info h3 { font-size: 12px; font-weight: 850; letter-spacing: 1px; margin-bottom: 22px; margin-top: 0; }
 .contact-detail { display: flex; align-items: flex-start; gap: 13px; margin: 18px 0; }
 .contact-detail > i { display: grid; place-items: center; flex: 0 0 34px; width: 34px; height: 34px; border: 1px solid rgba(255,255,255,0.75); border-radius: 50%; }
@@ -465,9 +477,9 @@ main { display: block; }
 .footer-brand strong { font-size: 14px; font-weight: 700; }
 .footer-brand small { font-size: 11px; margin-top: 4px; }
 .footer-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
-.footer-nav a { color: #d7d9dc; font-size: 11px; transition: color 0.2s; }
+.footer-nav a { color: var(--cdm-border); font-size: 11px; transition: color 0.2s; }
 .footer-nav a:hover { color: var(--orange); }
-.copyright { color: #b7bbc0; font-size: 10px; margin: 0; text-align: right; }
+.copyright { color: var(--cdm-border); font-size: 10px; margin: 0; text-align: right; }
 
 /* Responsive */
 @media (max-width: 991.98px) {
@@ -654,8 +666,8 @@ main { display: block; }
 /* Stylish nav */
 .site-nav { background: rgba(255,255,255,0.96); backdrop-filter: blur(10px); border-bottom: 1px solid var(--cdm-border); box-shadow: var(--cdm-shadow-sm); }
 .site-nav .container { justify-content: center; }
-.nav-menu { margin: 0 auto; gap: 0.4rem; padding: 6px; border-radius: 40px; background: var(--cdm-green-soft); box-shadow: inset 0 0 0 1px rgba(23,99,75,0.15); }
+.nav-menu { margin: 0 auto; gap: 0.4rem; padding: 6px; border-radius: 40px; background: var(--home-saffron-light); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--home-saffron) 15%, transparent); }
 .nav-menu a.nav-link { position: relative; padding: 9px 18px; border-radius: 30px; color: var(--ink); font-size: 13px; font-weight: 700; letter-spacing: 0.3px; transition: background 0.25s, color 0.25s, transform 0.25s; }
-.nav-menu a.nav-link:hover { color: #fff; background: var(--cdm-green); transform: translateY(-1px); box-shadow: var(--cdm-shadow-sm); }
-.nav-menu a.btn-orange { margin-left: 6px; padding: 10px 20px; color: #fff; border: 0; border-radius: 30px; background: var(--cdm-green); box-shadow: var(--cdm-shadow-sm); font-size: 12.5px; letter-spacing: 0.4px; }
+.nav-menu a.nav-link:hover { color:var(--cdm-white); background: var(--home-saffron); transform: translateY(-1px); box-shadow: var(--cdm-shadow-sm); }
+.nav-menu a.btn-orange { margin-left: 6px; padding: 10px 20px; color:var(--cdm-white); border: 0; border-radius: 30px; background: var(--home-saffron); box-shadow: var(--cdm-shadow-sm); font-size: 12.5px; letter-spacing: 0.4px; }
 .nav-menu a.btn-orange:hover { transform: translateY(-2px); box-shadow: var(--cdm-shadow-md); }

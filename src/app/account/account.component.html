@@ -51,7 +51,7 @@
         } @else if (profileError(); as error) {
           <div class="error-state" role="alert"><p>{{ error }}</p><button type="button" class="account-secondary text-button" (click)="loadProfile()">{{ copy().retry }}</button></div>
         } @else {
-          <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+          <form class="cdm-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
             <div class="form-grid">
               <label class="field full-width">
                 <span>{{ copy().email }}</span>
@@ -80,19 +80,15 @@
                   <option value="en">English</option>
                 </select>
               </label>
-              <label class="field">
-                <span>{{ copy().preferredLocality }}</span>
-                <select formControlName="preferred_locality_id" [disabled]="!editing()">
-                  <option value="">{{ copy().notSelected }}</option>
-                  @for (place of places(); track place.id) { <option [value]="place.id">{{ place.label }}</option> }
-                </select>
-              </label>
+              <app-searchable-select [label]="copy().preferredLocality" controlId="preferred_locality_id" formControlName="preferred_locality_id"
+                [options]="places()" [disabled]="!editing()" [clearable]="true" [emptyValue]="''"
+                [placeholder]="copy().notSelected" searchPlaceholder="Search localities in English or Tamil…" />
             </div>
 
             @if (editing() && auth.user()?.id; as userId) {
               <div class="photo-upload">
                 <div class="photo-upload-heading"><h3>{{ copy().profilePhoto }}</h3><p>{{ copy().photoHint }}</p></div>
-                <app-media-upload entityType="profile" [entityId]="userId" [multiple]="false" [maxFiles]="1" [maxFileSizeMb]="5"
+                <app-form-file-upload label="Profile photo" [entityType]="'profile'" [entityId]="userId" [multiple]="false" [maxFiles]="1" [maxFileSizeMb]="5"
                   (uploaded)="refreshAvatar()" (deleted)="refreshAvatar()" />
               </div>
             }

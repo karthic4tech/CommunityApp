@@ -4,6 +4,8 @@
 @use './styles/utilities';
 @use './styles/components';
 @use './styles/responsive';
+@use './styles/forms';
+@use './app/marketplace/marketplace';
 
 @font-face {
   font-family: 'bootstrap-icons';
@@ -14,11 +16,11 @@
 }
 
 /* Shared Bootstrap-inspired form controls and actions for every route. */
-app-root input:not([type='checkbox']):not([type='radio']):not(.hero-search input):not(.header-search input):not(.search-input-wrap input):not(.subcategory-search input):not(.keyword-input input):not(.form-control),
-app-root select:not(.form-select):not(.location-select-wrap select),
-app-root textarea:not(.form-control) {
+app-root input:not([type='checkbox']):not([type='radio']):not(.hero-search input):not(.header-search input):not(.search-input-wrap input):not(.subcategory-search input):not(.keyword-input input):not(.form-control):not(.mp-page input),
+app-root select:not(.form-select):not(.location-select-wrap select):not(.mp-page select),
+app-root textarea:not(.form-control):not(.mp-page textarea) {
   min-height: var(--cdm-control-height);
-  border: 1px solid #cbd8d1;
+  border: 1px solid var(--cdm-border);
   border-radius: var(--cdm-radius-md);
   padding: .7rem .85rem;
   color: var(--cdm-text);
@@ -31,12 +33,12 @@ app-root textarea:not(.form-control) { min-height: 110px; }
 app-root input::placeholder,
 app-root textarea::placeholder { color: var(--cdm-muted); opacity: 1; }
 
-app-root input:not([type='checkbox']):not([type='radio']):not(.hero-search input):not(.header-search input):not(.search-input-wrap input):not(.subcategory-search input):not(.keyword-input input):not(.form-control):focus,
-app-root select:not(.form-select):not(.location-select-wrap select):focus,
-app-root textarea:not(.form-control):focus {
-  border-color: var(--cdm-green-accent);
+app-root input:not([type='checkbox']):not([type='radio']):not(.hero-search input):not(.header-search input):not(.search-input-wrap input):not(.subcategory-search input):not(.keyword-input input):not(.form-control):not(.mp-page input):focus,
+app-root select:not(.form-select):not(.location-select-wrap select):not(.mp-page select):focus,
+app-root textarea:not(.form-control):not(.mp-page textarea):focus {
+  border-color: var(--cdm-btn-primary);
   outline: 0;
-  box-shadow: 0 0 0 .22rem rgba(22, 128, 91, .18);
+  box-shadow: 0 0 0 .22rem var(--cdm-btn-focus);
 }
 
 app-root select {
@@ -56,28 +58,28 @@ app-root select:not(.form-select):not(.location-select-wrap select) option {
 
 app-root select[multiple]:not(.form-select):not(.location-select-wrap select) { min-height: 130px; background-image: none; padding: .5rem; }
 app-root input[type='checkbox'],
-app-root input[type='radio'] { width: 1.1rem; height: 1.1rem; accent-color: var(--cdm-green); }
+app-root input[type='radio'] { width: 1.1rem; height: 1.1rem; accent-color:var(--cdm-royal-blue); }
 app-root input[type='file'] { min-height: auto; padding: .55rem; }
 
-app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):not(.hero-arrow):not(.slide-dot) {
+app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):not(.hero-arrow):not(.slide-dot):not(.mp-page button):not(.cdm-step-button):not(.secondary-button):not(.clear-button):not(.filter-chip):not(.category-sidebar button):not(.mobile-category-options button):not(.toggle-select):not(.clear-selection):not(.suffix-button) {
   min-height: 2.75rem;
-  border: 1px solid var(--cdm-green);
-  border-radius: var(--cdm-radius-md);
+  border: 1px solid var(--cdm-btn-primary);
+  border-radius: 10px;
   padding: .65rem 1rem;
-  color: #fff;
-  background: var(--cdm-green);
+  color: var(--cdm-white);
+  background: var(--cdm-btn-primary);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
   transition: color .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
 
-app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):not(.hero-arrow):not(.slide-dot):hover:not(:disabled) {
-  border-color: #104d39;
-  background: #104d39;
+app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):not(.hero-arrow):not(.slide-dot):not(.mp-page button):not(.cdm-step-button):not(.secondary-button):not(.clear-button):not(.filter-chip):not(.category-sidebar button):not(.mobile-category-options button):not(.toggle-select):not(.clear-selection):not(.suffix-button):hover:not(:disabled) {
+  border-color: var(--cdm-btn-primary-hover);
+  background: var(--cdm-btn-primary-hover);
 }
 
-app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):not(.hero-arrow):not(.slide-dot):disabled {
+app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):not(.hero-arrow):not(.slide-dot):not(.mp-page button):not(.cdm-step-button):not(.secondary-button):not(.clear-button):not(.filter-chip):not(.category-sidebar button):not(.mobile-category-options button):not(.toggle-select):not(.clear-selection):not(.suffix-button):disabled {
   cursor: not-allowed;
   opacity: .58;
 }
@@ -86,23 +88,23 @@ app-root button.secondary,
 app-root button.oauth-button,
 app-root button.secondary-action,
 app-root .actions button.secondary {
-  border-color: #b8c9bf;
-  color: var(--cdm-green);
+  border-color: var(--cdm-btn-border);
+  color: var(--cdm-navy);
   background: #fff;
 }
 
 app-root button.secondary:hover:not(:disabled),
 app-root button.oauth-button:hover:not(:disabled),
 app-root button.secondary-action:hover:not(:disabled) {
-  border-color: #87aa94;
-  color: #0e4932;
-  background: #f2f7f2;
+  border-color: var(--cdm-btn-primary);
+  color: var(--cdm-navy);
+  background: var(--cdm-btn-primary-light);
 }
 
-app-root label { color: #294c3d; font-weight: 650; }
+app-root label { color: var(--cdm-navy); font-weight: 650; }
 app-root label small,
 app-root .help,
-app-root .intro { color: #62746b; }
+app-root .intro { color: var(--cdm-muted); }
 app-submit-service .provider-type-group {
   border: 0;
   padding: 0;
@@ -112,7 +114,7 @@ app-submit-service .provider-type-group legend {
   font-size: 1rem;
   font-weight: 700;
   margin-bottom: .75rem;
-  color: #173f32;
+  color: var(--cdm-navy);
 }
 app-submit-service .provider-type-group .row {
   display: grid;
@@ -120,9 +122,9 @@ app-submit-service .provider-type-group .row {
   gap: .75rem;
 }
 app-submit-service .btn-check:checked + .btn {
-  background-color: #075541 !important;
-  border-color: #075541 !important;
-  color: white !important;
+  background-color:var(--cdm-royal-blue) !important;
+  border-color:var(--cdm-royal-blue) !important;
+  color:var(--cdm-navy) !important;
 }
 app-submit-service .btn-outline-success {
   display: flex;
@@ -130,21 +132,21 @@ app-submit-service .btn-outline-success {
   justify-content: center;
   gap: .5rem;
   min-height: 48px;
-  border-color: #075541;
-  color: #075541;
+  border-color:var(--cdm-royal-blue);
+  color:var(--cdm-royal-blue);
   font-weight: 600;
   flex-wrap: wrap;
 }
 app-submit-service .btn-outline-success:hover:not(:disabled) {
-  background-color: #e6f4e9;
-  border-color: #075541;
+  background-color: var(--cdm-green-soft);
+  border-color:var(--cdm-royal-blue);
 }
 app-submit-service .btn-check:focus-visible + .btn {
-  outline: 3px solid #17583f;
+  outline: 3px solid var(--cdm-royal-blue);
   outline-offset: 2px;
 }
 /* CDM360 reference-matched landing page. All rules are scoped to app-landing. */
-app-landing { display:block; --nc-orange:#f56b2e; --nc-orange-dark:#e95b20; --nc-ink:#17232e; --nc-dark:#25282e; --nc-muted:#59616b; --nc-cream:#f7f3ec; }
+app-landing { display:block; --nc-orange:var(--cdm-orange); --nc-orange-dark:var(--cdm-orange); --nc-ink:var(--cdm-navy); --nc-dark:var(--cdm-navy); --nc-muted:var(--cdm-muted); --nc-cream:var(--cdm-page); }
 app-landing .nc-home { color:var(--nc-ink); background:#fff; overflow:hidden; font-family:Arial,Helvetica,sans-serif; }
 app-landing .nc-kicker { margin:0 0 10px; color:var(--nc-orange-dark); font-size:11px; font-weight:800; letter-spacing:1.6px; }
 app-landing h1, app-landing h2, app-landing h3, app-landing p { margin-top:0; }
@@ -153,56 +155,56 @@ app-landing .nc-button { display:inline-flex; align-items:center; justify-conten
 app-landing .nc-button:hover { transform:translateY(-2px); background:var(--nc-orange-dark); }
 app-landing .nc-button-light { background:#fff; color:var(--nc-orange-dark); }
 app-landing .nc-hero { position:relative; min-height:370px; display:flex; align-items:center; padding:32px max(6.5%,calc((100vw - 1200px)/2)); isolation:isolate; }
-app-landing .nc-hero-photo { position:absolute; z-index:-2; inset:0; background:linear-gradient(90deg,#ffffff70,transparent 55%),url('/assets/images/chidambaram-hero.png') center 48%/cover no-repeat,linear-gradient(120deg,#e7d6b7,#9ab8b1 55%,#d4c5a9); }
-app-landing .nc-hero::after { content:''; position:absolute; z-index:-1; inset:0; background:linear-gradient(90deg,#fff9f0 0%,#fff9f0ee 33%,#fff9f060 52%,transparent 75%); }
-app-landing .nc-hero-copy { width:min(440px,54%); padding:28px 30px; background:#fff; border-radius:22px; box-shadow:0 12px 35px #19202b20; }
-app-landing .nc-hero-copy h1 { margin:0 0 12px; color:#172b3c; font-family:Georgia,'Times New Roman',serif; font-size:clamp(28px,3vw,43px); line-height:1.08; }
+app-landing .nc-hero-photo { position:absolute; z-index:-2; inset:0; background:linear-gradient(90deg,#ffffff70,transparent 55%),url('/assets/images/chidambaram-hero.png') center 48%/cover no-repeat,linear-gradient(120deg,var(--cdm-page),var(--cdm-blue-soft) 55%,var(--cdm-page)); }
+app-landing .nc-hero::after { content:''; position:absolute; z-index:-1; inset:0; background:linear-gradient(90deg,var(--cdm-page) 0%,color-mix(in srgb, var(--cdm-page) 93%, transparent) 33%,color-mix(in srgb, var(--cdm-page) 38%, transparent) 52%,transparent 75%); }
+app-landing .nc-hero-copy { width:min(440px,54%); padding:28px 30px; background:#fff; border-radius:22px; box-shadow:0 12px 35px color-mix(in srgb, var(--cdm-navy) 13%, transparent); }
+app-landing .nc-hero-copy h1 { margin:0 0 12px; color:var(--cdm-navy); font-family:Georgia,'Times New Roman',serif; font-size:clamp(28px,3vw,43px); line-height:1.08; }
 app-landing .nc-hero-copy h1 span:first-child { font-family:Arial,sans-serif; font-weight:900; }
-app-landing .nc-hero-copy p:not(.nc-kicker) { max-width:360px; color:#56606a; font-size:14px; line-height:1.65; }
+app-landing .nc-hero-copy p:not(.nc-kicker) { max-width:360px; color:var(--cdm-muted); font-size:14px; line-height:1.65; }
 app-landing .nc-intro { display:grid; grid-template-columns:1fr 1.05fr 1.1fr; gap:28px; align-items:center; max-width:1200px; margin:auto; padding:48px 5%; }
-app-landing .nc-photo { background-color:#e9e5df; background-position:center; background-size:cover; }
-app-landing .nc-family-photo { min-height:260px; border-radius:48% 0 16px 48%; background-image:url('/assets/images/chidambaram-community.png'),linear-gradient(135deg,#d8c5a8,#8b9e91); }
-app-landing .nc-intro-card { padding:26px; border-radius:14px; color:#fff; background:linear-gradient(135deg,#fa7b39,var(--nc-orange-dark)); }
-app-landing .nc-intro-card .nc-kicker { color:#fff5e9; }
+app-landing .nc-photo { background-color:var(--cdm-page); background-position:center; background-size:cover; }
+app-landing .nc-family-photo { min-height:260px; border-radius:48% 0 16px 48%; background-image:url('/assets/images/chidambaram-community.png'),linear-gradient(135deg,var(--cdm-yellow-soft),var(--cdm-blue-soft)); }
+app-landing .nc-intro-card { padding:26px; border-radius:14px; color:#fff; background:linear-gradient(135deg,var(--cdm-orange),var(--nc-orange-dark)); }
+app-landing .nc-intro-card .nc-kicker { color:var(--cdm-page); }
 app-landing .nc-intro-card h2 { margin-bottom:12px; font-size:clamp(23px,2.2vw,32px); line-height:1.1; }
-app-landing .nc-intro-card p:not(.nc-kicker) { font-size:13px; line-height:1.65; color:#fff4ed; }
+app-landing .nc-intro-card p:not(.nc-kicker) { font-size:13px; line-height:1.65; color:var(--cdm-page); }
 app-landing .nc-benefits { display:grid; gap:22px; }
 app-landing .nc-benefits article { display:flex; gap:15px; align-items:center; }
-app-landing .nc-benefits article>span { display:grid; place-items:center; flex:0 0 56px; width:56px; height:56px; border-radius:50%; color:var(--nc-orange); background:#f7eee8; font-size:23px; }
+app-landing .nc-benefits article>span { display:grid; place-items:center; flex:0 0 56px; width:56px; height:56px; border-radius:50%; color:var(--nc-orange); background:var(--cdm-orange-soft); font-size:23px; }
 app-landing .nc-benefits h3 { margin:0 0 5px; font-size:14px; }
 app-landing .nc-benefits p { margin:0; color:var(--nc-muted); font-size:12px; line-height:1.5; }
 app-landing .nc-services-band { display:grid; grid-template-columns:1fr 1.1fr .85fr; gap:32px; align-items:center; padding:54px max(6.5%,calc((100vw - 1200px)/2)); color:#fff; background:var(--nc-dark); }
 app-landing .nc-services-copy h2 { max-width:330px; margin-bottom:14px; font-size:clamp(30px,3vw,43px); line-height:1.04; }
-app-landing .nc-services-copy p, app-landing .nc-business-card p { color:#e0e1e4; font-size:13px; line-height:1.65; }
-app-landing .nc-business-photo { min-height:260px; border-radius:48% 16px 16px 16px; background-image:url('/assets/images/local-business-owner.png'),linear-gradient(135deg,#b4a18b,#4d665e); }
+app-landing .nc-services-copy p, app-landing .nc-business-card p { color:var(--cdm-page); font-size:13px; line-height:1.65; }
+app-landing .nc-business-photo { min-height:260px; border-radius:48% 16px 16px 16px; background-image:url('/assets/images/local-business-owner.png'),linear-gradient(135deg,var(--cdm-page),var(--cdm-navy)); }
 app-landing .nc-business-card { padding:27px; border-radius:14px; background:var(--nc-orange); }
 app-landing .nc-business-card>i { font-size:32px; }
 app-landing .nc-business-card h3 { margin:12px 0; font-size:17px; line-height:1.2; }
-app-landing .nc-categories { padding:38px 4% 48px; text-align:center; background:linear-gradient(#fff9f0d9,#fff9f0d9),url('/assets/images/temple-stone-texture.jpg') center/cover, #e9dfd2; }
+app-landing .nc-categories { padding:38px 4% 48px; text-align:center; background:linear-gradient(color-mix(in srgb, var(--cdm-page) 85%, transparent),color-mix(in srgb, var(--cdm-page) 85%, transparent)),url('/assets/images/temple-stone-texture.jpg') center/cover, var(--cdm-page); }
 app-landing .nc-categories-heading h2 { margin:0 0 8px; font-size:clamp(28px,3vw,38px); }
 app-landing .nc-categories-heading>p:last-child { margin-bottom:24px; color:var(--nc-muted); font-size:13px; }
 app-landing .nc-category-grid { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:12px; max-width:1250px; margin:auto; }
 app-landing .nc-category-grid app-category-card { min-width:0; }
-app-landing .nc-category-tile { display:flex; min-height:160px; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px 8px; border:1px solid #eee5dd; border-radius:16px; color:var(--nc-ink); background:#fff; box-shadow:0 8px 20px #28231b12; text-decoration:none; }
-app-landing .nc-category-icon { display:grid; place-items:center; width:48px; height:48px; border-radius:50%; color:var(--nc-orange); background:#fff0e8; font-size:24px; }
+app-landing .nc-category-tile { display:flex; min-height:160px; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px 8px; border:1px solid var(--cdm-orange-soft); border-radius:16px; color:var(--nc-ink); background:#fff; box-shadow:0 8px 20px color-mix(in srgb, var(--cdm-navy) 7%, transparent); text-decoration:none; }
+app-landing .nc-category-icon { display:grid; place-items:center; width:48px; height:48px; border-radius:50%; color:var(--nc-orange); background:var(--cdm-orange-soft); font-size:24px; }
 app-landing .nc-category-tile strong { font-size:12px; line-height:1.25; }
 app-landing .nc-category-tile small { margin-top:auto; color:var(--nc-orange-dark); font-weight:700; }
 app-landing .nc-heritage { display:grid; grid-template-columns:1fr 1.1fr; gap:7%; align-items:center; padding:54px max(8%,calc((100vw - 1120px)/2)); }
-app-landing .nc-temple-photo { min-height:320px; border-radius:52% 0 0 52%; background-image:url('/assets/images/chidambaram-temple.png'),linear-gradient(135deg,#c8d5dc,#c7a27a); }
+app-landing .nc-temple-photo { min-height:320px; border-radius:52% 0 0 52%; background-image:url('/assets/images/chidambaram-temple.png'),linear-gradient(135deg,var(--cdm-blue-soft),var(--cdm-yellow-soft)); }
 app-landing .nc-heritage h2 { margin-bottom:14px; font-size:clamp(29px,3vw,42px); line-height:1.05; }
 app-landing .nc-heritage p:not(.nc-kicker) { color:var(--nc-muted); font-size:14px; line-height:1.7; }
 app-landing .nc-trust { display:grid; grid-template-columns:1fr 1.15fr .8fr; gap:28px; align-items:center; padding:44px max(6.5%,calc((100vw - 1200px)/2)); color:white; background:var(--nc-dark); }
 app-landing .nc-trust-card { padding:26px; border-radius:15px; color:var(--nc-ink); background:white; }
 app-landing .nc-trust-card h2 { margin-bottom:12px; font-size:clamp(26px,2.6vw,36px); line-height:1.08; }
 app-landing .nc-trust-card p:not(.nc-kicker) { color:var(--nc-muted); font-size:13px; line-height:1.65; }
-app-landing .nc-people-photo { min-height:260px; border-radius:50%; background-image:url('/assets/images/chidambaram-community.png'),linear-gradient(135deg,#d2c1a9,#68867b); }
+app-landing .nc-people-photo { min-height:260px; border-radius:50%; background-image:url('/assets/images/chidambaram-community.png'),linear-gradient(135deg,var(--cdm-yellow-soft),var(--cdm-blue-soft)); }
 app-landing .nc-stats { display:grid; gap:18px; }
 app-landing .nc-stats>div { display:grid; grid-template-columns:44px 1fr; column-gap:12px; align-items:center; }
 app-landing .nc-stats i { grid-row:span 2; display:grid; place-items:center; width:42px; height:42px; border:1px solid var(--nc-orange); border-radius:50%; color:var(--nc-orange); font-size:19px; }
 app-landing .nc-stats strong { font-size:15px; }
-app-landing .nc-stats small { color:#c8cbd0; font-size:11px; }
+app-landing .nc-stats small { color:var(--cdm-border); font-size:11px; }
 app-landing .nc-testimonial { display:flex; align-items:center; justify-content:center; gap:0; padding:44px 8%; min-height:260px; }
-app-landing .nc-testimonial-photo { width:250px; height:250px; margin-left:24px; border-radius:50%; background-image:url('/assets/images/chidambaram-resident.png'),linear-gradient(135deg,#e6d3be,#9eb7b1); }
+app-landing .nc-testimonial-photo { width:250px; height:250px; margin-left:24px; border-radius:50%; background-image:url('/assets/images/chidambaram-resident.png'),linear-gradient(135deg,var(--cdm-yellow-soft),var(--cdm-blue-soft)); }
 app-landing .nc-testimonial blockquote { z-index:1; width:min(440px,55%); margin:0 -35px 0 0; padding:25px 28px; border-radius:18px; color:#fff; background:var(--nc-orange); }
 app-landing .nc-testimonial blockquote>i { font-size:26px; }
 app-landing .nc-testimonial blockquote p { margin:5px 0 12px; font-size:13px; line-height:1.65; }
@@ -211,8 +213,8 @@ app-landing .nc-contact { display:grid; grid-template-columns:1.1fr .9fr; max-wi
 app-landing .nc-contact-form { padding:30px; background:#fff; }
 app-landing .nc-contact h2 { margin-bottom:15px; font-size:30px; }
 app-landing .nc-contact form { display:grid; gap:10px; }
-app-landing .nc-contact label { display:grid; gap:5px; color:#525b63; font-size:11px; }
-app-landing .nc-contact input, app-landing .nc-contact textarea { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #e7e2dd; border-radius:5px; font:inherit; font-size:12px; }
+app-landing .nc-contact label { display:grid; gap:5px; color:var(--cdm-navy); font-size:11px; }
+app-landing .nc-contact input, app-landing .nc-contact textarea { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--cdm-border); border-radius:5px; font:inherit; font-size:12px; }
 app-landing .nc-contact-info { padding:30px; color:white; background:var(--nc-orange); }
 app-landing .nc-contact-info h3 { margin:0 0 18px; font-size:13px; }
 app-landing .nc-contact-info p { display:flex; gap:12px; align-items:center; font-size:12px; line-height:1.6; }
@@ -220,4 +222,4 @@ app-landing .nc-contact-info p i { font-size:20px; }
 app-landing .nc-social { display:flex; gap:10px; }
 app-landing .nc-social span { display:grid; place-items:center; width:30px; height:30px; border-radius:50%; color:var(--nc-orange); background:#fff; font-weight:800; }
 @media(max-width:1000px) { app-landing .nc-category-grid { grid-template-columns:repeat(4,minmax(0,1fr)); } app-landing .nc-intro { grid-template-columns:1fr 1fr; } app-landing .nc-benefits { grid-column:1/-1; grid-template-columns:repeat(3,1fr); } app-landing .nc-services-band { grid-template-columns:1fr 1fr; } app-landing .nc-business-card { grid-column:1/-1; } app-landing .nc-trust { grid-template-columns:1fr 1fr; } app-landing .nc-stats { grid-column:1/-1; grid-template-columns:repeat(4,1fr); } }
-@media(max-width:640px) { app-landing .nc-hero { min-height:430px; padding:22px 18px; align-items:flex-end; } app-landing .nc-hero-photo { background-position:58% center; } app-landing .nc-hero::after { background:linear-gradient(0deg,#fff9f0f5 0%,#fff9f0c9 56%,transparent 100%); } app-landing .nc-hero-copy { width:100%; padding:22px; } app-landing .nc-intro { grid-template-columns:1fr; padding:30px 18px; gap:18px; } app-landing .nc-family-photo { min-height:220px; border-radius:20px 80px 20px 20px; } app-landing .nc-benefits { grid-column:auto; grid-template-columns:1fr; } app-landing .nc-services-band { grid-template-columns:1fr; padding:36px 20px; gap:20px; } app-landing .nc-business-photo { min-height:220px; } app-landing .nc-business-card { grid-column:auto; } app-landing .nc-categories { padding:32px 14px; } app-landing .nc-category-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } app-landing .nc-category-tile { min-height:130px; } app-landing .nc-heritage { grid-template-columns:1fr; padding:35px 20px; gap:24px; } app-landing .nc-temple-photo { min-height:260px; } app-landing .nc-trust { grid-template-columns:1fr; padding:30px 18px; } app-landing .nc-stats { grid-column:auto; grid-template-columns:repeat(2,1fr); } app-landing .nc-testimonial { padding:30px 18px; flex-direction:column-reverse; gap:0; } app-landing .nc-testimonial-photo { width:190px; height:190px; margin:0 0 -15px 80px; } app-landing .nc-testimonial blockquote { width:100%; box-sizing:border-box; margin:0; } app-landing .nc-contact { grid-template-columns:1fr; padding:0 14px; margin-bottom:24px; } app-landing .nc-contact-form, app-landing .nc-contact-info { padding:22px; } }
+@media(max-width:640px) { app-landing .nc-hero { min-height:430px; padding:22px 18px; align-items:flex-end; } app-landing .nc-hero-photo { background-position:58% center; } app-landing .nc-hero::after { background:linear-gradient(0deg,color-mix(in srgb, var(--cdm-page) 96%, transparent) 0%,color-mix(in srgb, var(--cdm-page) 79%, transparent) 56%,transparent 100%); } app-landing .nc-hero-copy { width:100%; padding:22px; } app-landing .nc-intro { grid-template-columns:1fr; padding:30px 18px; gap:18px; } app-landing .nc-family-photo { min-height:220px; border-radius:20px 80px 20px 20px; } app-landing .nc-benefits { grid-column:auto; grid-template-columns:1fr; } app-landing .nc-services-band { grid-template-columns:1fr; padding:36px 20px; gap:20px; } app-landing .nc-business-photo { min-height:220px; } app-landing .nc-business-card { grid-column:auto; } app-landing .nc-categories { padding:32px 14px; } app-landing .nc-category-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } app-landing .nc-category-tile { min-height:130px; } app-landing .nc-heritage { grid-template-columns:1fr; padding:35px 20px; gap:24px; } app-landing .nc-temple-photo { min-height:260px; } app-landing .nc-trust { grid-template-columns:1fr; padding:30px 18px; } app-landing .nc-stats { grid-column:auto; grid-template-columns:repeat(2,1fr); } app-landing .nc-testimonial { padding:30px 18px; flex-direction:column-reverse; gap:0; } app-landing .nc-testimonial-photo { width:190px; height:190px; margin:0 0 -15px 80px; } app-landing .nc-testimonial blockquote { width:100%; box-sizing:border-box; margin:0; } app-landing .nc-contact { grid-template-columns:1fr; padding:0 14px; margin-bottom:24px; } app-landing .nc-contact-form, app-landing .nc-contact-info { padding:22px; } }

@@ -1,5 +1,5 @@
 :focus-visible { outline: 3px solid var(--cdm-green-accent); outline-offset: 3px; }
-::selection { color: var(--cdm-navy-deep); background: #d7eadf; }
+::selection { color: var(--cdm-navy-deep); background: var(--cdm-green-soft); }
 
 .cdm-page {
   width: 100%;
@@ -9,7 +9,7 @@
 }
 
 .cdm-surface { border: 1px solid var(--cdm-border); border-radius: var(--cdm-radius-lg); background: var(--cdm-white); box-shadow: var(--cdm-shadow-sm); }
-.cdm-eyebrow { color: var(--cdm-green); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.cdm-eyebrow { color:var(--cdm-royal-blue); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
 .text-cdm-navy { color: var(--cdm-navy-deep) !important; }
 .text-cdm-muted { color: var(--cdm-muted) !important; }
 .bg-cdm-soft { background-color: var(--cdm-green-soft) !important; }

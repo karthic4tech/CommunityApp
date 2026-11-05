@@ -3,14 +3,16 @@ import { ChangeDetectionStrategy, Component, ElementRef, OnInit, computed, injec
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../core/auth/auth.service';
-import { locationOptions } from '../core/models/service-listing';
+import { locationSearchOptions } from '../core/models/service-listing';
 import { SubmissionRow, SubmissionStatus } from '../core/models/service-submission';
 import { LanguageService } from '../core/services/language.service';
 import { MediaService } from '../core/services/media.service';
 import { ProfileService } from '../core/services/profile.service';
 import { ServiceDirectoryService } from '../core/services/service-directory.service';
 import { ServiceSubmissionService } from '../core/services/service-submission.service';
-import { MediaUploadComponent } from '../shared/components/media-upload/media-upload.component';
+import { FormFileUploadComponent } from '../shared/forms/form-file-upload.component';
+import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select.component';
+import { SearchableSelectOption } from '../shared/components/searchable-select/searchable-select.models';
 
 const ACCOUNT_COPY = {
   en: {
@@ -66,7 +68,7 @@ interface AccountProfileValues {
 
 @Component({
   selector: 'app-account',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink, MediaUploadComponent],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, FormFileUploadComponent, SearchableSelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './account.component.html',
   styleUrl: './account.component.scss',
@@ -99,7 +101,7 @@ export class AccountComponent implements OnInit {
   protected readonly message = signal<string | null>(null);
   protected readonly messageIsError = signal(false);
   protected readonly signOutError = signal<string | null>(null);
-  protected readonly places = signal<{ id: string; label: string }[]>([]);
+  protected readonly places = signal<readonly SearchableSelectOption[]>([]);
   private readonly savedProfileValues = signal<AccountProfileValues | null>(null);
   protected readonly submissions = signal<SubmissionRow[]>([]);
   protected readonly displayName = signal('');
@@ -167,7 +169,7 @@ export class AccountComponent implements OnInit {
       this.savedProfileValues.set(savedValues);
       this.displayName.set(savedValues.full_name);
       this.editing.set(false);
-      this.places.set(locationOptions(locations, profile.preferred_language));
+      this.places.set(locationSearchOptions(locations, profile.preferred_language));
       void this.refreshAvatar();
     } catch (error) {
       this.profileError.set(error instanceof Error ? error.message : this.copy().profileLoadFailed);

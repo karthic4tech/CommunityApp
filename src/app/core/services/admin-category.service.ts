@@ -19,7 +19,7 @@ export interface AdminCategoryTreeRow {
   depth: number;
 }
 
-const CATEGORY_COLUMNS = 'id,parent_id,name_ta,name_en,slug,description,icon_name,sort_order,is_active';
+const CATEGORY_COLUMNS = 'id,parent_id,name_ta,name_en,slug,description,icon_name,sort_order,is_active,is_essential,essential_order,show_as_shortcut,shortcut_order,show_on_homepage,homepage_order,is_emergency';
 
 @Injectable({ providedIn: 'root' })
 export class AdminCategoryService {

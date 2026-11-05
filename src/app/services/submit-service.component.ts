@@ -3,21 +3,25 @@ import { FormControl, NonNullableFormBuilder, ReactiveFormsModule, Validators } 
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../core/auth/auth.service';
 import { findCategoryPathById, ServiceCategory } from '../core/models/service-category';
-import { contactValidationMessage, DirectoryLocation, ListingContact, locationOptions, normalizeContactValue } from '../core/models/service-listing';
+import { contactValidationMessage, DirectoryLocation, ListingContact, locationOptions, locationSearchOptions, normalizeContactValue } from '../core/models/service-listing';
 import { SubmissionFormInput } from '../core/models/service-submission';
 import { LanguageService } from '../core/services/language.service';
 import { ServiceCategoryService } from '../core/services/service-category.service';
 import { ServiceDirectoryService } from '../core/services/service-directory.service';
 import { ServiceSubmissionService } from '../core/services/service-submission.service';
 import { ListingMediaService } from '../core/services/listing-media.service';
+import { FormProgressComponent } from '../shared/forms/form-progress.component';
+import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select.component';
+import { SearchableSelectOption, SearchableSelectValue } from '../shared/components/searchable-select/searchable-select.models';
+import { FormRadioGroupComponent } from '../shared/forms/form-radio-group.component';
 
 @Component({
   selector: 'app-submit-service',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, FormProgressComponent, SearchableSelectComponent, FormRadioGroupComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="submit-container">
-      <div class="container-xl">
+      <div class="container-fluid px-3 px-md-4">
         <main class="submit-content mx-auto">
             <a class="back-link text-decoration-none mb-4 d-inline-flex align-items-center gap-2" routerLink="/my-submissions">
               <i class="bi bi-arrow-left"></i>
@@ -25,9 +29,9 @@ import { ListingMediaService } from '../core/services/listing-media.service';
             </a>
 
             @if (!loading()) {
-              <div class="page-header mb-4 mb-lg-5">
+              <div class="page-header mb-4">
                 <p class="eyebrow text-uppercase fw-bold mb-2">Community service</p>
-                <h1 class="page-title fw-bold mb-3">{{ editing() ? 'Edit your submission' : 'Add your service' }}</h1>
+                <h1 class="page-title fw-bold mb-2">{{ editing() ? 'Edit your submission' : 'Add your service' }}</h1>
                 <p class="page-intro mb-0">Share accurate service information with the CDM360 community. Submissions are reviewed before publication.</p>
               </div>
             }
@@ -74,29 +78,10 @@ import { ListingMediaService } from '../core/services/listing-media.service';
               }
 
               <!-- Step Indicator -->
-              <nav class="step-progress mb-4 mb-lg-5" aria-label="Submission steps">
-                <div class="step-container">
-                  <button class="step-btn" [class.active]="step() === 1" [class.completed]="step() > 1" [attr.aria-current]="step() === 1 ? 'step' : null" (click)="step.set(1)" type="button">
-                    <span class="step-circle">1</span>
-                    <span class="step-text">Details</span>
-                  </button>
-                  <button class="step-btn" [class.active]="step() === 2" [class.completed]="step() > 2" [attr.aria-current]="step() === 2 ? 'step' : null" (click)="step.set(2)" type="button">
-                    <span class="step-circle">2</span>
-                    <span class="step-text">Contacts</span>
-                  </button>
-                  <button class="step-btn" [class.active]="step() === 3" [class.completed]="step() > 3" [attr.aria-current]="step() === 3 ? 'step' : null" (click)="step.set(3)" type="button">
-                    <span class="step-circle">3</span>
-                    <span class="step-text">Location</span>
-                  </button>
-                  <button class="step-btn" [class.active]="step() === 4" [class.completed]="step() > 4" [attr.aria-current]="step() === 4 ? 'step' : null" (click)="step.set(4)" type="button">
-                    <span class="step-circle">4</span>
-                    <span class="step-text">Review</span>
-                  </button>
-                </div>
-              </nav>
+              <app-form-progress class="submission-progress" [steps]="submissionSteps" [currentStep]="step()" [allowForward]="true" (stepSelected)="step.set($event)" />
 
-              <form [formGroup]="form" (ngSubmit)="step() === 4 ? save(true) : next()" class="submission-form card border-0" novalidate>
-                <div class="card-body p-4 p-lg-5">
+              <form [formGroup]="form" (ngSubmit)="step() === 4 ? save(true) : next()" class="submission-form card border-0 cdm-form" novalidate>
+                <div class="card-body p-3 p-md-4">
                   
                   @if (step() === 1) {
                     <div class="form-section">
@@ -148,22 +133,20 @@ import { ListingMediaService } from '../core/services/listing-media.service';
 
                       <div class="row g-4">
                         <div class="col-md-6">
-                          <label for="parent_slug" class="form-label fw-bold">Parent category <span class="required-mark" aria-hidden="true">*</span></label>
-                          <select class="form-select form-select-lg" id="parent_slug" #parent formControlName="parent_slug" (change)="selectParent(parent.value)" required>
-                            <option value="">Select a category</option>
-                            @for (category of rootCategories(); track category.id) {
-                              <option [value]="category.slug">{{ category.nameEnglish }} — {{ category.nameTamil }}</option>
-                            }
-                          </select>
+                          <app-searchable-select controlId="parent_slug" label="Parent category" formControlName="parent_slug"
+                            [options]="parentCategoryOptions()" [required]="true" [clearable]="true" [emptyValue]="''"
+                            placeholder="Select a category" searchPlaceholder="Search in English or Tamil…"
+                            [invalid]="form.controls.parent_slug.touched && form.controls.parent_slug.invalid"
+                            [error]="form.controls.parent_slug.touched && form.controls.parent_slug.invalid ? 'Choose a parent category.' : ''"
+                            (valueChange)="selectParentValue($event)" />
                         </div>
                         <div class="col-md-6">
-                          <label for="category_id" class="form-label fw-bold">Subcategory <span class="required-mark" aria-hidden="true">*</span></label>
-                          <select class="form-select form-select-lg" id="category_id" formControlName="category_id" [disabled]="!subcategories().length" required>
-                            <option value="">Select a subcategory</option>
-                            @for (category of subcategories(); track category.id) {
-                              <option [value]="category.id">{{ category.nameEnglish }} — {{ category.nameTamil }}</option>
-                            }
-                          </select>
+                          <app-searchable-select controlId="category_id" label="Subcategory" formControlName="category_id"
+                            [options]="subcategoryOptions()" [required]="true" [clearable]="true" [emptyValue]="''"
+                            [disabled]="!selectedParentSlug() || !subcategoryOptions().length"
+                            placeholder="Select a subcategory" searchPlaceholder="Search in English or Tamil…"
+                            [invalid]="!!selectedParentSlug() && !!subcategoryOptions().length && form.controls.category_id.touched && form.controls.category_id.invalid"
+                            [error]="selectedParentSlug() && subcategoryOptions().length && form.controls.category_id.touched && form.controls.category_id.invalid ? 'Choose a subcategory.' : ''" />
                         </div>
                       </div>
 
@@ -182,7 +165,7 @@ import { ListingMediaService } from '../core/services/listing-media.service';
 
                   @else if (step() === 2) {
                     <div class="form-section">
-                      <h2 class="h4 fw-bold mb-2" style="color:#0b3026;">Public contacts</h2>
+                      <h2 class="h4 fw-bold mb-2" style="color:var(--cdm-navy);">Public contacts</h2>
                       <p class="text-muted mb-5"><i class="bi bi-info-circle me-2"></i>Only checked contact details will be shown publicly. Web and social links without a protocol are saved with HTTPS.</p>
 
                       <div class="row g-4">
@@ -268,26 +251,16 @@ import { ListingMediaService } from '../core/services/listing-media.service';
 
                   @else if (step() === 3) {
                     <div class="form-section">
-                      <h2 class="h4 fw-bold mb-2" style="color:#0b3026;">Location and service coverage</h2>
+                      <h2 class="h4 fw-bold mb-2" style="color:var(--cdm-navy);">Location and service coverage</h2>
                       <p class="text-muted mb-5"><i class="bi bi-info-circle me-2"></i>Street address and coordinates are optional.</p>
 
                       <div class="row g-4">
                         <div class="col-md-6">
-                          <label for="based_location_id" class="form-label fw-bold">Business locality</label>
-                          <select class="form-select form-select-lg" id="based_location_id" formControlName="based_location_id">
-                            <option value="">Select a locality</option>
-                            @for (place of places(); track place.id) {
-                              <option [value]="place.id">{{ place.label }}</option>
-                            }
-                          </select>
+                          <app-searchable-select controlId="based_location_id" label="Business locality" formControlName="based_location_id"
+                            [options]="placeOptions()" [clearable]="true" [emptyValue]="''" [loading]="loading() && !places().length"
+                            placeholder="Select a locality" searchPlaceholder="Search localities in English or Tamil…" />
                         </div>
-                        <div class="col-md-6">
-                          <label for="coverage_type" class="form-label fw-bold">Coverage type</label>
-                          <select class="form-select form-select-lg" id="coverage_type" formControlName="coverage_type">
-                            <option value="based_here">Based here</option>
-                            <option value="serves_here">Serves here</option>
-                          </select>
-                        </div>
+                        <div class="col-md-6"><app-form-radio-group label="Coverage type" groupId="coverage_type" [options]="coverageTypeOptions" formControlName="coverage_type" /></div>
 
                         <div class="col-md-6">
                           <label for="address" class="form-label fw-bold">Business address</label>
@@ -308,12 +281,18 @@ import { ListingMediaService } from '../core/services/listing-media.service';
                         </div>
 
                         <div class="col-12">
-                          <label for="coverage_ids" class="form-label fw-bold">Additional service areas</label>
-                          <select class="form-select form-select-lg" id="coverage_ids" multiple formControlName="coverage_ids" size="6">
-                            @for (place of places(); track place.id) {
-                              <option [value]="place.id">{{ place.label }}</option>
-                            }
-                          </select>
+                          <fieldset class="coverage-fieldset" aria-describedby="coverage-hint">
+                            <legend class="form-label fw-bold">Additional service areas <span class="optional-mark">(optional)</span></legend>
+                            <label for="coverage-search" class="visually-hidden">Search service areas</label>
+                            <div class="coverage-search"><i class="bi bi-search" aria-hidden="true"></i><input id="coverage-search" type="search" [value]="coverageSearch()" (input)="setCoverageSearch($event)" placeholder="Search localities in English or Tamil…" /></div>
+                            <small id="coverage-hint" class="form-text">Choose every additional area your service covers.</small>
+                            @if (filteredCoverageOptions().length) {
+                              <div class="coverage-options">@for (place of filteredCoverageOptions(); track place.value) {
+                                <label class="coverage-option"><input type="checkbox" [checked]="form.controls.coverage_ids.value.includes(place.value)" (change)="toggleCoverage(place.value,$event)"><span>{{ place.label }}</span></label>
+                              }</div>
+                            } @else { <p class="coverage-empty" role="status">No matching localities found.</p> }
+                            @if (form.controls.coverage_ids.value.length) { <p class="coverage-count" role="status">{{ form.controls.coverage_ids.value.length }} area(s) selected</p> }
+                          </fieldset>
                         </div>
                       </div>
                     </div>
@@ -321,11 +300,11 @@ import { ListingMediaService } from '../core/services/listing-media.service';
 
                   @else {
                     <div class="form-section">
-                      <h2 class="h4 fw-bold mb-4" style="color:#0b3026;">Review and submit</h2>
+                      <h2 class="h4 fw-bold mb-4" style="color:var(--cdm-navy);">Review and submit</h2>
                       
-                      <div class="card border-0 mb-4" style="background:#f8fbf8;">
+                      <div class="card border-0 mb-4" style="background:var(--cdm-page);">
                         <div class="card-body">
-                          <h3 class="h5 fw-bold mb-2" style="color:#0b3026;">{{ form.controls.title.value || 'Untitled service' }}</h3>
+                          <h3 class="h5 fw-bold mb-2" style="color:var(--cdm-navy);">{{ form.controls.title.value || 'Untitled service' }}</h3>
                           <p class="text-muted fw-600 mb-2">{{ form.controls.display_name.value }}</p>
                           <p class="mb-0">{{ form.controls.description.value }}</p>
                           <hr class="my-3">
@@ -396,49 +375,51 @@ import { ListingMediaService } from '../core/services/listing-media.service';
   `,
   styles: `
     .submit-container {
-      background: #fbfaf6;
+      background: var(--cdm-warm-white);
       min-height: 100vh;
-      padding: clamp(1.5rem, 4vw, 3rem) 0 4rem;
+      padding: clamp(1.1rem, 2.4vw, 2rem) 0 3rem;
     }
 
     .submit-content {
-      width: min(100%, 980px);
+      width: min(100%, 1180px);
     }
 
+    .submission-progress { display:block; margin:0 0 1.25rem; }
+
     .back-link {
-      color: #14563d;
+      color: var(--cdm-navy);
       font-size: 1rem;
       font-weight: 600;
       min-height: 44px;
       align-items: center;
     }
 
-    .back-link:hover { color: #0b3928; }
+    .back-link:hover { color: var(--cdm-navy); }
     .back-link i { font-size: 1.1rem; }
 
     .eyebrow {
-      color: #b48b32;
+      color: var(--cdm-orange);
       font-size: .78rem;
       letter-spacing: .14em;
     }
 
     .page-title {
-      color: #0b3026;
-      font-size: clamp(2rem, 4vw, 2.65rem);
+      color: var(--cdm-navy-deep);
+      font-size: clamp(1.9rem, 3.2vw, 2.6rem);
       line-height: 1.15;
       letter-spacing: -.035em;
     }
 
     .page-intro {
-      max-width: 720px;
-      color: #53665d;
-      font-size: clamp(1.05rem, 2vw, 1.35rem);
-      line-height: 1.6;
+      max-width: 64ch;
+      color: var(--cdm-muted);
+      font-size: clamp(.98rem, 1.3vw, 1.08rem);
+      line-height: 1.65;
     }
 
     .step-progress {
       padding-bottom: 1.5rem;
-      border-bottom: 1px solid #e2e7dd;
+      border-bottom: 1px solid var(--cdm-border);
     }
 
     .step-container {
@@ -455,10 +436,10 @@ import { ListingMediaService } from '../core/services/listing-media.service';
       gap: .6rem;
       min-height: 54px;
       padding: .65rem 1.15rem;
-      border: 1px solid #c8d8cf;
+      border: 1px solid var(--cdm-border);
       border-radius: .8rem;
-      color: #315a49;
-      background: #edf3ee;
+      color: var(--cdm-navy);
+      background: var(--cdm-page);
       font-size: 1rem;
       font-weight: 650;
       cursor: pointer;
@@ -471,7 +452,7 @@ import { ListingMediaService } from '../core/services/listing-media.service';
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      color: #315a49;
+      color: var(--cdm-navy);
       background: #fff;
       font-size: .82rem;
       font-weight: 750;
@@ -482,34 +463,34 @@ import { ListingMediaService } from '../core/services/listing-media.service';
 
     .submit-container .step-btn.active,
     .submit-container .step-btn.completed {
-      border-color: #176346;
+      border-color: var(--cdm-navy);
       color: #fff;
-      background: #176346;
+      background: var(--cdm-navy);
     }
 
     .submit-container .step-btn.active .step-circle,
     .submit-container .step-btn.completed .step-circle {
-      color: #fff;
-      background: #075541;
+      color:var(--cdm-navy);
+      background: var(--cdm-green);
     }
 
     .submit-container .step-btn:hover {
-      border-color: #176346;
+      border-color: var(--cdm-navy);
       box-shadow: 0 0 0 3px rgba(23, 99, 70, .1);
     }
 
     .submit-container .step-btn:focus-visible,
     .submit-container .provider-choice:focus-visible {
-      outline: 3px solid #17583f;
+      outline: 3px solid var(--cdm-royal-blue);
       outline-offset: 3px;
     }
 
     .submission-form {
       overflow: hidden;
-      border: 1px solid #eceee8 !important;
-      border-radius: 1.15rem;
-      background: #fff;
-      box-shadow: 0 12px 34px rgba(30, 55, 42, .07);
+      border: 1px solid var(--cdm-form-border) !important;
+      border-radius: 1rem;
+      background: var(--cdm-white);
+      box-shadow: 0 8px 26px rgba(0, 32, 80, .055);
     }
 
     .section-heading {
@@ -518,8 +499,8 @@ import { ListingMediaService } from '../core/services/listing-media.service';
       gap: .9rem;
     }
 
-    .section-heading h2 { color: #0b3026; }
-    .section-heading p { color: #66786f; line-height: 1.55; }
+    .section-heading h2 { color: var(--cdm-navy-deep); }
+    .section-heading p { color: var(--cdm-muted); line-height: 1.55; }
 
     .section-icon {
       display: grid;
@@ -528,9 +509,9 @@ import { ListingMediaService } from '../core/services/listing-media.service';
       height: 42px;
       flex: 0 0 auto;
       border-radius: .8rem;
-      color: #176346;
-      background: #eaf3ed;
-      font-size: 1.2rem;
+      color:var(--cdm-royal-blue);
+      background: var(--cdm-green-soft);
+      font-size: 1.1rem;
     }
 
     .provider-type-group {
@@ -556,11 +537,11 @@ import { ListingMediaService } from '../core/services/listing-media.service';
     }
 
     .provider-choice {
-      min-height: 150px;
-      padding: 1.25rem;
-      border: 1.5px solid #c8d8cf;
+      min-height: 102px;
+      padding: 1rem;
+      border: 1.5px solid var(--cdm-border);
       border-radius: .95rem;
-      color: #075541;
+      color:var(--cdm-royal-blue);
       background: #fff;
       font-weight: 650;
       justify-content: center;
@@ -568,38 +549,50 @@ import { ListingMediaService } from '../core/services/listing-media.service';
     }
 
     .provider-choice i {
-      color: #176346;
-      font-size: 2rem;
+      color: var(--cdm-navy);
+      font-size: 1.55rem;
     }
 
     .provider-choice:hover {
-      border-color: #176346;
-      color: #075541;
-      background: #f5faf6;
+      border-color: var(--cdm-navy);
+      color:var(--cdm-royal-blue);
+      background: var(--cdm-page);
       transform: translateY(-2px);
     }
 
     .submit-container .btn-check:checked + .provider-choice {
-      border-color: #075541;
-      color: #fff;
-      background: #075541;
+      border-color:var(--cdm-royal-blue);
+      color:var(--cdm-navy);
+      background: var(--cdm-green);
       box-shadow: 0 8px 18px rgba(7, 85, 65, .18);
     }
 
     .submit-container .btn-check:checked + .provider-choice i { color: #fff; }
 
-    .form-label { color: #294c3d; }
-    .required-mark { color: #a64b37; }
-    .optional-mark { color: #6b7972; font-size: .875rem; font-weight: 450; }
-    .form-text { color: #66786f; font-size: .84rem; line-height: 1.5; }
+    .form-label { color: var(--cdm-navy); }
+    .required-mark { color: var(--cdm-form-danger); }
+    .optional-mark { color: var(--cdm-navy); font-size: .875rem; font-weight: 450; }
+    .form-text { color: var(--cdm-muted); font-size: .84rem; line-height: 1.5; }
+    .coverage-fieldset { display:grid; gap:.55rem; min-width:0; margin:0; padding:0; border:0; }
+    .coverage-fieldset legend { float:none; width:auto; margin:0; }
+    .coverage-search { position:relative; display:flex; align-items:center; }
+    .coverage-search i { position:absolute; left:.85rem; z-index:1; color:var(--cdm-navy); pointer-events:none; }
+    .coverage-search input { width:100%; min-height:48px; padding:.65rem .85rem .65rem 2.4rem; border:1px solid var(--cdm-form-border); border-radius:9px; color:var(--cdm-form-text); background:#fff; font:inherit; }
+    .coverage-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.4rem .8rem; max-height:220px; overflow:auto; padding:.65rem; border:1px solid var(--cdm-border); border-radius:10px; background:var(--cdm-page); }
+    .coverage-option { display:flex; align-items:flex-start; gap:.55rem; min-width:0; padding:.35rem; border-radius:7px; color:var(--cdm-muted); font-size:.8rem; font-weight:550; line-height:1.45; cursor:pointer; }
+    .coverage-option:hover { background:var(--cdm-green-soft); }
+    .coverage-option input { flex:none; margin-top:.15rem; accent-color:var(--cdm-royal-blue); }
+    .coverage-option span { overflow-wrap:anywhere; }
+    .coverage-empty,.coverage-count { margin:0; color:var(--cdm-muted); font-size:.78rem; }
+    .coverage-count { color:var(--cdm-royal-blue); font-weight:700; }
 
     .submit-container .form-control-lg,
     .submit-container .form-select-lg {
-      min-height: 52px;
-      padding: .75rem 1rem;
-      border: 1px solid #c5d3ca;
-      border-radius: .7rem;
-      font-size: 1rem;
+      min-height: 50px;
+      padding: .7rem .85rem;
+      border: 1px solid var(--cdm-form-border);
+      border-radius: .65rem;
+      font-size: .96rem;
       transition: border-color .18s ease, box-shadow .18s ease;
     }
 
@@ -608,49 +601,59 @@ import { ListingMediaService } from '../core/services/listing-media.service';
 
     .submit-container .form-control:focus,
     .submit-container .form-select:focus {
-      border-color: #43876a;
-      box-shadow: 0 0 0 .22rem rgba(23, 99, 70, .15);
+      border-color:var(--cdm-royal-blue);
+      box-shadow: 0 0 0 .22rem rgba(56, 176, 0, .15);
     }
 
     .submission-actions {
-      border-top: 1px solid #e4e9e4;
-      background: #f7f9f7;
+      border-top: 1px solid var(--cdm-form-border);
+      background: var(--cdm-page);
     }
 
+    .submission-actions .d-flex { align-items:center; }
+    .submission-actions .btn { min-height:46px; border-radius:.65rem; font-size:.9rem; font-weight:700; }
+
     .submit-container .btn-success {
-      border-color: #075541;
-      color: #fff;
-      background: #075541;
-      font-weight: 650;
+      border-color: var(--cdm-btn-primary);
+      color: var(--cdm-white);
+      background: var(--cdm-btn-primary);
+      font-weight: 600;
     }
 
     .submit-container .btn-success:hover:not(:disabled) {
-      border-color: #053d2f;
-      background: #053d2f;
+      border-color: var(--cdm-btn-primary-hover);
+      color: var(--cdm-white);
+      background: var(--cdm-btn-primary-hover);
+    }
+
+    .submit-container .btn-success:active:not(:disabled) {
+      border-color: var(--cdm-btn-primary-active);
+      color: var(--cdm-white);
+      background: var(--cdm-btn-primary-active);
     }
 
     .submit-container .btn-outline-secondary {
-      border-color: #b8c9bf;
-      color: #14563d;
+      border-color: var(--cdm-border);
+      color: var(--cdm-navy);
       background: #fff;
       font-weight: 650;
     }
 
     .submit-container .btn-outline-secondary:hover:not(:disabled) {
-      border-color: #87aa94;
-      color: #0e4932;
-      background: #f2f7f2;
+      border-color: var(--cdm-royal-blue);
+      color: var(--cdm-navy);
+      background: var(--cdm-green-soft);
     }
 
     .submit-container .btn-light {
-      color: #14563d;
+      color: var(--cdm-navy);
       font-weight: 650;
     }
 
     .alert { border: 0; border-radius: .85rem; }
-    .alert-info { color: #14563d; background: #edf6f1; }
-    .alert-warning { color: #625329; background: #fff8e9; }
-    .alert-danger { color: #8a261f; background: #fdf3f1; }
+    .alert-info { color: var(--cdm-navy); background: var(--cdm-green-soft); }
+    .alert-warning { color: var(--cdm-navy); background: var(--cdm-yellow-soft); }
+    .alert-danger { color: #C92A2A; background: var(--cdm-orange-soft); }
     .form-section { animation: fadeIn .25s ease-out; }
 
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -672,6 +675,7 @@ import { ListingMediaService } from '../core/services/listing-media.service';
       }
 
       .provider-choice { min-height: 118px; }
+      .coverage-options { grid-template-columns:1fr; }
       .submit-container .form-control-lg,
       .submit-container .form-select-lg {
         min-height: 48px;
@@ -711,6 +715,8 @@ export class SubmitServiceComponent implements OnInit {
     based_location_id: '', coverage_type: 'based_here' as 'based_here' | 'serves_here', coverage_ids: new FormControl<string[]>([], { nonNullable: true }), address: '', postal_code: '', latitude: null as number | null, longitude: null as number | null, declaration: false,
   });
   protected readonly step = signal(1);
+  protected readonly submissionSteps = ['Details', 'Contacts', 'Location', 'Review'] as const;
+  protected readonly coverageTypeOptions = [{value:'based_here',label:'Based here'},{value:'serves_here',label:'Serves here'}] as const;
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
@@ -720,12 +726,28 @@ export class SubmitServiceComponent implements OnInit {
   protected readonly existingStatus = signal<string | null>(null);
   protected readonly pendingUpdate = signal(false);
   protected readonly selectedParentSlug = signal('');
+  protected readonly coverageSearch = signal('');
   protected readonly rootCategories = computed(() => this.categories.categories());
   protected readonly subcategories = computed<ServiceCategory[]>(() => {
     const parent = this.categories.categories().find(category => category.slug === this.selectedParentSlug());
     return parent?.subcategories ?? [];
   });
   protected readonly places = computed(() => locationOptions(this.locationRows(), 'en'));
+  protected readonly parentCategoryOptions = computed<readonly SearchableSelectOption[]>(() => this.rootCategories().map(category => ({
+    value: category.slug,
+    label: `${category.nameEnglish} — ${category.nameTamil}`,
+    searchText: `${category.nameEnglish} ${category.nameTamil} ${category.slug}`,
+  })));
+  protected readonly subcategoryOptions = computed<readonly SearchableSelectOption[]>(() => this.subcategories().map(category => ({
+    value: category.id,
+    label: `${category.nameEnglish} — ${category.nameTamil}`,
+    searchText: `${category.nameEnglish} ${category.nameTamil} ${category.slug}`,
+  })));
+  protected readonly placeOptions = computed(() => locationSearchOptions(this.locationRows(), 'en'));
+  protected readonly filteredCoverageOptions = computed(() => {
+    const query = this.coverageSearch().trim().toLocaleLowerCase();
+    return query ? this.placeOptions().filter(option => `${option.label} ${option.searchText ?? ''}`.toLocaleLowerCase().includes(query)) : this.placeOptions();
+  });
   protected readonly editing = computed(() => Boolean(this.existingId()));
   protected readonly published = computed(() => this.existingStatus() === 'published');
   protected readonly selectedCategoryLabel = computed(() => {
@@ -739,13 +761,24 @@ export class SubmitServiceComponent implements OnInit {
   protected selectParent(slug: string): void {
     this.selectedParentSlug.set(slug);
     this.form.controls.parent_slug.setValue(slug);
-    this.form.controls.category_id.setValue('');
+    this.form.controls.category_id.reset('');
+  }
+  protected selectParentValue(value: SearchableSelectValue): void {
+    if (typeof value === 'string') this.selectParent(value);
   }
   protected selectFiles(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files ?? []);
     if (files.length > 10) { this.errorMessage.set('You can select up to 10 images.'); this.selectedFiles.set(files.slice(0, 10)); return; }
     this.errorMessage.set(null); this.selectedFiles.set(files);
+  }
+  protected setCoverageSearch(event: Event): void { this.coverageSearch.set((event.currentTarget as HTMLInputElement).value); }
+  protected toggleCoverage(locationId: string, event: Event): void {
+    const checked = (event.currentTarget as HTMLInputElement).checked;
+    const current = this.form.controls.coverage_ids.value;
+    this.form.controls.coverage_ids.setValue(checked
+      ? current.includes(locationId) ? current : [...current, locationId]
+      : current.filter(value => value !== locationId));
   }
   protected next(): void { if (this.canNext()) this.step.update(value => Math.min(4, value + 1)); }
   protected previous(): void { this.step.update(value => Math.max(1, value - 1)); }

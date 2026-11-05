@@ -55,20 +55,20 @@ interface CategorySelection {
     </div>
   `,
   styles: `
-    :host { display:block; min-width:0; padding-block:1.25rem 2.5rem; color:#173a50; }
+    :host { display:block; min-width:0; padding-block:1.25rem 2.5rem; color:var(--cdm-navy); }
     .service-listings-page { width:100%; max-width:var(--cdm-content-width); margin:0 auto; }
-    .breadcrumbs { display:flex; align-items:center; flex-wrap:wrap; gap:.55rem; margin-bottom:1rem; color:#64748b; font-size:.84rem; }
-    .breadcrumbs a, .state-link { color:#17634b; }
-    .listing-page-heading { padding:clamp(1.25rem,3vw,2rem); border:1px solid #e3eae5; border-radius:16px; background:#fff; }
-    .eyebrow { margin:0 0 .4rem; color:#17634b; font-size:.72rem; font-weight:800; letter-spacing:.12em; }
-    h1 { color:#12345a; font-size:clamp(1.55rem,3vw,2rem); margin:0; overflow-wrap:anywhere; }
-    .secondary, .description { color:#64748b; line-height:1.7; }
+    .breadcrumbs { display:flex; align-items:center; flex-wrap:wrap; gap:.55rem; margin-bottom:1rem; color:var(--cdm-muted); font-size:.84rem; }
+    .breadcrumbs a, .state-link { color:var(--cdm-royal-blue); }
+    .listing-page-heading { padding:clamp(1.25rem,3vw,2rem); border:1px solid var(--cdm-border); border-radius:16px; background:#fff; }
+    .eyebrow { margin:0 0 .4rem; color:var(--cdm-royal-blue); font-size:.72rem; font-weight:800; letter-spacing:.12em; }
+    h1 { color:var(--cdm-navy); font-size:clamp(1.55rem,3vw,2rem); margin:0; overflow-wrap:anywhere; }
+    .secondary, .description { color:var(--cdm-muted); line-height:1.7; }
     .secondary { margin:.3rem 0 0; }
     .description { margin:.5rem 0 0; white-space:pre-line; }
-    .state { display:flex; align-items:center; flex-wrap:wrap; gap:.75rem; margin:1rem 0; padding:1rem 1.15rem; border:1px solid #e3eae5; border-radius:13px; background:white; color:#64748b; line-height:1.7; }
+    .state { display:flex; align-items:center; flex-wrap:wrap; gap:.75rem; margin:1rem 0; padding:1rem 1.15rem; border:1px solid var(--cdm-border); border-radius:13px; background:white; color:var(--cdm-muted); line-height:1.7; }
     .state-link { display:inline-flex; align-items:center; min-height:44px; margin-top:1rem; }
-    button { min-height:44px; border:1px solid #17634b; border-radius:9px; background:#17634b; color:white; padding:.65rem .9rem; font:inherit; font-weight:700; cursor:pointer; }
-    button:focus-visible,a:focus-visible { outline:3px solid #16805b50; outline-offset:3px; }
+    button { min-height:44px; border:1px solid var(--cdm-btn-primary); border-radius:9px; background:var(--cdm-btn-primary); color:var(--cdm-white); padding:.65rem .9rem; font:inherit; font-weight:700; cursor:pointer; }
+    button:focus-visible,a:focus-visible { outline:3px solid color-mix(in srgb, var(--cdm-btn-primary) 31%, transparent); outline-offset:3px; }
   `,
 })
 export class ServiceListingsPageComponent implements OnInit {

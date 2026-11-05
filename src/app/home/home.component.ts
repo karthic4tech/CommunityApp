@@ -1,11 +1,14 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { DOCUMENT, NgOptimizedImage } from '@angular/common';
 import { LanguageService } from '../core/services/language.service';
 import { ServiceCategoryService } from '../core/services/service-category.service';
 import { ServiceDirectoryService } from '../core/services/service-directory.service';
 import { ServiceListing } from '../core/models/service-listing';
 import { CategoryCardComponent } from './category-card.component';
+import { AuthService } from '../core/auth/auth.service';
+import { filter } from 'rxjs';
 
 interface LandingValue {
   readonly id: string;
@@ -68,6 +71,7 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
   selector: 'app-home',
   imports: [RouterLink, RouterLinkActive, RouterOutlet, NgOptimizedImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[class.home-route]': 'isHomeRoute()' },
   template: `
     <a class="skip-link" href="#main">{{ i18n.text().skip }}</a>
     <header class="site-header">
@@ -78,19 +82,30 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
           <img ngSrc="assets/images/cdm360-pagetitle.webp" width="1303" height="434" priority
             alt="CDM360 — Chidambaram Community Platform" class="brand-wordmark" />
         </a>
+        <nav class="header-auth-actions" [attr.aria-label]="i18n.language() === 'ta' ? 'கணக்கு அணுகல்' : 'Account access'">
+          @if (auth.isAuthenticated()) {
+            <a class="header-user" routerLink="/account"><i class="bi bi-person-circle" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'வணக்கம்' : 'Hi' }}, {{ headerUserName() }}</a>
+            <button class="header-sign-out" type="button" (click)="signOut()" [disabled]="signingOut()" [attr.aria-busy]="signingOut()">
+              <i class="bi bi-box-arrow-right" aria-hidden="true"></i>{{ signingOut() ? (i18n.language() === 'ta' ? 'வெளியேறுகிறது…' : 'Signing out…') : (i18n.language() === 'ta' ? 'வெளியேறு' : 'Sign out') }}
+            </button>
+          } @else {
+            <a class="header-sign-in" routerLink="/auth/sign-in">{{ i18n.language() === 'ta' ? 'உள்நுழைக' : 'Sign in' }}</a>
+            <a class="header-sign-up" routerLink="/auth/sign-up"><i class="bi bi-person-plus" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'பதிவு செய்க' : 'Sign up' }}</a>
+          }
+        </nav>
         <div class="language-switch" role="group" aria-label="Language / மொழி">
           <button type="button" lang="ta" [class.active]="i18n.language() === 'ta'" [attr.aria-pressed]="i18n.language() === 'ta'" (click)="i18n.setLanguage('ta')">தமிழ்</button>
           <button type="button" lang="en" [class.active]="i18n.language() === 'en'" [attr.aria-pressed]="i18n.language() === 'en'" (click)="i18n.setLanguage('en')">English</button>
         </div>
       </div>
-      <nav class="main-nav container-xl" [attr.aria-label]="i18n.language() === 'ta' ? 'முதன்மை வழிசெலுத்தல்' : 'Main navigation'">
-        <a routerLink="/" routerLinkActive="nav-active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page"><i class="bi bi-house-door" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'முகப்பு' : 'Home' }}</span></a>
-        <a routerLink="/services" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-grid" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'சேவைகள்' : 'Explore Services' }}</span></a>
-        <a routerLink="/" fragment="about"><i class="bi bi-compass" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'நம் கதை' : 'Our story' }}</span></a>
-        <a routerLink="/" fragment="community"><i class="bi bi-plus-circle" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'சேவையைப் பகிருங்கள்' : 'For providers' }}</span></a>
-        <a routerLink="/account" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-person-circle" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'கணக்கு' : 'Account' }}</span></a>
-        <a routerLink="/admin/login" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-shield-lock" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'நிர்வாகம்' : 'Admin' }}</span></a>
-      </nav>
+       <nav class="main-nav container-xl" [attr.aria-label]="i18n.language() === 'ta' ? 'முதன்மை வழிசெலுத்தல்' : 'Main navigation'">
+         <a routerLink="/" routerLinkActive="nav-active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page"><i class="bi bi-house-door" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'முகப்பு' : 'Home' }}</span></a>
+         <a routerLink="/essential-services" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-lightning-charge" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகள்' : 'Essential Services' }}</span></a>
+         <a routerLink="/services" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-grid" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகள்' : 'Explore All Services' }}</span></a>
+         <a routerLink="/marketplace" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-shop-window" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'சந்தை' : 'Marketplace' }}</span></a>
+         <a routerLink="/account" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-person-circle" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'கணக்கு' : 'Account' }}</span></a>
+         <a routerLink="/admin/login" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-shield-lock" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'நிர்வாகம்' : 'Admin' }}</span></a>
+       </nav>
     </header>
 
     <main id="main" class="container-fluid p-0" tabindex="-1"><router-outlet (activate)="focusContent()" /></main>
@@ -102,7 +117,9 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
         </div>
         <div class="footer-links">
           <strong>{{ i18n.language() === 'ta' ? 'விரைவு இணைப்புகள்' : 'Explore' }}</strong>
+          <a routerLink="/essential-services">{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகள்' : 'Essential Services' }}</a>
           <a routerLink="/services">{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகள்' : 'All services' }}</a>
+          <a routerLink="/marketplace">{{ i18n.language() === 'ta' ? 'வாங்க / விற்க' : 'Buy & Sell Locally' }}</a>
           <a routerLink="/" fragment="about">{{ i18n.language() === 'ta' ? 'நம் கதை' : 'Our story' }}</a>
           <a routerLink="/account">{{ i18n.language() === 'ta' ? 'கணக்கு' : 'Account' }}</a>
         </div>
@@ -120,16 +137,43 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
 })
 export class HomeComponent {
   protected readonly i18n = inject(LanguageService);
+  protected readonly auth = inject(AuthService);
+  protected readonly isHomeRoute = signal(inject(Router).url === '/');
+  protected readonly signingOut = signal(false);
+  protected readonly headerUserName = computed(() => {
+    const user = this.auth.user?.();
+    const metadataName = user?.user_metadata?.['full_name'];
+    if (typeof metadataName === 'string' && metadataName.trim()) return metadataName.trim();
+    return user?.email?.split('@')[0] || 'User';
+  });
   private readonly document = inject(DOCUMENT);
+  private readonly router = inject(Router);
+
+  constructor() {
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      takeUntilDestroyed(),
+    ).subscribe(event => this.isHomeRoute.set(event.urlAfterRedirects === '/'));
+  }
 
   protected focusContent(): void {
     this.document.getElementById('main')?.focus({ preventScroll: true });
+  }
+
+  protected async signOut(): Promise<void> {
+    if (this.signingOut()) return;
+    this.signingOut.set(true);
+    try {
+      await this.auth.signOut();
+    } finally {
+      this.signingOut.set(false);
+    }
   }
 }
 
 @Component({
   selector: 'app-landing',
-  imports: [RouterLink, NgOptimizedImage, CategoryCardComponent],
+  imports: [RouterLink, CategoryCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="nc-home">
@@ -237,7 +281,7 @@ export class HomeComponent {
 
       <section class="nc-testimonial"><div class="nc-photo nc-testimonial-photo" role="img" aria-label="Chidambaram resident"></div><blockquote><i class="bi bi-quote"></i><p>{{ i18n.language() === 'ta' ? 'நம் சிதம்பரம் உள்ளூர் சேவைகளைக் கண்டறியவும், நம் ஊருடன் இணைந்திருக்கவும் உதவுகிறது.' : 'CDM360 makes it easy to find trusted local services, discover new businesses, know about upcoming events and stay connected with my town.' }}</p><cite>— {{ i18n.language() === 'ta' ? 'சிதம்பரம் குடியிருப்பாளர்' : 'A Chidambaram Resident' }}</cite></blockquote></section>
 
-      <section class="nc-contact" id="contact"><div class="nc-contact-form"><p class="nc-kicker">{{ i18n.language() === 'ta' ? 'தொடர்பு கொள்ளுங்கள்' : 'GET IN TOUCH' }}</p><h2>{{ i18n.language() === 'ta' ? 'எங்களைத் தொடர்பு கொள்ளுங்கள்' : 'Contact Us' }}</h2><form (submit)="$event.preventDefault()"><label>{{ i18n.language() === 'ta' ? 'பெயர்' : 'Name' }}<input type="text" [placeholder]="i18n.language() === 'ta' ? 'உங்கள் பெயர்' : 'Enter your name'"></label><label>{{ i18n.language() === 'ta' ? 'மின்னஞ்சல்' : 'Email Address' }}<input type="email" placeholder="Enter a valid email address"></label><label>{{ i18n.language() === 'ta' ? 'செய்தி' : 'Message' }}<textarea rows="3" placeholder="How can we help?"></textarea></label><button type="submit" class="nc-button">{{ i18n.language() === 'ta' ? 'செய்தி அனுப்புங்கள்' : 'Send Message' }} <i class="bi bi-arrow-right"></i></button></form></div><div class="nc-contact-info"><h3>{{ i18n.language() === 'ta' ? 'தொடர்பு விவரங்கள்' : 'CONTACT INFORMATION' }}</h3><p><i class="bi bi-geo-alt"></i> Chidambaram, Cuddalore District<br>Tamil Nadu, India</p><p><i class="bi bi-envelope"></i> support@namchidambaram.org</p><h3>{{ i18n.language() === 'ta' ? 'எங்களைப் பின்தொடருங்கள்' : 'FOLLOW US' }}</h3><div class="nc-social"><span>f</span><span>▶</span><span>◎</span><span>◉</span></div></div></section>
+      <section class="nc-contact" id="contact"><div class="nc-contact-form"><p class="nc-kicker">{{ i18n.language() === 'ta' ? 'தொடர்பு கொள்ளுங்கள்' : 'GET IN TOUCH' }}</p><h2>{{ i18n.language() === 'ta' ? 'எங்களைத் தொடர்பு கொள்ளுங்கள்' : 'Contact Us' }}</h2><form class="cdm-form" (submit)="$event.preventDefault()"><label>{{ i18n.language() === 'ta' ? 'பெயர்' : 'Name' }}<input type="text" [placeholder]="i18n.language() === 'ta' ? 'உங்கள் பெயர்' : 'Enter your name'"></label><label>{{ i18n.language() === 'ta' ? 'மின்னஞ்சல்' : 'Email Address' }}<input type="email" placeholder="Enter a valid email address"></label><label>{{ i18n.language() === 'ta' ? 'செய்தி' : 'Message' }}<textarea rows="3" placeholder="How can we help?"></textarea></label><button type="submit" class="nc-button">{{ i18n.language() === 'ta' ? 'செய்தி அனுப்புங்கள்' : 'Send Message' }} <i class="bi bi-arrow-right"></i></button></form></div><div class="nc-contact-info"><h3>{{ i18n.language() === 'ta' ? 'தொடர்பு விவரங்கள்' : 'CONTACT INFORMATION' }}</h3><p><i class="bi bi-geo-alt"></i> Chidambaram, Cuddalore District<br>Tamil Nadu, India</p><p><i class="bi bi-envelope"></i> support@namchidambaram.org</p><h3>{{ i18n.language() === 'ta' ? 'எங்களைப் பின்தொடருங்கள்' : 'FOLLOW US' }}</h3><div class="nc-social"><span>f</span><span>▶</span><span>◎</span><span>◉</span></div></div></section>
     </div>
   `,
   styleUrl: './home.component.scss',

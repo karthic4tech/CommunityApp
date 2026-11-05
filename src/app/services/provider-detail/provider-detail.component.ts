@@ -30,7 +30,7 @@ import { ListingSummaryComponent } from '../listing-summary/listing-summary.comp
               @if (last) {
                 <span aria-current="page">{{ i18n.language() === 'ta' ? category.nameTamil : category.nameEnglish }}</span>
               } @else if (index === 0) {
-                <a [routerLink]="['/services', category.slug]">{{ i18n.language() === 'ta' ? category.nameTamil : category.nameEnglish }}</a>
+                <a [routerLink]="['/services/category', category.slug]">{{ i18n.language() === 'ta' ? category.nameTamil : category.nameEnglish }}</a>
               } @else {
                 <span>{{ i18n.language() === 'ta' ? category.nameTamil : category.nameEnglish }}</span>
               }
@@ -55,17 +55,17 @@ import { ListingSummaryComponent } from '../listing-summary/listing-summary.comp
   `,
   styleUrl: '../directory.scss',
   styles: `
-    .breadcrumbs { display:flex; align-items:center; flex-wrap:wrap; gap:.55rem; margin-bottom:1rem; color:#52665b; font-size:.9rem; }
-    .breadcrumbs a, .back-link { color:#075541; }
+    .breadcrumbs { display:flex; align-items:center; flex-wrap:wrap; gap:.55rem; margin-bottom:1rem; color:var(--cdm-muted); font-size:.9rem; }
+    .breadcrumbs a, .back-link { color:var(--cdm-royal-blue); }
     .related { margin-top:2rem; }
-    .related h2 { color:#173f32; font-size:1.25rem; }
+    .related h2 { color:var(--cdm-navy); font-size:1.25rem; }
     .related-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
     .back-link { display:inline-flex; align-items:center; min-height:44px; margin-top:1rem; }
     @media (max-width:1000px) { .related-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media (max-width:650px) { .related-grid { grid-template-columns:1fr; } }
   `,
 })
-export class ProviderDetailComponent implements OnInit {
+export class ServiceDetailComponent implements OnInit {
   protected readonly i18n = inject(LanguageService);
   private readonly directory = inject(ServiceDirectoryService);
   private readonly categoryService = inject(ServiceCategoryService);
@@ -84,6 +84,7 @@ export class ProviderDetailComponent implements OnInit {
   constructor() {
     effect(onCleanup => {
       const id = this.params().get('id') ?? '';
+      const slug = this.params().get('slug');
       this.attempts();
       this.loading.set(true);
       this.error.set(false);
@@ -91,7 +92,7 @@ export class ProviderDetailComponent implements OnInit {
       this.related.set([]);
       let current = true;
       onCleanup(() => { current = false; });
-      void this.directory.detail(id).then(listing => {
+      void (slug ? this.directory.detailBySlug(slug) : this.directory.detail(id)).then(listing => {
         if (!current) return;
         this.listing.set(listing);
         if (listing) {
@@ -110,3 +111,5 @@ export class ProviderDetailComponent implements OnInit {
 
   protected retry(): void { this.attempts.update(value => value + 1); }
 }
+
+export { ServiceDetailComponent as ProviderDetailComponent };

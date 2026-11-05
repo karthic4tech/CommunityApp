@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { LanguageService } from '../core/services/language.service';
 import { LocalBrandsComponent } from './local-brands.component';
+import { ServiceDiscoveryPreviewComponent } from './service-discovery-preview.component';
 
 @Component({
   selector: 'app-home-beta',
   standalone: true,
-  imports: [NgOptimizedImage, LocalBrandsComponent],
+  imports: [NgOptimizedImage, RouterLink, LocalBrandsComponent, ServiceDiscoveryPreviewComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home-beta.component.html',
   styleUrl: './home-beta.component.scss'

@@ -65,8 +65,8 @@ describe('ServicesComponent advanced listing filters', () => {
 
     expect(directorySearch).toHaveBeenCalledWith(categoryId, locationId, 'plumber', 0);
     expect(harness.routeNativeElement?.querySelector('#listing-results-title')?.textContent).toContain('Matching services');
-    expect(harness.routeNativeElement?.querySelector<HTMLSelectElement>('#service-category-filter')?.value).toBe(categoryId);
-    expect(harness.routeNativeElement?.querySelector<HTMLSelectElement>('#service-location-filter')?.value).toBe(locationId);
+    expect(harness.routeNativeElement?.querySelector<HTMLInputElement>('#service-category-filter')?.value).toContain('Home Services');
+    expect(harness.routeNativeElement?.querySelector<HTMLInputElement>('#service-location-filter')?.value).toContain('Chidambaram');
   });
 
   it('applies advanced filter controls through the query string', async () => {
@@ -75,11 +75,21 @@ describe('ServicesComponent advanced listing filters', () => {
     harness.detectChanges();
     const element = harness.routeNativeElement!;
     const query = element.querySelector<HTMLInputElement>('#service-query')!;
-    const category = element.querySelector<HTMLSelectElement>('#service-category-filter')!;
-    const location = element.querySelector<HTMLSelectElement>('#service-location-filter')!;
+    const category = element.querySelector<HTMLInputElement>('#service-category-filter')!;
+    const location = element.querySelector<HTMLInputElement>('#service-location-filter')!;
     query.value = 'electrician';
-    category.value = categoryId;
-    location.value = locationId;
+    category.focus();
+    category.value = 'Home';
+    category.dispatchEvent(new Event('input', { bubbles:true }));
+    harness.detectChanges();
+    const categoryOption = Array.from(element.querySelectorAll<HTMLElement>('[role="option"]')).find(option => option.textContent?.includes('Home Services'));
+    categoryOption?.click();
+    location.focus();
+    location.value = 'Chidambaram';
+    location.dispatchEvent(new Event('input', { bubbles:true }));
+    harness.detectChanges();
+    const locationOption = Array.from(element.querySelectorAll<HTMLElement>('[role="option"]')).find(option => option.textContent?.includes('Chidambaram'));
+    locationOption?.click();
     element.querySelector<HTMLFormElement>('.service-search')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await harness.fixture.whenStable();
 
@@ -96,8 +106,8 @@ describe('ServicesComponent advanced listing filters', () => {
     harness.detectChanges();
 
     const element = harness.routeNativeElement!;
-    const location = element.querySelector<HTMLSelectElement>('#service-location-filter')!;
-    expect(location.value).toBe(locationId);
+    const location = element.querySelector<HTMLInputElement>('#service-location-filter')!;
+    expect(location.value).toContain('Chidambaram');
     expect(directorySearch).not.toHaveBeenCalled();
 
     element.querySelector<HTMLFormElement>('.service-search')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));

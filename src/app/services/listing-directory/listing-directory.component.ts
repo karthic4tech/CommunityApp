@@ -3,14 +3,15 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ServiceCategory } from '../../core/models/service-category';
-import { DirectoryLocation, DirectoryPage, locationOptions } from '../../core/models/service-listing';
+import { DirectoryLocation, DirectoryPage, locationOptions, locationSearchOptions } from '../../core/models/service-listing';
 import { LanguageService } from '../../core/services/language.service';
 import { ServiceDirectoryService } from '../../core/services/service-directory.service';
 import { ListingSummaryComponent } from '../listing-summary/listing-summary.component';
+import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-listing-directory',
-  imports: [ReactiveFormsModule, RouterLink, ListingSummaryComponent],
+  imports: [ReactiveFormsModule, RouterLink, ListingSummaryComponent, SearchableSelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="listing-directory" aria-labelledby="directory-title" [attr.aria-busy]="loading()">
@@ -18,16 +19,14 @@ import { ListingSummaryComponent } from '../listing-summary/listing-summary.comp
         <div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'உள்ளூர் அடைவு' : 'LOCAL DIRECTORY' }}</p><h2 id="directory-title">{{ i18n.language() === 'ta' ? 'உள்ளூர் சேவை வழங்குநர்கள்' : 'Local service providers' }}</h2></div>
         @if (!loading() && !error() && result().listings.length) { <span class="result-count" aria-live="polite">{{ result().listings.length }} {{ i18n.language() === 'ta' ? 'இந்தப் பக்கத்தில்' : 'on this page' }}</span> }
       </header>
-      <form class="directory-search" [formGroup]="form" (ngSubmit)="apply()">
+      <form class="directory-search cdm-form" [formGroup]="form" (ngSubmit)="apply()">
         <label class="keyword-label">{{ i18n.language() === 'ta' ? 'பெயர் அல்லது சேவை' : 'Search services and providers' }}
           <span class="keyword-input"><i class="bi bi-search" aria-hidden="true"></i><input type="search" formControlName="q" maxlength="200" [placeholder]="i18n.language() === 'ta' ? 'சேவை அல்லது வணிகப் பெயர்' : 'Service or business name'"></span>
         </label>
-        <label>{{ i18n.language() === 'ta' ? 'இடம்' : 'Location' }}
-          <select formControlName="location">
-            <option value="">{{ i18n.language() === 'ta' ? 'அனைத்து இடங்கள்' : 'All locations' }}</option>
-            @for (place of places(); track place.id) { <option [value]="place.id" [selected]="form.controls.location.value === place.id">{{ place.label }}</option> }
-          </select>
-        </label>
+        <app-searchable-select [label]="i18n.language() === 'ta' ? 'இடம்' : 'Location'" controlId="directory-location"
+          formControlName="location" [options]="placeOptions()" [emptyValue]="''" [clearable]="true"
+          [placeholder]="i18n.language() === 'ta' ? 'அனைத்து இடங்கள்' : 'All locations'"
+          [searchPlaceholder]="i18n.language() === 'ta' ? 'இடங்களைத் தேடுங்கள்…' : 'Search locations…'" />
         <button type="submit" class="primary-action"><i class="bi bi-search" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'தேடுக' : 'Search' }}</button>
         <button class="secondary-action" type="button" (click)="clear()">{{ i18n.language() === 'ta' ? 'வடிகட்டிகளை நீக்கு' : 'Clear filters' }}</button>
       </form>
@@ -72,6 +71,7 @@ export class ListingDirectoryComponent {
   protected readonly error = signal(false);
   protected readonly result = signal<DirectoryPage>({ listings: [], hasMore: false });
   protected readonly places = computed(() => locationOptions(this.locations(), this.i18n.language()));
+  protected readonly placeOptions = computed(() => locationSearchOptions(this.locations(), this.i18n.language()));
   protected readonly page = computed(() => {
     const page = Number(this.params().get('page') ?? 1);
     return Number.isSafeInteger(page) && page > 0 && page <= 10000 ? page - 1 : 0;

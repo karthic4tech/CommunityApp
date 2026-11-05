@@ -48,21 +48,21 @@ import { LocalBrandService } from '../core/services/local-brand.service';
   styles: `
     :host { display:block; min-width:0; padding-block:1.5rem 3rem; }
     .business-directory { width:min(1200px,calc(100% - 40px)); margin-inline:auto; display:grid; gap:1.25rem; }
-    .directory-heading { padding:clamp(1.5rem,4vw,2.25rem); border:1px solid #e4e8e3; border-radius:18px; background:#fff; }
-    .eyebrow { margin:0 0 .45rem; color:#16805b; font-size:.73rem; font-weight:800; letter-spacing:.12em; }
-    h1 { margin:0; color:#12345a; font-size:clamp(1.8rem,4vw,2.5rem); letter-spacing:-.03em; }
-    .directory-heading p:last-child { margin:.55rem 0 0; color:#667580; line-height:1.6; }
+    .directory-heading { padding:clamp(1.5rem,4vw,2.25rem); border:1px solid var(--cdm-border); border-radius:18px; background:#fff; }
+    .eyebrow { margin:0 0 .45rem; color:var(--cdm-royal-blue); font-size:.73rem; font-weight:800; letter-spacing:.12em; }
+    h1 { margin:0; color:var(--cdm-navy); font-size:clamp(1.8rem,4vw,2.5rem); letter-spacing:-.03em; }
+    .directory-heading p:last-child { margin:.55rem 0 0; color:var(--cdm-muted); line-height:1.6; }
     .business-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:1rem; }
-    .business-card { display:grid; justify-items:center; gap:.7rem; min-width:0; min-height:200px; padding:1rem; border:1px solid #e4e8e3; border-radius:14px; background:#fff; color:#12345a; text-align:center; text-decoration:none; transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease; }
-    .business-card:hover { border-color:#bdd9ca; box-shadow:0 6px 18px #12345a0c; transform:translateY(-2px); }
-    .business-card:focus-visible { outline:3px solid #16805b60; outline-offset:3px; }
-    .logo-frame { display:grid; place-items:center; width:100%; height:112px; padding:.7rem; border-radius:10px; background:#fbfcfa; }
+    .business-card { display:grid; justify-items:center; gap:.7rem; min-width:0; min-height:200px; padding:1rem; border:1px solid var(--cdm-border); border-radius:14px; background:#fff; color:var(--cdm-navy); text-align:center; text-decoration:none; transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease; }
+    .business-card:hover { border-color:var(--cdm-border); box-shadow:0 6px 18px color-mix(in srgb, var(--cdm-navy) 5%, transparent); transform:translateY(-2px); }
+    .business-card:focus-visible { outline:3px solid color-mix(in srgb, var(--cdm-green) 38%, transparent); outline-offset:3px; }
+    .logo-frame { display:grid; place-items:center; width:100%; height:112px; padding:.7rem; border-radius:10px; background:var(--cdm-page); }
     .logo-frame img { display:block; width:100%; height:100%; object-fit:contain; object-position:center; }
-    .logo-fallback { display:grid; place-items:center; align-content:center; gap:.25rem; width:100%; height:100%; border:1px dashed #cbd9d1; border-radius:8px; background:#f4f8f5; color:#16805b; }
-    .logo-fallback i { color:#f2a900; }.logo-fallback strong { color:#12345a; font-size:1.2rem; }
-    .card-link { display:inline-flex; align-items:center; gap:.4rem; margin-top:auto; color:#16805b; font-size:.8rem; font-weight:700; }
-    .directory-state { display:flex; align-items:center; flex-wrap:wrap; gap:.75rem; min-height:100px; margin:0; padding:1.2rem; border:1px solid #e4e8e3; border-radius:14px; background:#fff; color:#667580; }
-    .retry { min-height:42px; padding:.55rem .85rem; border:1px solid #d5ded8; border-radius:8px; background:#fff; color:#12345a; font:inherit; font-weight:700; }
+    .logo-fallback { display:grid; place-items:center; align-content:center; gap:.25rem; width:100%; height:100%; border:1px dashed var(--cdm-border); border-radius:8px; background:var(--cdm-blue-soft); color:var(--cdm-royal-blue); }
+    .logo-fallback i { color:var(--cdm-yellow); }.logo-fallback strong { color:var(--cdm-navy); font-size:1.2rem; }
+    .card-link { display:inline-flex; align-items:center; gap:.4rem; margin-top:auto; color:var(--cdm-royal-blue); font-size:.8rem; font-weight:700; }
+    .directory-state { display:flex; align-items:center; flex-wrap:wrap; gap:.75rem; min-height:100px; margin:0; padding:1.2rem; border:1px solid var(--cdm-border); border-radius:14px; background:#fff; color:var(--cdm-muted); }
+    .retry { min-height:42px; padding:.55rem .85rem; border:1px solid var(--cdm-border); border-radius:8px; background:#fff; color:var(--cdm-navy); font:inherit; font-weight:700; }
     @media(max-width:600px) { .business-directory { width:calc(100% - 28px); } .business-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:.7rem; } .business-card { min-height:170px; padding:.7rem; } .logo-frame { height:90px; } }
   `,
 })

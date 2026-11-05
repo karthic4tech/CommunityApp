@@ -41,6 +41,17 @@ describe('ServiceCategoryService', () => {
     expect(from).toHaveBeenCalledTimes(2);
   });
 
+  it('uses the curation projection only for Essential Services and explains a missing migration', async () => {
+    returns.mockResolvedValueOnce({ data: [row('essential', { is_essential: true, essential_order: 2 })], error: null });
+    const categories = await service.getEssentialCategories();
+    expect(select).toHaveBeenCalledWith(expect.stringContaining('is_essential'));
+    expect(eq).toHaveBeenCalledWith('is_essential', true);
+    expect(categories[0].isEssential).toBe(true);
+
+    returns.mockResolvedValueOnce({ data: null, error: { code: '42703' } });
+    await expect(service.getEssentialCategories(true)).rejects.toThrow('Apply migration 20261105100000_essential_service_curations.sql');
+  });
+
   it('handles errors and allows retry, including empty results', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     returns.mockResolvedValueOnce({ data: null, error: { code: '42501' } });

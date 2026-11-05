@@ -8,8 +8,8 @@ app-root .published article {
 }
 
 app-root table { border-color: var(--cdm-border); }
-app-root table thead th { color: var(--cdm-navy); background: #f4f8f5; }
-app-root code { color: var(--cdm-green); }
+app-root table thead th { color: var(--cdm-navy); background: var(--cdm-blue-soft); }
+app-root code { color:var(--cdm-royal-blue); }
 app-root a { text-underline-offset: 0.18em; }
 
 @media (max-width: 650px) {

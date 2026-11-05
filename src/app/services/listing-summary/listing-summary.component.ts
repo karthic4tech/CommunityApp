@@ -15,7 +15,7 @@ import { ServiceDirectoryService } from '../../core/services/service-directory.s
         <h1 #heading tabindex="-1">{{ listing().service_providers.display_name }}</h1>
         <h2>{{ listing().title }}</h2>
       } @else {
-        <h3><a [routerLink]="['/providers', listing().id]">{{ listing().title }}</a></h3>
+        <h3><a [routerLink]="listing().slug ? ['/services', listing().slug] : ['/providers', listing().id]">{{ listing().title }}</a></h3>
         <p class="provider">{{ listing().service_providers.display_name }}</p>
         @if (listing().service_categories; as category) {
           <span class="category-label">{{ i18n.language() === 'ta' ? category.name_ta : category.name_en }}</span>
@@ -58,7 +58,7 @@ import { ServiceDirectoryService } from '../../core/services/service-directory.s
         }
         @if (mapsHref(); as maps) { <a [href]="maps" target="_blank" rel="noopener noreferrer">{{ i18n.language() === 'ta' ? 'Google Maps வழிகள்' : 'Google Maps directions' }}</a> }
         @if (!detail()) {
-          <a [routerLink]="['/providers', listing().id]">{{ i18n.language() === 'ta' ? 'விவரங்கள்' : 'View details' }}</a>
+          <a [routerLink]="listing().slug ? ['/services', listing().slug] : ['/providers', listing().id]">{{ i18n.language() === 'ta' ? 'விவரங்கள்' : 'View details' }}</a>
         }
       </div>
       @if (detail() && !contacts().length) {
@@ -68,23 +68,23 @@ import { ServiceDirectoryService } from '../../core/services/service-directory.s
   `,
   styles: `
     :host { display:block; min-width:0; }
-    article { display:grid; align-content:start; height:100%; min-width:0; box-sizing:border-box; padding:1.1rem; background:#fff; border:1px solid #e3eae5; border-radius:14px; color:#173a50; overflow-wrap:anywhere; }
+    article { display:grid; align-content:start; height:100%; min-width:0; box-sizing:border-box; padding:1.1rem; background:#fff; border:1px solid var(--cdm-border); border-radius:14px; color:var(--cdm-navy); overflow-wrap:anywhere; }
     h1 { font-size:clamp(1.5rem,3vw,2rem); } h2,h3 { font-size:1.05rem; } h1,h3 { margin:0 0 .35rem; }
-    h3 a { color:#12345a; line-height:1.4; text-decoration:none; } h3 a:hover { color:#17634b; }
-    a { color:#17634b; } .provider { margin:.1rem 0 .5rem; color:#64748b; font-size:.84rem; font-weight:600; }
-    .category-label { justify-self:start; margin-bottom:.45rem; padding:.25rem .55rem; border:1px solid #e3eae5; border-radius:999px; background:#f7faf8; color:#17634b; font-size:.72rem; font-weight:650; }
-    .verified { display:inline-flex; align-items:center; justify-self:start; gap:.25rem; margin-bottom:.45rem; color:#17634b; font-size:.77rem; font-weight:700; }
+    h3 a { color:var(--cdm-navy); line-height:1.4; text-decoration:none; } h3 a:hover { color:var(--cdm-royal-blue); }
+    a { color:var(--cdm-royal-blue); } .provider { margin:.1rem 0 .5rem; color:var(--cdm-muted); font-size:.84rem; font-weight:600; }
+    .category-label { justify-self:start; margin-bottom:.45rem; padding:.25rem .55rem; border:1px solid var(--cdm-border); border-radius:999px; background:var(--cdm-page); color:var(--cdm-royal-blue); font-size:.72rem; font-weight:650; }
+    .verified { display:inline-flex; align-items:center; justify-self:start; gap:.25rem; margin-bottom:.45rem; color:var(--cdm-royal-blue); font-size:.77rem; font-weight:700; }
     .description { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:3; white-space:pre-line; line-height:1.65; }
-    p,.places { color:#64748b; line-height:1.65; font-size:.86rem; } .address { white-space:pre-line; }
-    .places { padding-left:1.15rem; } .image { position:relative; aspect-ratio:16/10; margin-block:.7rem; overflow:hidden; border-radius:10px; background:#f3f6f4; } .image-placeholder { display:flex; align-items:center; justify-content:center; gap:.5rem; min-height:130px; margin-block:.7rem; border:1px dashed #cfdbd4; border-radius:10px; background:#f7faf8; color:#64748b; text-align:center; }
+    p,.places { color:var(--cdm-muted); line-height:1.65; font-size:.86rem; } .address { white-space:pre-line; }
+    .places { padding-left:1.15rem; } .image { position:relative; aspect-ratio:16/10; margin-block:.7rem; overflow:hidden; border-radius:10px; background:var(--cdm-page); } .image-placeholder { display:flex; align-items:center; justify-content:center; gap:.5rem; min-height:130px; margin-block:.7rem; border:1px dashed var(--cdm-border); border-radius:10px; background:var(--cdm-page); color:var(--cdm-muted); text-align:center; }
     img { object-fit:cover; border-radius:10px; } .gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:1rem; }
     .detail-view { padding:clamp(1.1rem,3vw,1.75rem); border-radius:16px; }
-    .detail-view h1 { color:#12345a; font-weight:760; }
-    .detail-view h2 { color:#12345a; margin-bottom:.75rem; }
+    .detail-view h1 { color:var(--cdm-navy); font-weight:760; }
+    .detail-view h2 { color:var(--cdm-navy); margin-bottom:.75rem; }
     .actions { display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.4rem; }
-    .actions a { display:inline-flex; flex-direction:column; justify-content:center; min-height:42px; padding:.5rem .7rem; border:1px solid #d4dfd9; border-radius:9px; color:#12345a; background:#fff; text-decoration:none; font-size:.8rem; font-weight:650; }
-    .actions a:hover { border-color:#a9cdb9; background:#f6faf7; }
-    .contact-value { font-size:.8rem; font-weight:400; } a:focus-visible { outline:3px solid #16805b50; outline-offset:3px; }
+    .actions a { display:inline-flex; flex-direction:column; justify-content:center; min-height:42px; padding:.5rem .7rem; border:1px solid var(--cdm-border); border-radius:9px; color:var(--cdm-navy); background:#fff; text-decoration:none; font-size:.8rem; font-weight:650; }
+    .actions a:hover { border-color:var(--cdm-green); background:var(--cdm-green-soft); }
+    .contact-value { font-size:.8rem; font-weight:400; } a:focus-visible { outline:3px solid color-mix(in srgb, var(--cdm-green) 31%, transparent); outline-offset:3px; }
   `,
 })
 export class ListingSummaryComponent {

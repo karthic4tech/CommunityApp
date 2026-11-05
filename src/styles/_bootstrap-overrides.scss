@@ -1,7 +1,7 @@
 // Bootstrap remains the layout and component foundation; these overrides apply CDM360 tokens.
 .btn {
-  --bs-btn-font-weight: 700;
-  --bs-btn-border-radius: var(--cdm-radius-md);
+  --bs-btn-font-weight: 600;
+  --bs-btn-border-radius: 10px;
   min-height: 2.75rem;
   display: inline-flex;
   align-items: center;
@@ -9,57 +9,76 @@
   gap: 0.5rem;
 }
 
-.btn-primary {
-  --bs-btn-bg: var(--cdm-green);
-  --bs-btn-border-color: var(--cdm-green);
-  --bs-btn-hover-bg: #104d39;
-  --bs-btn-hover-border-color: #104d39;
-  --bs-btn-active-bg: #0e4534;
-  --bs-btn-active-border-color: #0e4534;
-  --bs-btn-disabled-bg: var(--cdm-green);
-  --bs-btn-disabled-border-color: var(--cdm-green);
+.btn-primary,
+.btn-success {
+  --bs-btn-color: var(--cdm-white);
+  --bs-btn-bg: var(--cdm-btn-primary);
+  --bs-btn-border-color: var(--cdm-btn-primary);
+  --bs-btn-hover-color: var(--cdm-white);
+  --bs-btn-hover-bg: var(--cdm-btn-primary-hover);
+  --bs-btn-hover-border-color: var(--cdm-btn-primary-hover);
+  --bs-btn-active-color: var(--cdm-white);
+  --bs-btn-active-bg: var(--cdm-btn-primary-active);
+  --bs-btn-active-border-color: var(--cdm-btn-primary-active);
+  --bs-btn-disabled-color: var(--cdm-white);
+  --bs-btn-disabled-bg: var(--cdm-btn-primary);
+  --bs-btn-disabled-border-color: var(--cdm-btn-primary);
 }
 
 .btn-secondary {
-  --bs-btn-bg: var(--cdm-navy);
-  --bs-btn-border-color: var(--cdm-navy);
-  --bs-btn-hover-bg: #102b46;
-  --bs-btn-hover-border-color: #102b46;
+  --bs-btn-color: var(--cdm-navy);
+  --bs-btn-bg: var(--cdm-white);
+  --bs-btn-border-color: var(--cdm-btn-border);
+  --bs-btn-hover-color: var(--cdm-navy);
+  --bs-btn-hover-bg: var(--cdm-btn-primary-light);
+  --bs-btn-hover-border-color: var(--cdm-btn-primary);
 }
 
-.btn-outline-primary {
-  --bs-btn-color: var(--cdm-green);
-  --bs-btn-border-color: var(--cdm-green);
-  --bs-btn-hover-bg: var(--cdm-green);
-  --bs-btn-hover-border-color: var(--cdm-green);
+.btn-outline-secondary {
+  --bs-btn-color: var(--cdm-navy);
+  --bs-btn-border-color: var(--cdm-btn-border);
+  --bs-btn-hover-color: var(--cdm-navy);
+  --bs-btn-hover-bg: var(--cdm-btn-primary-light);
+  --bs-btn-hover-border-color: var(--cdm-btn-primary);
 }
 
-.btn-warning {
-  --bs-btn-color: #3d2c00;
-  --bs-btn-hover-color: #3d2c00;
-  --bs-btn-active-color: #3d2c00;
+.btn-outline-primary,
+.btn-outline-success {
+  --bs-btn-color: var(--cdm-btn-primary);
+  --bs-btn-border-color: var(--cdm-btn-primary);
+  --bs-btn-hover-color: var(--cdm-white);
+  --bs-btn-hover-bg: var(--cdm-btn-primary);
+  --bs-btn-hover-border-color: var(--cdm-btn-primary);
+}
+
+.btn-warning,
+.btn-info {
+  --bs-btn-color: var(--cdm-navy);
+  --bs-btn-hover-color: var(--cdm-navy);
+  --bs-btn-active-color: var(--cdm-navy);
   --bs-btn-font-weight: 750;
 }
 
 .form-control,
 .form-select {
   min-height: var(--cdm-control-height);
-  border-color: #cbd8d1;
+  border-color: var(--cdm-border);
   border-radius: var(--cdm-radius-md);
-  color: var(--cdm-text);
+  color: var(--cdm-navy);
+  background-color: var(--cdm-white);
   box-shadow: var(--cdm-shadow-sm);
 }
 
-.form-control::placeholder { color: #64748b; opacity: 1; }
+.form-control::placeholder { color: var(--cdm-muted); opacity: 1; }
 .form-control:focus,
 .form-select:focus {
-  border-color: var(--cdm-green-accent);
-  box-shadow: 0 0 0 0.22rem rgba(22, 128, 91, 0.18);
+  border-color: var(--cdm-royal-blue);
+  box-shadow: 0 0 0 0.22rem rgba(7, 85, 184, 0.2);
 }
 
 .form-check-input:checked {
-  border-color: var(--cdm-green);
-  background-color: var(--cdm-green);
+  border-color:var(--cdm-royal-blue);
+  background-color:var(--cdm-royal-blue);
 }
 
 .card {
@@ -69,8 +88,8 @@
   box-shadow: var(--cdm-shadow-sm);
 }
 
-.badge { font-weight: 700; }
+.badge { font-weight: 750; }
 .alert { --bs-alert-border-radius: var(--cdm-radius-md); }
 .table { --bs-table-border-color: var(--cdm-border); }
-.table thead th { color: var(--cdm-navy); background: #f4f8f5; }
-.pagination { --bs-pagination-color: var(--cdm-green); --bs-pagination-active-bg: var(--cdm-green); --bs-pagination-active-border-color: var(--cdm-green); }
+.table thead th { color: var(--cdm-navy); background: var(--cdm-blue-soft); }
+.pagination { --bs-pagination-color: var(--cdm-navy); --bs-pagination-active-bg: var(--cdm-btn-primary); --bs-pagination-active-border-color: var(--cdm-btn-primary); --bs-pagination-active-color: var(--cdm-white); }

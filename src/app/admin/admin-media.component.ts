@@ -1,16 +1,19 @@
 import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AdminMediaModule, AdminMediaQuery, AdminMediaRow, MediaAsset, MediaCleanupItem, MediaGalleryItem, MediaStats, PRIVATE_BUCKET, MediaUploadStatus } from '../core/models/media.models';
 import { MediaService } from '../core/services/media.service';
 import { MediaPreviewComponent } from '../shared/components/media-preview/media-preview.component';
+import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select.component';
+import { SearchableSelectOption } from '../shared/components/searchable-select/searchable-select.models';
 
 const PAGE_SIZE = 25;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 @Component({
   selector: 'app-admin-media',
-  imports: [RouterLink, NgOptimizedImage, MediaPreviewComponent],
+  imports: [RouterLink, NgOptimizedImage, MediaPreviewComponent, FormsModule, SearchableSelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(keydown.escape)': 'closeOverlays()' },
   template: `
@@ -44,29 +47,13 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         }
       </div>
 
-      <form class="toolbar" (submit)="applyFilters($event)">
+      <form class="toolbar cdm-form" (submit)="applyFilters($event, module.value, status.value)">
         <label class="search-label">
           <span>Search filename</span>
           <input #search type="search" name="search" [value]="filters.search" [placeholder]="'image.webp'" />
         </label>
-        <label class="filter">
-          <span>Module</span>
-          <select name="module" [value]="filters.module">
-            <option value="all">All modules</option>
-            <option value="service_listing">Service listing</option>
-            <option value="provider">Businesses</option>
-            <option value="profile">Profiles</option>
-          </select>
-        </label>
-        <label class="filter">
-          <span>Status</span>
-          <select name="status" [value]="filters.status">
-            <option value="all">All statuses</option>
-            <option value="uploaded">Uploaded</option>
-            <option value="failed">Failed</option>
-            <option value="pending">Pending</option>
-          </select>
-        </label>
+        <app-searchable-select #module="ngModel" name="module" label="Module" controlId="media-module-filter" [options]="moduleOptions" [ngModel]="filters.module" [ngModelOptions]="{standalone:true}" [clearable]="false" searchPlaceholder="Search modules…" />
+        <app-searchable-select #status="ngModel" name="status" label="Status" controlId="media-status-filter" [options]="statusOptions" [ngModel]="filters.status" [ngModelOptions]="{standalone:true}" [clearable]="false" searchPlaceholder="Search statuses…" />
         <label class="filter">
           <span>Uploader ID</span>
           <input #uploader type="text" name="uploader" [value]="filters.uploaderId" placeholder="User UUID" autocomplete="off" />
@@ -187,58 +174,58 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   styles: `
     :host { display: block; padding-block: 1.5rem 2.5rem; }
     .admin-page { display: grid; gap: 1.25rem; }
-    .admin-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: clamp(1.5rem,4vw,2.5rem); border-radius: 20px; background: linear-gradient(120deg,#eff7ee,#f8f8ed); border: 1px solid #dfeade; }
-    .back-link { display: inline-flex; align-items: center; gap: .4rem; min-height: 44px; margin-bottom: .75rem; color: #075541; text-decoration: none; }
-    .eyebrow { margin: 0 0 .35rem; color: #52665b; font-size: .72rem; font-weight: 800; letter-spacing: .12em; }
-    h1 { margin: 0; color: #173f32; font-size: clamp(1.7rem,4vw,2.4rem); }
-    .intro { color: #52665b; line-height: 1.7; }
+    .admin-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: clamp(1.5rem,4vw,2.5rem); border-radius: 20px; background: linear-gradient(120deg,var(--cdm-green-soft),var(--cdm-page)); border: 1px solid var(--cdm-green-soft); }
+    .back-link { display: inline-flex; align-items: center; gap: .4rem; min-height: 44px; margin-bottom: .75rem; color:var(--cdm-royal-blue); text-decoration: none; }
+    .eyebrow { margin: 0 0 .35rem; color: var(--cdm-muted); font-size: .72rem; font-weight: 800; letter-spacing: .12em; }
+    h1 { margin: 0; color: var(--cdm-navy); font-size: clamp(1.7rem,4vw,2.4rem); }
+    .intro { color: var(--cdm-muted); line-height: 1.7; }
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .75rem; }
-    .stat-card { margin: 0; padding: .9rem 1rem; border: 1px solid #dfe7e2; border-radius: 14px; background: #fff; display: grid; gap: .15rem; }
-    .stat-card dt { color: #52665b; font-size: .78rem; }
-    .stat-card dd { margin: 0; color: #173f32; font-size: 1.4rem; font-weight: 800; }
-    .toolbar { display: flex; align-items: end; flex-wrap: wrap; gap: .6rem; padding: 1rem; border: 1px solid #dfe7e2; border-radius: 14px; background: #fff; }
-    .toolbar label { display: grid; gap: .3rem; color: #173f32; font-size: .82rem; font-weight: 650; }
+    .stat-card { margin: 0; padding: .9rem 1rem; border: 1px solid var(--cdm-border); border-radius: 14px; background: #fff; display: grid; gap: .15rem; }
+    .stat-card dt { color: var(--cdm-muted); font-size: .78rem; }
+    .stat-card dd { margin: 0; color: var(--cdm-navy); font-size: 1.4rem; font-weight: 800; }
+    .toolbar { display: flex; align-items: end; flex-wrap: wrap; gap: .6rem; padding: 1rem; border: 1px solid var(--cdm-border); border-radius: 14px; background: #fff; }
+    .toolbar label { display: grid; gap: .3rem; color: var(--cdm-navy); font-size: .82rem; font-weight: 650; }
     .search-label { flex: 1 1 220px; }
     .filter { flex: 0 1 150px; }
-    input, select { width: 100%; min-height: 44px; border: 1px solid #b8c9bf; border-radius: 9px; padding: .55rem; background: #fff; color: #173f32; font: inherit; }
+    input, select { width: 100%; min-height: 44px; border: 1px solid var(--cdm-border); border-radius: 9px; padding: .55rem; background: #fff; color: var(--cdm-navy); font: inherit; }
     .primary-action, .secondary-action, .danger-button, .action-button {
       display: inline-flex; align-items: center; min-height: 44px; border-radius: 9px; padding: .55rem .8rem; font: inherit; font-weight: 700; cursor: pointer; border: 0;
     }
-    .primary-action { background: #075541; color: #fff; }
-    .secondary-action { background: #fff; color: #075541; border: 1px solid #b8c9bf; }
-    .danger-button { background: #8a261f; color: #fff; }
-    .action-button { background: #fff; color: #075541; border: 1px solid #b8c9bf; font-weight: 600; }
+    .primary-action { background: var(--cdm-btn-primary); color:var(--cdm-white); }
+    .secondary-action { background: #fff; color:var(--cdm-royal-blue); border: 1px solid var(--cdm-border); }
+    .danger-button { background: #C92A2A; color: #fff; }
+    .action-button { background: #fff; color:var(--cdm-royal-blue); border: 1px solid var(--cdm-border); font-weight: 600; }
     .primary-action:disabled, .secondary-action:disabled, .action-button:disabled { opacity: .6; cursor: default; }
-    .state { margin: 0; padding: 1rem 1.25rem; border: 1px solid #dfe7e2; border-radius: 14px; background: #fff; color: #52665b; line-height: 1.7; }
-    .table-wrap { overflow-x: auto; border: 1px solid #dfe7e2; border-radius: 16px; background: #fff; }
-    table { width: 100%; min-width: 900px; border-collapse: collapse; color: #173f32; }
-    th, td { padding: .6rem .75rem; border-bottom: 1px solid #edf1ee; text-align: left; vertical-align: middle; }
-    thead th { background: #f7faf7; color: #52665b; font-size: .8rem; }
+    .state { margin: 0; padding: 1rem 1.25rem; border: 1px solid var(--cdm-border); border-radius: 14px; background: #fff; color: var(--cdm-muted); line-height: 1.7; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--cdm-border); border-radius: 16px; background: #fff; }
+    table { width: 100%; min-width: 900px; border-collapse: collapse; color: var(--cdm-navy); }
+    th, td { padding: .6rem .75rem; border-bottom: 1px solid var(--cdm-border); text-align: left; vertical-align: middle; }
+    thead th { background: var(--cdm-blue-soft); color: var(--cdm-muted); font-size: .8rem; }
     tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
-    .thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; background: #eef2ee; }
-    .thumb-missing { display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #52665b; }
+    .thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; background: var(--cdm-page); }
+    .thumb-missing { display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--cdm-muted); }
     .file-cell { display: flex; flex-direction: column; gap: .15rem; min-width: 180px; overflow-wrap: anywhere; }
-    .file-cell small { color: #52665b; font-weight: 400; }
-    .status { display: inline-flex; padding: .2rem .55rem; border-radius: 99px; background: #e2f3e8; color: #176044; font-size: .78rem; font-weight: 700; }
-    .status-failed { background: #faf0ee; color: #8a261f; }
+    .file-cell small { color: var(--cdm-muted); font-weight: 400; }
+    .status { display: inline-flex; padding: .2rem .55rem; border-radius: 99px; background: var(--cdm-green-soft); color:var(--cdm-royal-blue); font-size: .78rem; font-weight: 700; }
+    .status-failed { background: var(--cdm-page); color: #C92A2A; }
     .row-actions { display: flex; flex-wrap: wrap; gap: .35rem; }
-    .pagination { display: flex; align-items: center; justify-content: space-between; gap: 1rem; color: #52665b; }
+    .pagination { display: flex; align-items: center; justify-content: space-between; gap: 1rem; color: var(--cdm-muted); }
     .cleanup { display: grid; gap: .5rem; }
-    .cleanup h2 { margin: 0; color: #173f32; font-size: 1.1rem; }
+    .cleanup h2 { margin: 0; color: var(--cdm-navy); font-size: 1.1rem; }
     .cleanup-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
-    .cleanup-item { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .6rem .8rem; border: 1px solid #dfe7e2; border-radius: 12px; background: #fff; color: #173f32; overflow-wrap: anywhere; }
-    .cleanup-error { display: block; color: #8a261f; }
+    .cleanup-item { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .6rem .8rem; border: 1px solid var(--cdm-border); border-radius: 12px; background: #fff; color: var(--cdm-navy); overflow-wrap: anywhere; }
+    .cleanup-error { display: block; color: #C92A2A; }
     .overlay { position: fixed; inset: 0; z-index: 1040; display: grid; place-items: center; padding: 1rem; background: rgb(0 0 0 / .5); }
     .overlay-panel { width: min(100%, 640px); max-height: 90vh; overflow: auto; padding: 1.25rem; border-radius: 16px; background: #fff; }
     .overlay-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-    .overlay-header h2 { margin: 0; color: #173f32; font-size: 1.2rem; }
-    .icon-button { width: 44px; height: 44px; border: 0; border-radius: 9px; background: #f1f4f1; color: #173f32; cursor: pointer; font-size: 1.1rem; }
+    .overlay-header h2 { margin: 0; color: var(--cdm-navy); font-size: 1.2rem; }
+    .icon-button { width: 44px; height: 44px; border: 0; border-radius: 9px; background: var(--cdm-page); color: var(--cdm-navy); cursor: pointer; font-size: 1.1rem; }
     .metadata-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem 1rem; margin: 1rem 0; }
-    .metadata-grid dt { color: #52665b; font-size: .78rem; }
-    .metadata-grid dd { margin: .1rem 0 0; color: #173f32; overflow-wrap: anywhere; }
+    .metadata-grid dt { color: var(--cdm-muted); font-size: .78rem; }
+    .metadata-grid dd { margin: .1rem 0 0; color: var(--cdm-navy); overflow-wrap: anywhere; }
     .overlay-footer { display: flex; justify-content: flex-end; }
     .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-    :is(a, button, input, select):focus-visible { outline: 3px solid #17583f; outline-offset: 2px; }
+    :is(a, button, input, select):focus-visible { outline: 3px solid var(--cdm-royal-blue); outline-offset: 2px; }
     @media (max-width: 760px) { .metadata-grid { grid-template-columns: 1fr; } .admin-header { flex-direction: column; } .pagination { flex-direction: column; } }
   `,
 })
@@ -265,6 +252,12 @@ export class AdminMediaComponent implements OnInit {
   protected readonly totalPages = computed(() => Math.max(1, Math.ceil(this.total() / PAGE_SIZE)));
 
   protected filters = { search: '', module: 'all', status: 'all', uploaderId: '', from: '', to: '' };
+  protected readonly moduleOptions: readonly SearchableSelectOption[] = [
+    {value:'all',label:'All modules'},{value:'service_listing',label:'Service listing'},{value:'provider',label:'Businesses'},{value:'profile',label:'Profiles'},
+  ];
+  protected readonly statusOptions: readonly SearchableSelectOption[] = [
+    {value:'all',label:'All statuses'},{value:'uploaded',label:'Uploaded'},{value:'failed',label:'Failed'},{value:'pending',label:'Pending'},
+  ];
 
   ngOnInit(): void {
     void this.reload();
@@ -277,7 +270,7 @@ export class AdminMediaComponent implements OnInit {
     this.loading.set(false);
   }
 
-  protected applyFilters(event: Event): void {
+  protected applyFilters(event: Event, module: string, status: string): void {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     const value = (name: string): string => String((form.elements.namedItem(name) as HTMLInputElement | HTMLSelectElement | null)?.value ?? '').trim();
@@ -287,7 +280,7 @@ export class AdminMediaComponent implements OnInit {
       return;
     }
     this.filterError.set(null);
-    this.filters = { search: value('search'), module: value('module'), status: value('status'), uploaderId: uploader, from: value('from'), to: value('to') };
+    this.filters = { search: value('search'), module, status, uploaderId: uploader, from: value('from'), to: value('to') };
     this.page.set(1);
     void this.loadRows();
   }

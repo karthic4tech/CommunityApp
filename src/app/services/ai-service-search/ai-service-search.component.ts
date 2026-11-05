@@ -3,31 +3,30 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AiServiceSearchResult } from '../../core/models/ai-service-search';
-import { DirectoryLocation, locationOptions } from '../../core/models/service-listing';
+import { DirectoryLocation, locationSearchOptions } from '../../core/models/service-listing';
 import { AiServiceSearchService } from '../../core/services/ai-service-search.service';
 import { LanguageService } from '../../core/services/language.service';
 import { ServiceDirectoryService } from '../../core/services/service-directory.service';
 import { ListingSummaryComponent } from '../listing-summary/listing-summary.component';
+import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-ai-service-search',
-  imports: [ReactiveFormsModule, RouterLink, ListingSummaryComponent],
+  imports: [ReactiveFormsModule, RouterLink, ListingSummaryComponent, SearchableSelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section aria-labelledby="ai-search-title" [attr.aria-busy]="loading()">
       <h1 id="ai-search-title">{{ i18n.language() === 'ta' ? 'உங்களுக்குத் தேவையான சேவையைச் சொல்லுங்கள்' : 'Describe the service you need' }}</h1>
       <p id="search-help">{{ i18n.language() === 'ta' ? 'தமிழ் அல்லது English-இல் தேடுங்கள். எ.கா: சிதம்பரத்தில் குழாய் பழுது பார்க்க ஆள் தேவை' : 'Search in Tamil or English. For example: I need a plumber in Chidambaram.' }}</p>
       <p id="search-privacy">{{ i18n.language() === 'ta' ? 'AI தேடலில் உங்கள் தேடல் உரை AI வழங்குநருக்கு அனுப்பப்படும். தனிப்பட்ட தகவல்களைச் சேர்க்க வேண்டாம். சாதாரண சொல் தேடலையும் பயன்படுத்தலாம்.' : 'AI search sends your query to an AI provider. Do not include personal details. Keyword search does not use AI.' }}</p>
-      <form [formGroup]="form" (ngSubmit)="submit(false)">
+      <form class="cdm-form" [formGroup]="form" (ngSubmit)="submit(false)">
         <label>{{ i18n.language() === 'ta' ? 'என்ன சேவை தேவை?' : 'What service do you need?' }}
           <input type="search" formControlName="query" minlength="2" maxlength="200" required aria-describedby="search-help search-privacy">
         </label>
-        <label>{{ i18n.language() === 'ta' ? 'இடம் (விருப்பம்)' : 'Location (optional)' }}
-          <select formControlName="location">
-            <option value="">{{ i18n.language() === 'ta' ? 'தேடலில் உள்ள இடம் / அனைத்து இடங்கள்' : 'From query / all locations' }}</option>
-            @for (place of placeOptions(); track place.id) { <option [value]="place.id">{{ place.label }}</option> }
-          </select>
-        </label>
+        <app-searchable-select [label]="i18n.language() === 'ta' ? 'இடம் (விருப்பம்)' : 'Location (optional)'" controlId="ai-search-location"
+          formControlName="location" [options]="placeOptions()" [emptyValue]="''" [clearable]="true" [loading]="locationsLoading()"
+          [placeholder]="i18n.language() === 'ta' ? 'தேடலில் உள்ள இடம் / அனைத்து இடங்கள்' : 'From query / all locations'"
+          [searchPlaceholder]="i18n.language() === 'ta' ? 'இடங்களைத் தேடுங்கள்…' : 'Search locations…'" />
         <button type="submit" [disabled]="form.invalid || loading()">{{ i18n.language() === 'ta' ? 'AI தேடல்' : 'AI search' }}</button>
         <button type="button" class="secondary" [disabled]="form.invalid || loading()" (click)="submit(true)">{{ i18n.language() === 'ta' ? 'சொல் தேடல்' : 'Keyword search' }}</button>
       </form>
@@ -73,10 +72,11 @@ export class AiServiceSearchComponent {
   private readonly attempts = signal(0);
   private readonly locations = signal<DirectoryLocation[]>([]);
   protected readonly locationsError = signal(false);
+  protected readonly locationsLoading = signal(true);
   protected readonly loading = signal(false);
   protected readonly error = signal(false);
   protected readonly result = signal<AiServiceSearchResult | null>(null);
-  protected readonly placeOptions = computed(() => locationOptions(this.locations(), this.i18n.language()));
+  protected readonly placeOptions = computed(() => locationSearchOptions(this.locations(), this.i18n.language()));
   protected readonly form = inject(NonNullableFormBuilder).group({
     query: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]], location: '',
   });
@@ -111,8 +111,10 @@ export class AiServiceSearchComponent {
   }
 
   protected async loadLocations(): Promise<void> {
+    this.locationsLoading.set(true);
     this.locationsError.set(false);
     try { this.locations.set(await this.directory.locations()); } catch { this.locationsError.set(true); }
+    finally { this.locationsLoading.set(false); }
   }
   protected retry(): void { this.attempts.update(value => value + 1); }
   protected submit(keywordOnly: boolean): void {

@@ -43,6 +43,21 @@ import { LanguageService } from '../core/services/language.service';
           <a routerLink="/admin/media">{{ i18n.language() === 'ta' ? 'பட நிர்வாகம்' : 'Open media management' }}</a>
         </article>
         <article class="card col-12 col-md-6">
+          <h2>{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகள்' : 'Essential Services Management' }}</h2>
+          <p>{{ i18n.language() === 'ta' ? 'அத்தியாவசிய வகைகள், முகப்புப் பக்கக் குறுக்குவழிகள் மற்றும் வரிசையை நிர்வகிக்கவும்.' : 'Curate priority categories, emergency flags and homepage shortcuts.' }}</p>
+          <a routerLink="/admin/essential-services">{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகளை நிர்வகி' : 'Manage Essential Services' }}</a>
+        </article>
+        <article class="card col-12 col-md-6">
+          <h2>Marketplace</h2>
+          <p>Moderate product advertisements and reports, and manage the local marketplace catalogue.</p>
+          <a routerLink="/admin/marketplace">Manage marketplace</a>
+        </article>
+        <article class="card col-12 col-md-6">
+          <h2>Marketplace moderation</h2>
+          <p>Review local product listings and reports, and manage marketplace categories and settings.</p>
+          <a routerLink="/admin/marketplace">Open marketplace administration</a>
+        </article>
+        <article class="card col-12 col-md-6">
           <h2>{{ i18n.language() === 'ta' ? 'உள்ளூர் பிராண்டுகள்' : 'Local brands' }}</h2>
           <p>{{ i18n.language() === 'ta' ? 'முகப்புப் பக்கத்தில் இடம்பெறும் சரிபார்க்கப்பட்ட வணிகங்களையும் அவற்றின் வரிசையையும் நிர்வகிக்கவும்.' : 'Feature verified businesses on the homepage and set their display order.' }}</p>
           <a routerLink="/admin/local-brands">{{ i18n.language() === 'ta' ? 'பிராண்டுகளை நிர்வகி' : 'Manage local brands' }}</a>
@@ -59,17 +74,17 @@ import { LanguageService } from '../core/services/language.service';
     :host { display:block; padding-block:2rem; }
      .admin-page { width:100%; max-width:var(--cdm-content-width); margin:0 auto; }
      .admin-header { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:clamp(1.5rem,4vw,2.5rem); border-radius:var(--cdm-radius-xl); background:var(--cdm-green-soft); border:1px solid var(--cdm-border); }
-    .eyebrow { margin:0 0 .35rem; color:#52665b; font-size:.72rem; font-weight:800; letter-spacing:.12em; }
+    .eyebrow { margin:0 0 .35rem; color:var(--cdm-muted); font-size:.72rem; font-weight:800; letter-spacing:.12em; }
      h1 { margin:0; color:var(--cdm-navy-deep); font-size:clamp(1.7rem,4vw,2.5rem); }
      h2 { color:var(--cdm-navy-deep); font-size:1.1rem; }
-    .intro, .card p { color:#52665b; line-height:1.8; }
+    .intro, .card p { color:var(--cdm-muted); line-height:1.8; }
      .sign-out { flex:none; }
      .admin-grid { align-items:stretch; }
      .card { padding:1.25rem; border:1px solid var(--cdm-border); border-radius:var(--cdm-radius-lg); background:white; }
-    .card a { display:inline-flex; align-items:center; min-height:44px; color:#075541; }
-    .verified { color:#176044 !important; font-weight:700; }
-    ul { padding-left:1.25rem; color:#52665b; line-height:1.8; }
-    :is(a,button):focus-visible { outline:3px solid #17583f; outline-offset:3px; }
+    .card a { display:inline-flex; align-items:center; min-height:44px; color:var(--cdm-royal-blue); }
+    .verified { color:var(--cdm-royal-blue) !important; font-weight:700; }
+    ul { padding-left:1.25rem; color:var(--cdm-muted); line-height:1.8; }
+    :is(a,button):focus-visible { outline:3px solid var(--cdm-royal-blue); outline-offset:3px; }
      @media (max-width:650px) { .admin-header { flex-direction:column; } }
   `,
 })

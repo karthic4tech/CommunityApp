@@ -14,7 +14,7 @@ import { SupabaseService } from './supabase.service';
  * owner/admin session from hydrating private contacts or media in this public
  * browsing flow.
  */
-const LISTING_COLUMNS = `id,category_id,title,description,status,published_at,
+const LISTING_COLUMNS = `id,slug,category_id,title,description,status,published_at,
   service_categories!inner(id,is_active,name_ta,name_en,slug),
   service_providers!inner(id,display_name,description,verification_status,public_email,website_url,address,postal_code,latitude,longitude),
   listing_locations(coverage_type,locations!inner(id,parent_id,name_ta,name_en,location_type,is_active)),
@@ -63,7 +63,36 @@ export class ServiceDirectoryService {
       throw new Error('Invalid directory response.');
     }
 
-    const rpcRows = data ?? [];
+    return this.hydratePage(data ?? []);
+  }
+
+  async searchEssential(
+    categoryId: string | null,
+    locationId: string | null,
+    keyword: string,
+    page = 0,
+  ): Promise<DirectoryPage> {
+    const start = page * DIRECTORY_PAGE_SIZE;
+    const { data, error } = await this.supabase.client.rpc('essential_directory_listings', {
+      category: categoryId,
+      location: locationId,
+      keyword: keyword.trim(),
+    })
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .order('id', { ascending: true })
+      .range(start, start + DIRECTORY_PAGE_SIZE)
+      .returns<DirectoryListingRow[]>();
+    if (error) {
+      console.error('Essential directory search failed:', { code: error.code });
+      throw new Error('Unable to load essential service listings.');
+    }
+    if (data !== null && (!Array.isArray(data) || data.some(row => !row || typeof row.id !== 'string'))) {
+      throw new Error('Invalid essential directory response.');
+    }
+    return this.hydratePage(data ?? []);
+  }
+
+  private async hydratePage(rpcRows: readonly DirectoryListingRow[]): Promise<DirectoryPage> {
     const ids = [...new Set(rpcRows.map(row => row.id))];
     if (!ids.length) return { listings: [], hasMore: false };
 
@@ -102,6 +131,22 @@ export class ServiceDirectoryService {
     if (!UUID_PATTERN.test(id)) return null;
     const { data, error } = await this.publicListingQuery()
       .eq('id', id)
+      .eq('status', 'published')
+      .eq('service_providers.verification_status', 'verified')
+      .eq('service_categories.is_active', true)
+      .eq('listing_contacts.is_public', true)
+      .eq('listing_locations.locations.is_active', true)
+      .eq('listing_media.media_assets.visibility', 'public')
+      .eq('listing_media.media_assets.media_type', 'image')
+      .maybeSingle<ServiceListing>();
+    if (error) throw new Error('Unable to load this service listing.');
+    return data && publicListing(data) ? data : null;
+  }
+
+  async detailBySlug(slug: string): Promise<ServiceListing | null> {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 200) return null;
+    const { data, error } = await this.publicListingQuery()
+      .eq('slug', slug)
       .eq('status', 'published')
       .eq('service_providers.verification_status', 'verified')
       .eq('service_categories.is_active', true)
