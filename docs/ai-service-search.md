@@ -13,11 +13,17 @@ The Edge Function performs this sequence:
    If a user JWT is supplied, verify it with Supabase Auth; do not downgrade a bad
    session to anonymous access.
 2. Read active, reachable categories and locations with the caller's RLS context.
-3. Use a two-minute validated-intent cache or atomically reserve an AI quota slot.
+3. Try a direct dynamic-catalog/alias match, then use a 24-hour validated-intent cache or atomically reserve an AI quota slot.
 4. Ask OpenAI for category/location slugs, extra literal keywords and `ta` / `en`.
 5. Validate the entire output and resolve slugs to real database records.
 6. Call the existing `directory_listings` RPC with resolved UUIDs and return up to
-   12 real listings. No generated business descriptions or chatbot responses.
+    12 real listings. No generated business descriptions or chatbot responses.
+
+The same function also accepts `operation: "suggest_category"` with a service
+description. It loads the active parent/child hierarchy, applies direct aliases
+first, otherwise uses the same Responses API adapter and quota, then resolves and
+validates the returned slugs against real active rows. It returns no suggestion
+when the parent/child relationship is invalid or ambiguous.
 
 The confirmed query uses `service_listings.category_id`, `provider_id`, `title`,
 `description`, `status`, `published_at` and `id`; `status` must equal `published`.
@@ -76,7 +82,9 @@ in your values locally. `.env.local` is ignored by Git.
 | Secret | Value |
 | --- | --- |
 | `OPENAI_API_KEY` | A restricted, project-scoped OpenAI key |
-| `AI_SEARCH_MODEL` | Default `gpt-4.1-nano-2025-04-14` |
+| `OPENAI_MODEL` | Configurable Responses API model; default `gpt-6-luna` |
+| `AI_SEARCH_MODEL` | Backward-compatible model override; used only when `OPENAI_MODEL` is absent |
+| `AI_SEARCH_CONFIG_VERSION` | Cache invalidation version, e.g. `v2` |
 | `AI_SEARCH_ALLOWED_ORIGINS` | Comma-separated exact origins, e.g. localhost, your Cloudflare Pages/custom domain; no trailing slash/wildcards |
 | `AI_SEARCH_PUBLIC_KEY` | The publishable key used by Angular |
 
@@ -84,6 +92,12 @@ in your values locally. `.env.local` is ignored by Git.
 For local execution use the corresponding local project public values, never a
 service-role key. No OpenAI key belongs in Angular environments, Cloudflare client
 variables, source control, screenshots or browser requests.
+
+The shared CORS utility includes these exact origins by default:
+`http://localhost:4200`, `http://127.0.0.1:4200`, `https://cdm360.in`, and
+`https://www.cdm360.in`. Additional exact origins may be supplied through the
+trusted server-side `CORS_ALLOWED_ORIGINS` setting. Never use a wildcard or an
+origin suffix match.
 
 With the Supabase CLI installed/authenticated:
 
@@ -130,12 +144,27 @@ content type, and optionally the current user's `Authorization: Bearer <JWT>`:
 { "query": "சிதம்பரத்தில் குழாய் பழுது பார்க்க ஆள் தேவை", "location": null }
 ```
 
-`location` may be a real location UUID or an unambiguous database slug. Only
-`query` and `location` are accepted. The query must be 2–200 characters without
+`location` may be a real location UUID or an unambiguous database slug. Search
+requests accept `query` and `location`; category-assistance requests additionally
+set `operation` to `suggest_category` and omit `location`. The query must be 2–200 characters without
 control characters; the entire request is limited to 2 KiB.
 
 The response contains `mode`, `reason`, `language`, validated `intent`, `listings`
 and `hasMore`. Intent carries real category/location records, not generated IDs.
+
+Test preflight from an approved origin with:
+
+```bash
+curl -i -X OPTIONS https://avgvkymmzclckazxglli.supabase.co/functions/v1/ai-service-search \
+  -H "Origin: http://localhost:4200" \
+  -H "Access-Control-Request-Method: POST" \
+  -H "Access-Control-Request-Headers: authorization,apikey,content-type,x-client-info"
+```
+
+Expected results are HTTP 204, a matching `Access-Control-Allow-Origin`,
+`Vary: Origin`, and the permitted request headers. A 401/403/429/500 response
+with CORS headers is an application, authentication, quota, or server result—not
+a CORS failure.
 
 - Provider error, timeout, invalid model output or exhausted quota: return literal
   keyword results with `mode: 'keyword'`. Empty results are not broadened silently.
@@ -149,22 +178,25 @@ and `hasMore`. Intent carries real category/location records, not generated IDs.
 
 ## Cost controls and monitoring
 
-OpenAI GPT-4.1 nano supports strict JSON output without reasoning/tool calls. The
+The configured OpenAI model must support strict JSON output without reasoning/tool calls. The
 model is pinned for reproducibility and configurable in one secret. The adapter
 is isolated in `openai.ts`; another provider would need a compatible adapter,
 not an arbitrary caller-supplied URL/model.
 
-- One AI call per uncached submitted query; no retries or AI calls per keystroke.
+- Direct catalog/alias matches do not call AI. Otherwise there is one AI call per uncached submitted query; no retries or AI calls per keystroke.
 - At most 180 output tokens, an eight-second provider timeout and bounded query.
 - Send only category slugs and compact location labels, not listings/contacts or
   category descriptions. A 16,000-character taxonomy cap and 500-row per-table
   catalogue cap refuse excessive/truncated catalogues instead of inflating cost.
-- Cache validated intents only, for a fixed two minutes, at most 128 per isolate;
-  caller identity partitions entries. Concurrent identical requests are coalesced.
+- Cache validated intents only, for 24 hours, at most 128 per isolate; entries include
+  the configured cache version, normalized query, language and explicit location.
+  Concurrent identical requests are coalesced. Listings are always re-queried under
+  current RLS and are never cached.
   Every request revalidates the catalogue and re-queries results under current RLS.
   Responses use `Cache-Control: no-store`; there is no shared listing-result cache.
 - Database-backed limits: **300 reservations/day globally**, **20/minute globally**,
-  **10/minute shared across anonymous users**, **6/minute per authenticated UUID**.
+  **10/hour shared across anonymous users**, **30/hour per authenticated UUID** and
+  **100/day per authenticated UUID**.
   Failed model calls also consume reservations. Quota database errors fail closed
   for AI and use keyword fallback. Counters older than two days are cleaned on
   successful reservation. Change reviewed SQL constants to tune the MVP budget.

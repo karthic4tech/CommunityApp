@@ -22,6 +22,8 @@
     </section>
   }
 
+  <app-mobile-verification (verified)="loadProfile()" />
+
   <div class="dashboard-grid row g-3">
     <div class="main-column col-12 col-lg-8">
       <section class="identity-card" aria-label="{{ copy().member }}">
@@ -71,7 +73,8 @@
               </label>
               <label class="field">
                 <span>{{ copy().phone }}</span>
-                <input type="tel" formControlName="phone" autocomplete="tel" maxlength="40" [readOnly]="!editing()" />
+                <input type="tel" formControlName="phone" autocomplete="tel" maxlength="40" readonly aria-describedby="phone-verification-help" />
+                <small id="phone-verification-help">{{ phoneVerified() ? 'Verified through Supabase Auth.' : 'Add and verify your number above to change it.' }}</small>
               </label>
               <label class="field">
                 <span>{{ copy().preferredLanguage }}</span>

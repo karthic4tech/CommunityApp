@@ -25,12 +25,17 @@ import { FormControlComponent } from '../shared/forms/form-control.component';
           @if (errorMessage(); as message) { <p class="error" role="alert">{{ message }}</p> }
           <button type="submit" [disabled]="form.invalid || submitting() || form.controls.password.value !== form.controls.confirmPassword.value">{{ submitting() ? 'Creating account…' : 'Create account' }}</button>
         </form>
+        <div class="oauth-separator" aria-hidden="true"><span>OR CONTINUE WITH</span></div>
+        <button type="button" class="oauth-button" (click)="googleSignIn()" [disabled]="submitting()" [attr.aria-busy]="submitting()">
+          <svg class="google-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.35 12.27c0-.71-.06-1.4-.18-2.05H12v3.88h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.7 2.91-4.2 2.91-7.22Z"/><path fill="#34A853" d="M12 21.75c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.54 0-4.69-1.72-5.46-4.03H3.3v2.53A9.74 9.74 0 0 0 12 21.75Z"/><path fill="#FBBC05" d="M6.54 13.83A5.85 5.85 0 0 1 6.23 12c0-.64.11-1.26.31-1.83V7.64H3.3A9.75 9.75 0 0 0 2.25 12c0 1.57.38 3.06 1.05 4.36l3.24-2.53Z"/><path fill="#EA4335" d="M12 6.14c1.43 0 2.71.49 3.72 1.46l2.79-2.79C16.83 3.13 14.63 2.25 12 2.25a9.74 9.74 0 0 0-8.7 5.39l3.24 2.53C7.31 7.86 9.46 6.14 12 6.14Z"/></svg>
+          <span>{{ submitting() ? 'Redirecting to Google…' : 'Continue with Google' }}</span>
+        </button>
       }
       <p class="links"><a routerLink="/auth/sign-in">Already have an account? Sign in</a></p>
     </section>
   `,
   styles: `
-    :host { display:block; padding-block:2rem; }.auth-card { width:min(100%, 560px); margin-inline:auto; padding:clamp(1.5rem,4vw,2.5rem); border:1px solid var(--cdm-border); border-radius:20px; background:white; box-shadow:0 8px 24px #0020500a; }.eyebrow { margin:0 0 .35rem; color:var(--cdm-muted); font-size:.72rem; font-weight:800; letter-spacing:.12em; } h1 { margin:0; color:var(--cdm-navy); font-size:clamp(1.7rem,4vw,2.4rem); }.intro, small { color:var(--cdm-muted); line-height:1.7; } form { display:grid; gap:1rem; margin-top:1.5rem; } label { display:grid; gap:.4rem; color:var(--cdm-navy); font-weight:650; } input { width:100%; min-height:46px; border:1px solid var(--cdm-border); border-radius:9px; padding:.7rem; background:white; color:var(--cdm-navy); font:inherit; } button { min-height:46px; border:1px solid var(--cdm-btn-primary); border-radius:9px; padding:.7rem 1rem; background:var(--cdm-btn-primary); color:var(--cdm-white); font:inherit; font-weight:700; cursor:pointer; } button:disabled { opacity:.6; cursor:default; }.error { color:#C92A2A; line-height:1.6; }.success { margin-top:1.5rem; padding:1rem; border:1px solid var(--cdm-btn-primary); border-radius:12px; background:var(--cdm-btn-primary-light); color:var(--cdm-navy); line-height:1.7; }.success a, .links a { color:var(--cdm-royal-blue); }.links { margin-top:1.25rem; } :is(a,button,input):focus-visible { outline:3px solid var(--cdm-royal-blue); outline-offset:3px; }
+     :host { display:block; padding-block:2rem; }.auth-card { width:min(100%, 560px); margin-inline:auto; padding:clamp(1.5rem,4vw,2.5rem); border:1px solid var(--cdm-border); border-radius:20px; background:white; box-shadow:0 8px 24px #0020500a; }.eyebrow { margin:0 0 .35rem; color:var(--cdm-muted); font-size:.72rem; font-weight:800; letter-spacing:.12em; } h1 { margin:0; color:var(--cdm-navy); font-size:clamp(1.7rem,4vw,2.4rem); }.intro, small { color:var(--cdm-muted); line-height:1.7; } form { display:grid; gap:1rem; margin-top:1.5rem; } label { display:grid; gap:.4rem; color:var(--cdm-navy); font-weight:650; } input { width:100%; min-height:46px; border:1px solid var(--cdm-border); border-radius:9px; padding:.7rem; background:white; color:var(--cdm-navy); font:inherit; } button { min-height:46px; border:1px solid var(--cdm-btn-primary); border-radius:9px; padding:.7rem 1rem; background:var(--cdm-btn-primary); color:var(--cdm-white); font:inherit; font-weight:700; cursor:pointer; } button:disabled { opacity:.6; cursor:default; }.oauth-separator { display:flex; align-items:center; gap:.75rem; margin-top:1.35rem; color:var(--cdm-muted); font-size:.68rem; font-weight:800; letter-spacing:.1em; }.oauth-separator::before,.oauth-separator::after { content:''; height:1px; flex:1; background:var(--cdm-border); }.oauth-button { display:flex; align-items:center; justify-content:center; gap:.65rem; width:100%; margin-top:.85rem; border-color:#d9dee7; background:#fff; color:#002050; }.oauth-button:hover:not(:disabled) { border-color:#aeb8c8; background:#f8fafc; }.google-icon { width:20px; height:20px; flex:0 0 20px; }.error { color:#C92A2A; line-height:1.6; }.success { margin-top:1.5rem; padding:1rem; border:1px solid var(--cdm-btn-primary); border-radius:12px; background:var(--cdm-btn-primary-light); color:var(--cdm-navy); line-height:1.7; }.success a, .links a { color:var(--cdm-royal-blue); }.links { margin-top:1.25rem; } :is(a,button,input):focus-visible { outline:3px solid var(--cdm-royal-blue); outline-offset:3px; }
   `,
 })
 export class AuthSignUpComponent {
@@ -46,6 +51,13 @@ export class AuthSignUpComponent {
   protected readonly created = signal(false);
   protected readonly emailSentTo = signal('');
   protected readonly errorMessage = signal<string | null>(null);
+
+  protected async googleSignIn(): Promise<void> {
+    if (this.submitting()) return;
+    this.submitting.set(true); this.errorMessage.set(null);
+    try { await this.auth.signInWithGoogle(); }
+    catch (error) { this.errorMessage.set(error instanceof Error ? error.message : 'Google sign-in is unavailable.'); this.submitting.set(false); }
+  }
 
   protected async submit(): Promise<void> {
     if (this.form.invalid || this.form.controls.password.value !== this.form.controls.confirmPassword.value) return;

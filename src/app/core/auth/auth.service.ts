@@ -22,6 +22,7 @@ export class AuthService {
   private readonly loadingState = signal(true);
   private readonly errorState = signal<string | null>(null);
   private readonly initialization: Promise<void>;
+  private googleSignInRequest: Promise<void> | null = null;
 
   readonly session = this.sessionState.asReadonly();
   readonly user = computed<User | null>(() => this.sessionState()?.user ?? null);
@@ -31,6 +32,7 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this.sessionState() !== null);
   readonly isAdmin = computed(() => this.rolesState().length > 0);
   readonly emailVerified = computed(() => Boolean(this.user()?.email_confirmed_at));
+  readonly phoneVerified = computed(() => Boolean(this.user()?.phone && this.user()?.phone_confirmed_at));
 
   constructor() {
     this.initialization = this.initialize();
@@ -101,12 +103,76 @@ export class AuthService {
   }
 
   async signInWithGoogle(): Promise<void> {
+    if (this.googleSignInRequest) return this.googleSignInRequest;
+    this.errorState.set(null);
+    this.googleSignInRequest = this.startGoogleSignIn();
+    try { await this.googleSignInRequest; } finally { this.googleSignInRequest = null; }
+  }
+
+  async sendPhoneOtp(phone: string): Promise<void> {
     this.errorState.set(null);
     try {
-      const redirectTo = this.authRedirectUrl();
+      const { error } = await this.supabase.client.auth.signInWithOtp({
+        phone,
+        options: { shouldCreateUser: true },
+      });
+      if (error) throw error;
+    } catch (error) {
+      const message = this.mapPhoneAuthError(error, 'We could not send a verification code. Please try again.');
+      this.errorState.set(message);
+      throw new Error(message);
+    }
+  }
+
+  async verifyPhoneOtp(phone: string, token: string): Promise<void> {
+    this.errorState.set(null);
+    try {
+      const { data, error } = await this.supabase.client.auth.verifyOtp({ phone, token, type: 'sms' });
+      if (error || !data.session) throw error ?? new Error('Verification did not return a session.');
+      this.sessionState.set(data.session);
+      await this.loadRoles(data.session);
+    } catch (error) {
+      const message = this.mapPhoneAuthError(error, 'That verification code is not valid. Please check it and try again.');
+      this.errorState.set(message);
+      throw new Error(message);
+    }
+  }
+
+  async sendPhoneChangeOtp(phone: string): Promise<void> {
+    this.errorState.set(null);
+    try {
+      const { error } = await this.supabase.client.auth.updateUser({ phone });
+      if (error) throw error;
+    } catch (error) {
+      const message = this.mapPhoneAuthError(error, 'We could not send a verification code. Please try again.');
+      this.errorState.set(message);
+      throw new Error(message);
+    }
+  }
+
+  async verifyPhoneChangeOtp(phone: string, token: string): Promise<void> {
+    this.errorState.set(null);
+    try {
+      const { error } = await this.supabase.client.auth.verifyOtp({ phone, token, type: 'phone_change' });
+      if (error) throw error;
+      const { data: refreshed, error: refreshError } = await this.supabase.client.auth.refreshSession();
+      if (refreshError || !refreshed.session) throw refreshError ?? new Error('Verification session unavailable.');
+      this.sessionState.set(refreshed.session);
+      await this.loadRoles(refreshed.session);
+    } catch (error) {
+      const message = this.mapPhoneAuthError(error, 'That verification code is not valid. Please check it and try again.');
+      this.errorState.set(message);
+      throw new Error(message);
+    }
+  }
+
+  private async startGoogleSignIn(): Promise<void> {
+    try {
+      const origin = globalThis.location?.origin;
+      const redirectTo = origin ? `${origin}/auth/callback` : '/auth/callback';
       const { error } = await this.supabase.client.auth.signInWithOAuth({
         provider: 'google',
-        options: redirectTo ? { redirectTo } : undefined,
+        options: { redirectTo },
       });
       if (error) throw error;
     } catch (error) {
@@ -161,7 +227,8 @@ export class AuthService {
   async signOut(): Promise<void> {
     this.errorState.set(null);
     try {
-      const { error } = await this.supabase.client.auth.signOut();
+      // Revoke every active Supabase session, not only this browser session.
+      const { error } = await this.supabase.client.auth.signOut({ scope: 'global' });
       if (error) throw error;
     } catch {
       this.errorState.set('Unable to sign out. Please try again.');
@@ -169,7 +236,15 @@ export class AuthService {
     } finally {
       this.sessionState.set(null);
       this.rolesState.set([]);
+      this.clearClientStorage();
     }
+  }
+
+  private clearClientStorage(): void {
+    // Supabase owns the auth token storage. Clearing both stores also removes
+    // any pending callback state or cached user-specific browser data.
+    try { globalThis.localStorage?.clear(); } catch { /* Storage may be blocked by browser privacy settings. */ }
+    try { globalThis.sessionStorage?.clear(); } catch { /* Storage may be blocked by browser privacy settings. */ }
   }
 
   private async initialize(): Promise<void> {
@@ -227,6 +302,18 @@ export class AuthService {
     if (message.includes('invalid login') || message.includes('invalid credentials')) return 'The email or password is incorrect.';
     if (message.includes('password')) return 'The password does not meet the required rules.';
     if (message.includes('email')) return 'Please check the email address and try again.';
+    return fallback;
+  }
+
+  private mapPhoneAuthError(error: unknown, fallback: string): string {
+    const message = error instanceof Error ? error.message.toLowerCase() : '';
+    if (message.includes('rate') || message.includes('too many') || message.includes('limit')) return 'Too many requests. Please wait a moment before trying again.';
+    if (message.includes('expired')) return 'This verification code has expired. Request a new code.';
+    if (message.includes('invalid') || message.includes('token') || message.includes('otp')) return 'That verification code is incorrect or expired. Please try again.';
+    if (message.includes('provider') || message.includes('sms') || message.includes('phone') || message.includes('not configured')) {
+      return 'SMS login is not configured yet. Please enable Phone Auth and configure an SMS provider in Supabase.';
+    }
+    if (message.includes('network') || message.includes('fetch')) return 'Unable to connect. Check your internet connection and try again.';
     return fallback;
   }
 }

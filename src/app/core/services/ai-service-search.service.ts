@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { FunctionsHttpError } from '@supabase/supabase-js';
-import { AiServiceSearchResult } from '../models/ai-service-search';
+import { AiServiceSearchResult, CategorySuggestionResult } from '../models/ai-service-search';
 import { publicListing } from '../models/service-listing';
 import { ServiceDirectoryService } from './service-directory.service';
 import { SupabaseService } from './supabase.service';
@@ -30,6 +30,20 @@ export class AiServiceSearchService {
       // The direct RPC still uses the existing caller-scoped client and RLS.
       return this.keywordSearch(term, location);
     }
+  }
+
+  async suggestCategory(query: string): Promise<CategorySuggestionResult> {
+    const term = query.trim();
+    if (term.length < 2 || term.length > 200 || /[\u0000-\u001f\u007f]/u.test(term)) throw new Error('Invalid category description.');
+    const { data, error } = await this.supabase.client.functions.invoke<CategorySuggestionResult>('ai-service-search', {
+      body: { operation: 'suggest_category', query: term }, timeout: 20_000,
+    });
+    if (error || !data || typeof data.success !== 'boolean'
+      || !['direct_match', 'ai_match', 'no_match'].includes(data.reason)
+      || (data.success && !data.suggestion) || (!data.success && data.suggestion !== null)) {
+      throw new Error('Category assistance unavailable.');
+    }
+    return data;
   }
 
   private async keywordSearch(query: string, location: string | null): Promise<AiServiceSearchResult> {

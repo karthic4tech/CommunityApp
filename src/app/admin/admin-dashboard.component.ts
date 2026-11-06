@@ -19,6 +19,7 @@ import { LanguageService } from '../core/services/language.service';
       </header>
 
       <div class="admin-grid row g-3">
+        <article class="card col-12 col-md-6"><h2>User Management</h2><p>Review registered members, providers and mobile verification status.</p><a routerLink="/admin/users">Manage users</a></article>
         <article class="card col-12 col-md-6">
           <h2>{{ i18n.language() === 'ta' ? 'உங்கள் அணுகல்' : 'Your access' }}</h2>
           <p>{{ auth.user()?.email }}</p>
@@ -26,6 +27,11 @@ import { LanguageService } from '../core/services/language.service';
           <ul>
             @for (role of auth.roles(); track role) { <li>{{ role }}</li> }
           </ul>
+        </article>
+        <article class="card col-12 col-md-6">
+          <h2>{{ i18n.language() === 'ta' ? 'உதவி மையம்' : 'Help Center' }}</h2>
+          <p>{{ i18n.language() === 'ta' ? 'இருமொழி FAQ மற்றும் வழிகாட்டிகளை நிர்வகிக்கவும்.' : 'Create and publish bilingual FAQs and user guides.' }}</p>
+          <a routerLink="/admin/help">{{ i18n.language() === 'ta' ? 'உதவியை நிர்வகிக்கவும்' : 'Manage Help Center' }}</a>
         </article>
         <article class="card col-12 col-md-6">
           <h2>{{ i18n.language() === 'ta' ? 'சேவை அடைவு' : 'Service directory' }}</h2>
@@ -94,7 +100,12 @@ export class AdminDashboardComponent {
   private readonly router = inject(Router);
 
   protected async signOut(): Promise<void> {
-    await this.auth.signOut();
-    await this.router.navigateByUrl('/admin/login');
+    try {
+      await this.auth.signOut();
+    } catch {
+      // The local session is still cleared when the network is unavailable.
+    } finally {
+      await this.router.navigateByUrl('/admin/login', { replaceUrl: true });
+    }
   }
 }

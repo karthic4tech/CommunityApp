@@ -18,6 +18,50 @@ export interface Intent {
   language: 'ta' | 'en';
 }
 
+export interface CategoryIntent {
+  parent_category_slug: string | null;
+  subcategory_slug: string | null;
+  language: 'ta' | 'en';
+}
+
+function normalized(value: string): string {
+  return value.normalize('NFC').toLocaleLowerCase().replace(/\s+/gu, ' ').trim();
+}
+
+const COMMON_ALIASES: Readonly<Record<string, readonly string[]>> = {
+  restaurants: ['batter', 'idly', 'idli', 'dosa', 'dosai', 'food shop', 'சமையல்', 'இட்லி', 'தோசை', 'மாவு'],
+  plumber: ['plumber', 'plumbing', 'பிளம்பர்', 'குழாய் பழுது', 'pipe repair'],
+  electrician: ['electrician', 'electrical service', 'எலக்ட்ரீஷியன்', 'மின்சார வேலை'],
+  ambulance: ['ambulance', 'ஆம்புலன்ஸ்', 'அவசர ஊர்தி'],
+  'ac-service': ['ac service', 'air conditioner repair', 'ஏசி சர்வீஸ்'],
+};
+
+/** Resolve only unambiguous catalog names/aliases. AI is used when this is inconclusive. */
+export function directIntent(query: string, catalog: Catalog, explicitLocation: CatalogRow | null): Intent | null {
+  const text = normalized(query);
+  const categoryMatches = catalog.categories.flatMap(row => {
+    const terms = [row.slug.replace(/-/gu, ' '), row.name_en ?? '', row.name_ta, ...(COMMON_ALIASES[row.slug] ?? [])]
+      .map(normalized).filter(term => term.length >= 2);
+    const matches = terms.filter(term => text.includes(term));
+    return matches.length ? [{ row, score: Math.max(...matches.map(term => term.length)) }] : [];
+  }).sort((a, b) => b.score - a.score);
+  if (!categoryMatches.length || (categoryMatches[1] && categoryMatches[0].score === categoryMatches[1].score
+    && categoryMatches[0].row.id !== categoryMatches[1].row.id)) return null;
+
+  const locationMatches = explicitLocation ? [] : catalog.locations.flatMap(row => {
+    const terms = [row.slug.replace(/-/gu, ' '), row.name_en ?? '', row.name_ta].map(normalized).filter(term => term.length >= 2);
+    const matches = terms.filter(term => text.includes(term));
+    return matches.length ? [{ row, score: Math.max(...matches.map(term => term.length)) }] : [];
+  }).sort((a, b) => b.score - a.score);
+  const location = explicitLocation ?? (locationMatches.length && (!locationMatches[1] || locationMatches[0].score > locationMatches[1].score) ? locationMatches[0].row : null);
+  return {
+    category_slug: categoryMatches[0].row.slug,
+    location_slug: location?.slug ?? null,
+    keywords: '',
+    language: /[\u0b80-\u0bff]/u.test(query) ? 'ta' : 'en',
+  };
+}
+
 export interface ResolvedSearch {
   category: CatalogRow | null;
   location: CatalogRow | null;
@@ -47,6 +91,14 @@ export function parseIntent(value: unknown): Intent {
     || typeof value.keywords !== 'string' || value.keywords.length > 80 || /[\u0000-\u001f]/u.test(value.keywords)
     || !['ta', 'en'].includes(String(value.language))) throw new Error('invalid_intent');
   return value as unknown as Intent;
+}
+
+export function parseCategoryIntent(value: unknown): CategoryIntent {
+  if (!record(value) || Object.keys(value).sort().join(',') !== 'language,parent_category_slug,subcategory_slug'
+    || !(value.parent_category_slug === null || typeof value.parent_category_slug === 'string' && value.parent_category_slug.length <= 100)
+    || !(value.subcategory_slug === null || typeof value.subcategory_slug === 'string' && value.subcategory_slug.length <= 100)
+    || !['ta', 'en'].includes(String(value.language))) throw new Error('invalid_category_intent');
+  return value as unknown as CategoryIntent;
 }
 
 // Filter against the complete reachable active hierarchy, excluding orphans/cycles.

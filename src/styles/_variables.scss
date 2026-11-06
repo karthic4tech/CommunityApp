@@ -7,7 +7,7 @@
 
   --cdm-navy: #002050;
   --cdm-royal-blue: #0755B8;
-  --cdm-orange: #F05A00;
+  --cdm-orange: #E3864F;
   --cdm-green: #38B000;
   --cdm-yellow: #F5C400;
   --cdm-page: #F8FAFC;
@@ -21,6 +21,7 @@
   --cdm-text: var(--cdm-navy);
   --cdm-muted: #64748B;
   --cdm-border: #E2E8F0;
+  --cdm-surface-muted: #F1F5F9;
   --cdm-saffron: var(--cdm-yellow);
   --cdm-saffron-soft: var(--cdm-yellow-soft);
   --cdm-green-accent: var(--cdm-green);
@@ -50,6 +51,8 @@
   --cdm-shadow-sm: 0 2px 8px rgba(0, 32, 80, 0.06);
   --cdm-shadow-md: 0 10px 28px rgba(0, 32, 80, 0.1);
   --cdm-content-width: 82.5rem;
+  --cdm-reading-width: 68.75rem;
+  --cdm-page-gutter: clamp(1rem, 3vw, 2rem);
   --cdm-control-height: 3.125rem;
   --cdm-form-gap: 1.25rem;
   --cdm-form-section-gap: 1.75rem;

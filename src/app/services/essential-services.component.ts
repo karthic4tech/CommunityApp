@@ -48,8 +48,13 @@ import { SearchableSelectOption } from '../shared/components/searchable-select/s
             [searchPlaceholder]="i18n.language() === 'ta' ? 'ஆங்கிலம் அல்லது தமிழில் தேடுங்கள்…' : 'Search in English or Tamil…'" />
           <button type="submit" class="search-button"><i class="bi bi-search" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'தேடுக' : 'Search' }}</button>
           <button type="button" class="clear-button" (click)="clearSearch()">{{ i18n.language() === 'ta' ? 'நீக்கு' : 'Clear' }}</button>
-        </form>
-        @if (locationsError()) { <p class="location-error" role="status">{{ i18n.language() === 'ta' ? 'இடங்கள் ஏற்றப்படவில்லை; அனைத்து இடங்களிலும் தேடப்படுகிறது.' : 'Locations could not be loaded; searching all locations.' }}</p> }
+         </form>
+         @if (locationsError()) { <p class="location-error" role="status">{{ i18n.language() === 'ta' ? 'இடங்கள் ஏற்றப்படவில்லை; அனைத்து இடங்களிலும் தேடப்படுகிறது.' : 'Locations could not be loaded; searching all locations.' }}</p> }
+         <a class="essential-ai-link" routerLink="/service-search">
+           <span class="essential-ai-icon"><i class="bi bi-stars" aria-hidden="true"></i></span>
+           <span><strong>{{ i18n.language() === 'ta' ? 'AI தமிழ் / ஆங்கில தேடலை முயற்சிக்கவும்' : 'Try AI Tamil / English search' }}</strong><small>{{ i18n.language() === 'ta' ? 'உங்கள் தேவையை இயல்பாகச் சொல்லுங்கள்' : 'Describe what you need in your own words' }}</small></span>
+           <i class="bi bi-arrow-right" aria-hidden="true"></i>
+         </a>
       </header>
 
       @if (emergencyShortcuts().length) {
@@ -145,7 +150,14 @@ import { SearchableSelectOption } from '../shared/components/searchable-select/s
     :is(input,select):focus-visible,:is(a,button):focus-visible { outline:3px solid color-mix(in srgb, var(--cdm-btn-primary) 44%, transparent); outline-offset:3px; }
     .search-button,.clear-button,.secondary-button { display:inline-flex; align-items:center; justify-content:center; gap:.45rem; min-height:44px; padding:.6rem .9rem; border:1px solid var(--cdm-btn-primary); border-radius:9px; color:var(--cdm-white); background:var(--cdm-btn-primary); font:inherit; font-size:.82rem; font-weight:750; text-decoration:none; cursor:pointer; }
     .search-button:hover { background:var(--cdm-btn-primary-hover); }.clear-button,.secondary-button { border-color:var(--cdm-btn-border); color:var(--cdm-navy); background:#fff; }.clear-button:hover,.secondary-button:hover { border-color:var(--cdm-btn-primary-hover); background:var(--cdm-btn-primary-light); }
-    .location-error { margin:.75rem 0 0; color:var(--cdm-yellow); font-size:.78rem; }
+     .location-error { margin:.75rem 0 0; color:var(--cdm-yellow); font-size:.78rem; }
+     .essential-ai-link { position:relative; z-index:1; display:flex; align-items:center; gap:.7rem; width:min(100%,31rem); margin:1rem 0 0; padding:.7rem .8rem; border:1px solid #ffffff3d; border-radius:12px; color:#fff; background:#ffffff12; text-decoration:none; transition:border-color .16s ease,background-color .16s ease,transform .16s ease; }
+     .essential-ai-link:hover { border-color:#ffffff80; color:#fff; background:#ffffff20; transform:translateY(-1px); }
+     .essential-ai-icon { display:grid; place-items:center; flex:none; width:36px; height:36px; border-radius:10px; color:var(--cdm-navy); background:var(--cdm-yellow); }
+     .essential-ai-link span:nth-child(2) { display:grid; min-width:0; gap:.12rem; }
+     .essential-ai-link strong { font-size:.82rem; line-height:1.35; }
+     .essential-ai-link small { color:var(--cdm-blue-soft); font-size:.72rem; }
+     .essential-ai-link > i:last-child { margin-left:auto; color:var(--cdm-yellow); }
     .emergency-band { display:grid; grid-template-columns:minmax(240px,.9fr) minmax(300px,1.3fr); gap:1rem 2rem; align-items:center; margin-top:1.35rem; padding:1.25rem clamp(1rem,3vw,1.75rem); border:1px solid var(--cdm-form-danger); border-left:5px solid var(--cdm-form-danger); border-radius:14px; background:var(--cdm-page); }
     .emergency-intro { display:flex; gap:.9rem; align-items:center; }.emergency-icon { display:grid; place-items:center; flex:0 0 46px; width:46px; height:46px; border-radius:13px; color:var(--cdm-form-danger); background:var(--cdm-form-danger); font-size:1.15rem; }
     .emergency-band .eyebrow { color:var(--cdm-form-danger); }.emergency-band h2 { margin:0; color:var(--cdm-form-danger); font-size:1.08rem; }.emergency-band p:not(.eyebrow) { margin:.25rem 0 0; color:var(--cdm-navy); font-size:.81rem; }

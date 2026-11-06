@@ -27,8 +27,8 @@ main { display: block; }
 /* Hero carousel: mobile-first, robust approach */
 .hero-section {
   position: relative;
-  width: 100%;
-  max-width: none;
+  width: min(var(--cdm-content-width), calc(100% - 2 * var(--cdm-page-gutter)));
+  max-width: var(--cdm-content-width);
   aspect-ratio: 2.39 / 1;
   min-height: 0;
   margin: 16px auto 24px;

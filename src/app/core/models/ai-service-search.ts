@@ -17,3 +17,14 @@ export interface AiServiceSearchResult extends DirectoryPage {
     keywords: string;
   };
 }
+
+export interface CategorySuggestion {
+  parent: SearchPlace;
+  subcategory: SearchPlace;
+}
+
+export interface CategorySuggestionResult {
+  success: boolean;
+  suggestion: CategorySuggestion | null;
+  reason: 'direct_match' | 'ai_match' | 'no_match';
+}

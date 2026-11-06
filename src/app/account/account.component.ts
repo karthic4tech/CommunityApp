@@ -13,6 +13,7 @@ import { ServiceSubmissionService } from '../core/services/service-submission.se
 import { FormFileUploadComponent } from '../shared/forms/form-file-upload.component';
 import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select.component';
 import { SearchableSelectOption } from '../shared/components/searchable-select/searchable-select.models';
+import { MobileVerificationComponent } from './mobile-verification.component';
 
 const ACCOUNT_COPY = {
   en: {
@@ -68,13 +69,14 @@ interface AccountProfileValues {
 
 @Component({
   selector: 'app-account',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink, FormFileUploadComponent, SearchableSelectComponent],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, FormFileUploadComponent, SearchableSelectComponent, MobileVerificationComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './account.component.html',
   styleUrl: './account.component.scss',
 })
 export class AccountComponent implements OnInit {
   protected readonly auth = inject(AuthService);
+  protected readonly phoneVerified = computed(() => Boolean(this.auth.user()?.phone && this.auth.user()?.phone_confirmed_at));
   private readonly profiles = inject(ProfileService);
   private readonly directory = inject(ServiceDirectoryService);
   private readonly submissionService = inject(ServiceSubmissionService);
@@ -241,11 +243,11 @@ export class AccountComponent implements OnInit {
     this.signingOut.set(true);
     try {
       await this.auth.signOut();
-      await this.router.navigateByUrl('/auth/sign-in');
     } catch (error) {
       this.signOutError.set(error instanceof Error ? error.message : 'Unable to sign out. Please try again.');
     } finally {
       this.signingOut.set(false);
+      await this.router.navigateByUrl('/auth/sign-in', { replaceUrl: true });
     }
   }
 }

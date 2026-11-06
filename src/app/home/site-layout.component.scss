@@ -42,7 +42,7 @@ main {
   margin-inline: auto;
 }
 
-.header-inner, .main-nav { max-width: var(--cdm-content-width); }
+.header-inner, .main-nav { max-width: var(--cdm-content-width); padding-inline:var(--cdm-page-gutter); }
 
 .header-inner {
   display: flex;
@@ -110,6 +110,8 @@ main {
 .header-auth-actions :is(a, button):hover { border-color:var(--cdm-border); background:var(--cdm-page); }
 .header-auth-actions a.header-user { border-color: transparent; color: var(--deep); background: transparent; box-shadow: none; }
 .header-auth-actions a.header-user:hover { border-color: var(--cdm-border); color: var(--deep); background: var(--cdm-page); }
+.header-avatar { width:28px; height:28px; flex:0 0 28px; border-radius:50%; object-fit:cover; background:var(--cdm-btn-primary-light); }
+.header-avatar-initials { display:inline-grid; place-items:center; color:var(--cdm-navy); font-size:.68rem; font-weight:800; }
 .header-auth-actions button.header-sign-out { border-color: var(--cdm-border); color: var(--deep); background: #fff; }
 .header-auth-actions button.header-sign-out:hover:not(:disabled) { border-color: var(--cdm-btn-primary); color: var(--cdm-btn-primary); background: var(--cdm-page); }
 .header-auth-actions a.header-sign-up { border-color:var(--cdm-btn-primary); color:var(--cdm-white); background:var(--cdm-btn-primary); box-shadow:0 3px 9px color-mix(in srgb, var(--cdm-btn-primary) 13%, transparent); }
@@ -195,7 +197,9 @@ main#main:focus-visible { outline: 0; }
 }
 
 .footer-intro { max-width: 410px; }
-.footer-brand { display: inline-block; color: var(--cdm-page); font-size: 1rem; font-weight: 850; text-decoration: none; }
+.footer-brand { display:inline-flex; align-items:center; gap:.65rem; color:var(--cdm-page); font-size:1rem; font-weight:850; text-decoration:none; }
+.footer-brand img { width:42px; height:42px; border-radius:50%; object-fit:cover; }
+.footer-brand span { display:block; }
 .footer-brand small { display: block; margin-top: .2rem; color: var(--cdm-border); font-size: .82rem; font-weight: 600; }
 .footer-intro p { max-width: 370px; margin: 1rem 0 0; color: var(--cdm-border); font-size: .84rem; line-height: 1.8; }
 .footer-links { display: flex; align-items: flex-start; flex-direction: column; gap: .65rem; }

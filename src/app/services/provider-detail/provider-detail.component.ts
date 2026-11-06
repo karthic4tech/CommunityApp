@@ -55,6 +55,7 @@ import { ListingSummaryComponent } from '../listing-summary/listing-summary.comp
   `,
   styleUrl: '../directory.scss',
   styles: `
+    :host { display:block; width:min(var(--cdm-content-width), calc(100% - 2 * var(--cdm-page-gutter))); margin-inline:auto; }
     .breadcrumbs { display:flex; align-items:center; flex-wrap:wrap; gap:.55rem; margin-bottom:1rem; color:var(--cdm-muted); font-size:.9rem; }
     .breadcrumbs a, .back-link { color:var(--cdm-royal-blue); }
     .related { margin-top:2rem; }

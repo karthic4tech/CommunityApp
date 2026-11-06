@@ -83,8 +83,11 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
             alt="CDM360 — Chidambaram Community Platform" class="brand-wordmark" />
         </a>
         <nav class="header-auth-actions" [attr.aria-label]="i18n.language() === 'ta' ? 'கணக்கு அணுகல்' : 'Account access'">
-          @if (auth.isAuthenticated()) {
-            <a class="header-user" routerLink="/account"><i class="bi bi-person-circle" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'வணக்கம்' : 'Hi' }}, {{ headerUserName() }}</a>
+           @if (auth.isAuthenticated()) {
+             <a class="header-user" routerLink="/account">
+               @if (headerAvatarUrl(); as avatarUrl) { <img class="header-avatar" [src]="avatarUrl" alt="" /> } @else { <span class="header-avatar header-avatar-initials" aria-hidden="true">{{ headerInitials() }}</span> }
+               <span>{{ i18n.language() === 'ta' ? 'வணக்கம்' : 'Hi' }}, {{ headerUserName() }}</span>
+             </a>
             <button class="header-sign-out" type="button" (click)="signOut()" [disabled]="signingOut()" [attr.aria-busy]="signingOut()">
               <i class="bi bi-box-arrow-right" aria-hidden="true"></i>{{ signingOut() ? (i18n.language() === 'ta' ? 'வெளியேறுகிறது…' : 'Signing out…') : (i18n.language() === 'ta' ? 'வெளியேறு' : 'Sign out') }}
             </button>
@@ -103,7 +106,8 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
          <a routerLink="/essential-services" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-lightning-charge" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகள்' : 'Essential Services' }}</span></a>
          <a routerLink="/services" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-grid" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகள்' : 'Explore All Services' }}</span></a>
          <a routerLink="/marketplace" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-shop-window" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'சந்தை' : 'Marketplace' }}</span></a>
-         <a routerLink="/account" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-person-circle" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'கணக்கு' : 'Account' }}</span></a>
+          <a routerLink="/account" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-person-circle" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'கணக்கு' : 'Account' }}</span></a>
+          <a routerLink="/help" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-question-circle" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'உதவி' : 'Help' }}</span></a>
          <a routerLink="/admin/login" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-shield-lock" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'நிர்வாகம்' : 'Admin' }}</span></a>
        </nav>
     </header>
@@ -112,16 +116,18 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
     <footer class="site-footer">
       <div class="footer-inner container-xl">
         <div class="footer-intro">
-          <a routerLink="/" class="footer-brand">{{ i18n.text().brand }} <small [lang]="i18n.secondaryLanguage()">{{ i18n.text().secondaryBrand }}</small></a>
+           <a routerLink="/" class="footer-brand"><img ngSrc="assets/images/cdm360-logo.jpeg" width="52" height="52" alt="" aria-hidden="true" /> <span>{{ i18n.text().brand }} <small [lang]="i18n.secondaryLanguage()">{{ i18n.text().secondaryBrand }}</small></span></a>
           <p>{{ i18n.language() === 'ta' ? 'நம் ஊரையும், நம் மக்களையும், நம் சேவைகளையும் இணைக்கும் ஒரு சமூகத் தளம்.' : 'A welcoming local directory connecting our town, our people, and the services we share.' }}</p>
         </div>
         <div class="footer-links">
           <strong>{{ i18n.language() === 'ta' ? 'விரைவு இணைப்புகள்' : 'Explore' }}</strong>
-          <a routerLink="/essential-services">{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகள்' : 'Essential Services' }}</a>
-          <a routerLink="/services">{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகள்' : 'All services' }}</a>
+           <a routerLink="/essential-services">{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகள்' : 'Essential Services' }}</a>
+           <a routerLink="/services">{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகள்' : 'All services' }}</a>
+           <a routerLink="/service-search">{{ i18n.language() === 'ta' ? 'AI தேடல்' : 'AI search' }}</a>
           <a routerLink="/marketplace">{{ i18n.language() === 'ta' ? 'வாங்க / விற்க' : 'Buy & Sell Locally' }}</a>
           <a routerLink="/" fragment="about">{{ i18n.language() === 'ta' ? 'நம் கதை' : 'Our story' }}</a>
-          <a routerLink="/account">{{ i18n.language() === 'ta' ? 'கணக்கு' : 'Account' }}</a>
+           <a routerLink="/account">{{ i18n.language() === 'ta' ? 'கணக்கு' : 'Account' }}</a>
+           <a routerLink="/help">{{ i18n.language() === 'ta' ? 'உதவி மையம்' : 'Help Center' }}</a>
         </div>
         <div class="footer-links">
           <strong>{{ i18n.language() === 'ta' ? 'சேவை வழங்குநர்களுக்கு' : 'For providers' }}</strong>
@@ -140,12 +146,18 @@ export class HomeComponent {
   protected readonly auth = inject(AuthService);
   protected readonly isHomeRoute = signal(inject(Router).url === '/');
   protected readonly signingOut = signal(false);
-  protected readonly headerUserName = computed(() => {
-    const user = this.auth.user?.();
-    const metadataName = user?.user_metadata?.['full_name'];
-    if (typeof metadataName === 'string' && metadataName.trim()) return metadataName.trim();
-    return user?.email?.split('@')[0] || 'User';
-  });
+   protected readonly headerUserName = computed(() => {
+     const user = this.auth.user?.();
+     const metadataName = user?.user_metadata?.['full_name'] ?? user?.user_metadata?.['name'];
+     if (typeof metadataName === 'string' && metadataName.trim()) return metadataName.trim();
+     return user?.email?.split('@')[0] || 'User';
+   });
+   protected readonly headerAvatarUrl = computed(() => {
+     const user = this.auth.user?.();
+     const avatar = user?.user_metadata?.['avatar_url'] ?? user?.user_metadata?.['picture'];
+     return typeof avatar === 'string' && avatar.trim() ? avatar : null;
+   });
+   protected readonly headerInitials = computed(() => this.headerUserName().split(/\s+/).filter(Boolean).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join('') || 'CD');
   private readonly document = inject(DOCUMENT);
   private readonly router = inject(Router);
 
@@ -165,8 +177,11 @@ export class HomeComponent {
     this.signingOut.set(true);
     try {
       await this.auth.signOut();
+    } catch {
+      // Local auth state and browser storage are cleared even if revocation is offline.
     } finally {
       this.signingOut.set(false);
+      await this.router.navigateByUrl('/', { replaceUrl: true });
     }
   }
 }

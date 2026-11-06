@@ -30,9 +30,13 @@ export function directorySession(client: SupabaseClient, identity: string): Sear
       const { data, error } = await client.rpc('directory_listings', {
         category: intent.category?.id ?? null, location: intent.location?.id ?? null, keyword: intent.keywords,
       }).select(COLUMNS)
-        .eq('status', 'published').eq('service_providers.verification_status', 'verified')
-        .eq('listing_contacts.is_public', true)
-        .order('published_at', { ascending: false, nullsFirst: false }).order('id', { ascending: true })
+        // The RPC already restricts results to published listings owned by
+        // verified providers. Nested relation filters are not valid on a
+        // setof-table RPC response in PostgREST (they target pgrst_call), and
+        // publicListings() removes any non-public contacts defensively.
+        .eq('status', 'published')
+        // service_listings has no published_at column; use a stable id order.
+        .order('id', { ascending: true })
         .limit(13).abortSignal(AbortSignal.timeout(6000));
       if (error || !Array.isArray(data)) throw new Error('directory_unavailable');
       return data;

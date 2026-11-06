@@ -6,6 +6,7 @@ export interface UserProfile {
   id: string;
   full_name: string | null;
   phone: string | null;
+  phone_verified_at?: string | null;
   preferred_locality_id: string | null;
   preferred_language: 'ta' | 'en';
   avatar_path: string | null;
@@ -45,15 +46,21 @@ export class ProfileService {
     return data;
   }
 
-  async ensure(fullName: string | null): Promise<UserProfile> {
+  async ensure(fullName: string | null, phone: string | null = null): Promise<UserProfile> {
     const existing = await this.get();
     if (existing) return existing;
     return this.save({
       full_name: fullName?.trim() || null,
-      phone: null,
+      phone,
       preferred_locality_id: null,
       preferred_language: 'ta',
       avatar_path: null,
     });
+  }
+
+  async syncVerifiedPhone(): Promise<UserProfile> {
+    const { data, error } = await this.supabase.client.rpc('sync_verified_phone').single<UserProfile>();
+    if (error || !data) throw new Error('Unable to synchronize the verified mobile number.');
+    return data;
   }
 }

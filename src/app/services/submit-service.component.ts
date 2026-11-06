@@ -9,6 +9,7 @@ import { LanguageService } from '../core/services/language.service';
 import { ServiceCategoryService } from '../core/services/service-category.service';
 import { ServiceDirectoryService } from '../core/services/service-directory.service';
 import { ServiceSubmissionService } from '../core/services/service-submission.service';
+import { ServiceCategoryAssistantService, ServiceCategorySuggestion } from '../core/services/service-category-assistant.service';
 import { ListingMediaService } from '../core/services/listing-media.service';
 import { FormProgressComponent } from '../shared/forms/form-progress.component';
 import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select.component';
@@ -131,7 +132,25 @@ import { FormRadioGroupComponent } from '../shared/forms/form-radio-group.compon
                         <div class="form-text">This describes you or your organisation, not an individual service.</div>
                       </div>
 
-                      <div class="row g-4">
+                       <div class="category-assistant mb-4">
+                         <a class="category-help-link" routerLink="/help/choose-service-category"><i class="bi bi-question-circle" aria-hidden="true"></i> Need help choosing a category?</a>
+                         <label for="category-description" class="form-label fw-bold">What service do you provide?</label>
+                         <textarea id="category-description" class="form-control form-control-lg" formControlName="category_description" rows="2" maxlength="200" placeholder="Describe your business or service…"></textarea>
+                         <div class="form-text">Describe it in English, Tamil or mixed Tamil-English, then let CDM 360 suggest the closest category.</div>
+                         <button type="button" class="category-assist-button" [disabled]="categorySuggesting() || form.controls.category_description.value.trim().length < 2" (click)="suggestCategory()">
+                           <i class="bi bi-stars" aria-hidden="true"></i>{{ categorySuggesting() ? 'Finding a category…' : 'Suggest category' }}
+                         </button>
+                         @if (categorySuggestion(); as suggestion) {
+                           <div class="category-suggestion" role="status">
+                             <div class="suggestion-icon"><i class="bi bi-check2-circle" aria-hidden="true"></i></div>
+                             <div class="suggestion-copy"><strong>AI suggested category</strong><span>{{ suggestion.parent.nameEnglish }} — {{ suggestion.parent.nameTamil }}</span><small>{{ suggestion.subcategory.nameEnglish }} — {{ suggestion.subcategory.nameTamil }}</small><em>{{ suggestion.reason }}</em></div>
+                             <div class="suggestion-actions"><button type="button" class="confirm-category" (click)="confirmCategorySuggestion()">Confirm</button><button type="button" class="change-category" (click)="dismissCategorySuggestion()">Change category</button></div>
+                           </div>
+                         }
+                         @if (categorySuggestionError(); as message) { <p class="category-assist-error" role="status">{{ message }}</p> }
+                       </div>
+
+                       <div class="row g-4">
                         <div class="col-md-6">
                           <app-searchable-select controlId="parent_slug" label="Parent category" formControlName="parent_slug"
                             [options]="parentCategoryOptions()" [required]="true" [clearable]="true" [emptyValue]="''"
@@ -502,6 +521,16 @@ import { FormRadioGroupComponent } from '../shared/forms/form-radio-group.compon
     .section-heading h2 { color: var(--cdm-navy-deep); }
     .section-heading p { color: var(--cdm-muted); line-height: 1.55; }
 
+    .category-assistant { display:grid; gap:.55rem; padding:1rem; border:1px solid var(--cdm-blue-soft); border-radius:.85rem; background:linear-gradient(135deg,var(--cdm-page),#fff); }
+    .category-assistant textarea { margin:0; }
+    .category-assist-button { display:inline-flex; align-items:center; justify-content:center; gap:.4rem; width:max-content; min-height:42px; padding:.55rem .8rem; border:1px solid var(--cdm-btn-primary); border-radius:9px; color:#fff; background:var(--cdm-btn-primary); font:inherit; font-size:.82rem; font-weight:750; cursor:pointer; }
+    .category-assist-button:hover:not(:disabled) { border-color:var(--cdm-btn-primary-hover); background:var(--cdm-btn-primary-hover); }
+    .category-assist-button:disabled { cursor:not-allowed; opacity:.58; }
+    .category-suggestion { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:.75rem; padding:.8rem; border:1px solid var(--cdm-green); border-radius:.75rem; background:var(--cdm-green-soft); }
+    .suggestion-icon { display:grid; place-items:center; width:38px; height:38px; border-radius:10px; color:var(--cdm-royal-blue); background:#fff; font-size:1.15rem; }
+    .suggestion-copy { display:grid; min-width:0; gap:.12rem; }.suggestion-copy strong { color:var(--cdm-navy); font-size:.78rem; }.suggestion-copy span,.suggestion-copy small { overflow-wrap:anywhere; color:var(--cdm-navy); font-size:.84rem; font-weight:700; }.suggestion-copy small { color:var(--cdm-muted); font-size:.75rem; font-weight:600; }.suggestion-copy em { color:var(--cdm-muted); font-size:.72rem; font-style:normal; }
+    .suggestion-actions { display:flex; flex-wrap:wrap; gap:.4rem; justify-content:flex-end; }.suggestion-actions button { min-height:36px; padding:.4rem .6rem; border-radius:7px; font:inherit; font-size:.73rem; font-weight:700; cursor:pointer; }.confirm-category { border:1px solid var(--cdm-btn-primary); color:#fff; background:var(--cdm-btn-primary); }.change-category { border:1px solid var(--cdm-border); color:var(--cdm-navy); background:#fff; }.category-assist-error { margin:0; color:#C92A2A; font-size:.78rem; }
+
     .section-icon {
       display: grid;
       place-items: center;
@@ -698,6 +727,7 @@ import { FormRadioGroupComponent } from '../shared/forms/form-radio-group.compon
       .submission-actions > .d-flex > div,
       .submission-actions > .d-flex > div > .btn { font-size: .9rem; }
       .submission-actions > .d-flex > div { gap: .5rem !important; }
+      .category-suggestion { grid-template-columns:auto minmax(0,1fr); }.suggestion-actions { grid-column:1 / -1; justify-content:stretch; }.suggestion-actions button { flex:1; }
     }
   `,
 })
@@ -707,10 +737,11 @@ export class SubmitServiceComponent implements OnInit {
   private readonly directory = inject(ServiceDirectoryService);
   private readonly submissions = inject(ServiceSubmissionService);
   private readonly media = inject(ListingMediaService);
+  private readonly categoryAssistant = inject(ServiceCategoryAssistantService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected readonly form = inject(NonNullableFormBuilder).group({
-    provider_type: 'individual' as 'individual' | 'business' | 'organisation', display_name: ['', [Validators.required, Validators.maxLength(160)]], provider_description: ['', Validators.maxLength(2000)], parent_slug: '', category_id: ['', Validators.required], title: ['', [Validators.required, Validators.maxLength(200)]], description: ['', [Validators.required, Validators.maxLength(5000)]],
+    provider_type: 'individual' as 'individual' | 'business' | 'organisation', display_name: ['', [Validators.required, Validators.maxLength(160)]], provider_description: ['', Validators.maxLength(2000)], category_description: '', parent_slug: '', category_id: ['', Validators.required], title: ['', [Validators.required, Validators.maxLength(200)]], description: ['', [Validators.required, Validators.maxLength(5000)]],
     phone: '', phone_public: true, whatsapp: '', whatsapp_public: true, email: '', email_public: true, website: '', website_public: true, facebook: '', facebook_public: true, instagram: '', instagram_public: true, youtube: '', youtube_public: true,
     based_location_id: '', coverage_type: 'based_here' as 'based_here' | 'serves_here', coverage_ids: new FormControl<string[]>([], { nonNullable: true }), address: '', postal_code: '', latitude: null as number | null, longitude: null as number | null, declaration: false,
   });
@@ -721,6 +752,9 @@ export class SubmitServiceComponent implements OnInit {
   protected readonly saving = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly selectedFiles = signal<readonly File[]>([]);
+  protected readonly categorySuggesting = signal(false);
+  protected readonly categorySuggestion = signal<ServiceCategorySuggestion | null>(null);
+  protected readonly categorySuggestionError = signal<string | null>(null);
   protected readonly locationRows = signal<DirectoryLocation[]>([]);
   protected readonly existingId = signal<string | null>(null);
   protected readonly existingStatus = signal<string | null>(null);
@@ -759,6 +793,7 @@ export class SubmitServiceComponent implements OnInit {
   ngOnInit(): void { void this.load(); }
 
   protected selectParent(slug: string): void {
+    this.categorySuggestion.set(null);
     this.selectedParentSlug.set(slug);
     this.form.controls.parent_slug.setValue(slug);
     this.form.controls.category_id.reset('');
@@ -766,6 +801,26 @@ export class SubmitServiceComponent implements OnInit {
   protected selectParentValue(value: SearchableSelectValue): void {
     if (typeof value === 'string') this.selectParent(value);
   }
+  protected async suggestCategory(): Promise<void> {
+    const description = this.form.controls.category_description.value.trim();
+    if (description.length < 2 || this.categorySuggesting()) return;
+    this.categorySuggesting.set(true); this.categorySuggestionError.set(null); this.categorySuggestion.set(null);
+    try {
+      const suggestion = await this.categoryAssistant.suggest(description);
+      if (!suggestion) this.categorySuggestionError.set('No confident category match was found. Please choose the category manually.');
+      else this.categorySuggestion.set(suggestion);
+    } catch { this.categorySuggestionError.set('Category assistance is unavailable right now. You can choose the category manually.'); }
+    finally { this.categorySuggesting.set(false); }
+  }
+  protected confirmCategorySuggestion(): void {
+    const suggestion = this.categorySuggestion();
+    if (!suggestion) return;
+    this.selectParent(suggestion.parent.slug);
+    this.form.controls.category_id.setValue(suggestion.subcategory.id);
+    this.form.controls.category_id.markAsDirty();
+    this.categorySuggestion.set(null);
+  }
+  protected dismissCategorySuggestion(): void { this.categorySuggestion.set(null); this.form.controls.category_id.setValue(''); }
   protected selectFiles(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files ?? []);

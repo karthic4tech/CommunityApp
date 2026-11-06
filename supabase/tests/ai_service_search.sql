@@ -9,7 +9,7 @@ begin
   for i in 1..10 loop
     if not public.reserve_ai_search() then raise exception 'Anonymous quota rejected too early'; end if;
   end loop;
-  if public.reserve_ai_search() then raise exception 'Shared anonymous minute quota bypassed'; end if;
+  if public.reserve_ai_search() then raise exception 'Shared anonymous hourly quota bypassed'; end if;
   begin
     perform 1 from public.ai_search_usage;
     raise exception 'Anonymous direct counter access was allowed';
@@ -29,10 +29,10 @@ set local role authenticated;
 do $$
 declare i integer;
 begin
-  for i in 1..6 loop
+  for i in 1..30 loop
     if not public.reserve_ai_search() then raise exception 'User quota rejected too early'; end if;
   end loop;
-  if public.reserve_ai_search() then raise exception 'User minute quota bypassed'; end if;
+  if public.reserve_ai_search() then raise exception 'User hourly quota bypassed'; end if;
   begin
     insert into public.ai_search_usage values ('forged', now(), 1);
     raise exception 'Authenticated direct counter writes were allowed';

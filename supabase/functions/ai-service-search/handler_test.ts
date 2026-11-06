@@ -1,8 +1,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
-import { Catalog, Intent, ResolvedSearch, SearchError, SearchSession, publicListings, reachable, record } from './contracts.ts';
+import { Catalog, CategoryIntent, Intent, ResolvedSearch, SearchError, SearchSession, publicListings, reachable, record } from './contracts.ts';
 import { createSearchHandler } from './handler.ts';
 import { createAuthorizer, directorySession } from './database.ts';
-import { DEFAULT_MODEL, createClassifier } from './openai.ts';
+import { DEFAULT_MODEL, createCategoryClassifier, createClassifier } from './openai.ts';
 
 function assert(condition: unknown, message = 'Assertion failed'): asserts condition {
   if (!condition) throw new Error(message);
@@ -35,14 +35,14 @@ function fixture(options: { classify?: () => Promise<Intent>; reserve?: () => Pr
     classify: async () => { classifications++; return options.classify ? options.classify() : intent; },
     monitor: event => events.push(event),
   });
-  const request = (query = 'Need a plumber', place?: string) => handler(new Request('http://edge/ai-service-search', {
+  const request = (query = 'Need a local specialist', place?: string) => handler(new Request('http://edge/ai-service-search', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'http://localhost:4200' },
     body: JSON.stringify({ query, location: place }),
   }));
   return { handler, request, searches, events, get classifications() { return classifications; }, get reservations() { return reservations; } };
 }
 
-for (const [query, language] of [['I need a plumber in Chidambaram', 'en'], ['சிதம்பரத்தில் குழாய் பழுது பார்க்க ஆள் தேவை', 'ta']] as const) {
+for (const [query, language] of [['I need local help in Chidambaram', 'en'], ['சிதம்பரத்தில் உள்ளூர் உதவி தேவை', 'ta']] as const) {
   Deno.test(`${language} request resolves real category/location and returns database listings`, async () => {
     const f = fixture({ classify: async () => ({ ...intent, language }) });
     const response = await f.request(query);
@@ -61,7 +61,7 @@ Deno.test('invalid output and invented categories/locations fall back to literal
     const f = fixture({ classify: () => Promise.resolve(output as Intent) });
     const body = await json(await f.request());
     equal(body.mode, 'keyword'); equal(body.reason, 'invalid_intent');
-    equal(f.searches[0].category, null); equal(f.searches[0].keywords, 'Need a plumber');
+    equal(f.searches[0].category, null); equal(f.searches[0].keywords, 'Need a local specialist');
   }
 });
 
@@ -81,7 +81,7 @@ Deno.test('provided location ID/slug overrides AI location; unknown values are r
 
 Deno.test('API failure, quota denial and quota failure use keyword fallback without unmetered AI', async () => {
   const f = fixture({ classify: () => Promise.reject(new Error('provider_failure')) });
-  equal((await json(await f.request())).reason, 'ai_unavailable'); equal(f.searches[0].keywords, 'Need a plumber');
+  equal((await json(await f.request())).reason, 'ai_unavailable'); equal(f.searches[0].keywords, 'Need a local specialist');
   for (const reserve of [async () => false, () => Promise.reject(new Error('database_failure'))]) {
     const limited = fixture({ reserve }); const body = await json(await limited.request());
     equal(body.mode, 'keyword'); equal(limited.classifications, 0);
@@ -105,13 +105,13 @@ Deno.test('rejects oversized, malformed, control-character and unexpected reques
   equal(f.classifications, 0);
 });
 
-Deno.test('caches/coalesces only intent for two minutes and re-queries listings under caller RLS', async () => {
+Deno.test('caches/coalesces only intent for 24 hours and re-queries listings under caller RLS', async () => {
   let time = 0;
   const f = fixture({ now: () => time });
   await Promise.all([f.request(), f.request()]);
   equal(f.classifications, 1); equal(f.reservations, 1); equal(f.searches.length, 2);
-  time = 119_000; await f.request(); equal(f.classifications, 1);
-  time = 120_001; await f.request(); equal(f.classifications, 2); equal(f.searches.length, 4);
+  time = 86_399_000; await f.request(); equal(f.classifications, 1);
+  time = 86_400_001; await f.request(); equal(f.classifications, 2); equal(f.searches.length, 4);
 });
 
 Deno.test('public projection removes drafts, suspended providers, private contacts/media and extra owner fields', () => {
@@ -132,19 +132,19 @@ Deno.test('OpenAI request is bounded, structured, non-stored and contains no lis
   let payload: Record<string, unknown> = {};
   const classify = createClassifier({ apiKey: 'test-key', monitor: () => {}, fetcher: async (_input, init) => {
     payload = JSON.parse(String(init?.body));
-    return Response.json({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(intent) } }], usage: { prompt_tokens: 10, completion_tokens: 20 } });
+    return Response.json({ output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(intent) }] }], usage: { input_tokens: 10, output_tokens: 20 } });
   } });
   equal(await classify('plumber', catalog), intent);
-  equal(payload.model, DEFAULT_MODEL); equal(payload.max_tokens, 180); equal(payload.store, false);
+  equal(payload.model, DEFAULT_MODEL); equal(payload.max_output_tokens, 180); equal(payload.store, false);
   assert(!JSON.stringify(payload).includes('public@example.com'));
-  for (const fetcher of [async () => new Response(null, { status: 429 }), async () => Response.json({ choices: [{ finish_reason: 'stop', message: { content: 'not-json' } }] }), async () => { throw new Error('timeout'); }]) {
+  for (const fetcher of [async () => new Response(null, { status: 429 }), async () => Response.json({ output: [{ type: 'message', content: [{ type: 'output_text', text: 'not-json' }] }] }), async () => { throw new Error('timeout'); }]) {
     let failed = false;
     try { await createClassifier({ apiKey: 'test', monitor: () => {}, fetcher })('plumber', catalog); } catch { failed = true; }
     assert(failed);
   }
 });
 
-Deno.test('directory queries use explicit published/verified/public filters with a caller-scoped client', async () => {
+Deno.test('directory queries use the caller-scoped visibility RPC and public projection', async () => {
   const urls: URL[] = [];
   const client = createClient('https://example.supabase.co', 'public-test-key', { auth: { persistSession: false }, global: {
     headers: { Authorization: 'Bearer caller-jwt' }, fetch: (input, init) => {
@@ -155,8 +155,10 @@ Deno.test('directory queries use explicit published/verified/public filters with
   } });
   await directorySession(client, 'user-id').search({ category, location, keywords: '', language: 'en' });
   equal(urls[0].searchParams.get('status'), 'eq.published');
-  equal(urls[0].searchParams.get('service_providers.verification_status'), 'eq.verified');
-  equal(urls[0].searchParams.get('listing_contacts.is_public'), 'eq.true');
+  // Published/verified visibility is enforced inside directory_listings.
+  // Nested relation filters are invalid for setof-table RPC responses.
+  equal(urls[0].searchParams.get('service_providers.verification_status'), null);
+  equal(urls[0].searchParams.get('listing_contacts.is_public'), null);
   assert(!urls[0].searchParams.get('select')?.includes('owner_user_id'));
 });
 
@@ -195,4 +197,50 @@ Deno.test('authorizer refuses invalid keys, malformed headers and invalid JWTs i
   try { await authorize(new Request('http://edge', { headers: { apikey: 'public-key', Authorization: 'Bearer invalid-jwt' } })); }
   catch (error) { rejected = error instanceof SearchError && error.status === 401; }
   assert(rejected);
+});
+
+Deno.test('suggest_category resolves direct matches and validates the real parent-child hierarchy', async () => {
+  const parent = { id: 'food-parent', parent_id: null, slug: 'food-services', name_ta: 'உணவு சேவைகள்', name_en: 'Food Services' };
+  const child = { id: 'batter-child', parent_id: parent.id, slug: 'batter-idly-dosa', name_ta: 'இட்லி தோசை மாவு', name_en: 'Idly Dosa Batter' };
+  const calls: number[] = [];
+  const session: SearchSession = { identity: 'anon', catalog: async () => ({ categories: [parent, child], locations: [] }),
+    reserve: async () => { calls.push(1); return true; }, search: async () => [] };
+  const handler = createSearchHandler({ allowedOrigins: [], authorize: async () => session,
+    classify: async () => intent, classifyCategory: async () => { throw new Error('AI should not run'); }, monitor: () => {} });
+  const response = await handler(new Request('http://edge', { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ operation: 'suggest_category', query: 'Batter shop for Idly and Dosa' }) }));
+  const body = await json(response);
+  equal(response.status, 200); equal(body.reason, 'direct_match');
+  equal(body.suggestion, { parent, subcategory: child }); equal(calls.length, 0);
+});
+
+Deno.test('suggest_category uses the existing classifier, rejects invalid relationships, and enforces quota', async () => {
+  const parent = { id: 'home-parent', parent_id: null, slug: 'home-services', name_ta: 'வீட்டு சேவைகள்', name_en: 'Home Services' };
+  const child = { id: 'ac-child', parent_id: parent.id, slug: 'ac-service', name_ta: 'குளிரூட்டும்', name_en: 'Cooling' };
+  const catalogWithHierarchy = { categories: [parent, child], locations: [] };
+  const make = (categoryIntent: CategoryIntent, reserve: () => Promise<boolean>) => createSearchHandler({ allowedOrigins: [],
+    authorize: async () => ({ identity: 'anon', catalog: async () => catalogWithHierarchy, reserve, search: async () => [] }),
+    classify: async () => intent, classifyCategory: async () => categoryIntent, monitor: () => {} });
+  let body = await json(await make({ parent_category_slug: parent.slug, subcategory_slug: child.slug, language: 'en' }, async () => true)(new Request('http://edge', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ operation: 'suggest_category', query: 'specialized household help' }) })));
+  equal(body.reason, 'ai_match'); equal(body.success, true);
+  body = await json(await make({ parent_category_slug: 'wrong-parent', subcategory_slug: child.slug, language: 'en' }, async () => true)(new Request('http://edge', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ operation: 'suggest_category', query: 'unfamiliar service' }) })));
+  equal(body.reason, 'no_match'); equal(body.suggestion, null);
+  equal((await make({ parent_category_slug: parent.slug, subcategory_slug: child.slug, language: 'en' }, async () => false)(new Request('http://edge', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ operation: 'suggest_category', query: 'unfamiliar service' }) }))).status, 429);
+});
+
+Deno.test('category classifier reuses Responses API with structured, non-stored output', async () => {
+  let payload: Record<string, unknown> = {};
+  const categoryIntent: CategoryIntent = { parent_category_slug: 'home-services', subcategory_slug: 'ac-service', language: 'ta' };
+  const classify = createCategoryClassifier({ apiKey: 'test-key', monitor: () => {}, fetcher: async (_input, init) => {
+    payload = JSON.parse(String(init?.body));
+    return Response.json({ output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(categoryIntent) }] }] });
+  } });
+  equal(await classify('எனக்கு ஏசி சர்வீஸ் வேலை தெரியும்', { categories: [
+    { id: 'p', parent_id: null, slug: 'home-services', name_ta: 'வீட்டு சேவைகள்', name_en: 'Home Services' },
+    { id: 'c', parent_id: 'p', slug: 'ac-service', name_ta: 'ஏசி சேவை', name_en: 'AC Service' },
+  ], locations: [] }), categoryIntent);
+  equal(payload.store, false); equal(payload.max_output_tokens, 120);
 });

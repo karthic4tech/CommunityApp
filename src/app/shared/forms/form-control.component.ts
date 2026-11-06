@@ -25,7 +25,14 @@ const CONTROL_KIND_BY_SELECTOR: Readonly<Record<string, 'textarea'|'select'|'dat
         @if (controlKind() === 'textarea') {
           <textarea class="form-control" [id]="controlId()" [rows]="rows()" [placeholder]="placeholder()" [required]="required()" [readOnly]="readOnly()" [disabled]="disabled()" [attr.maxlength]="maxLength()" [attr.aria-invalid]="error() ? 'true' : null" [attr.aria-describedby]="describedBy()" [value]="value()" (input)="onInput($event)" (blur)="onBlur()"></textarea>
         } @else {
-          <input class="form-control" [type]="controlKind() === 'date' ? 'date' : type()" [id]="controlId()" [placeholder]="placeholder()" [required]="required()" [readOnly]="readOnly()" [disabled]="disabled()" [attr.maxlength]="maxLength()" [attr.min]="min()" [attr.max]="max()" [attr.step]="step()" [attr.inputmode]="inputMode() || null" [autocomplete]="autocomplete()" [attr.aria-invalid]="error() ? 'true' : null" [attr.aria-describedby]="describedBy()" [value]="value()" (input)="onInput($event)" (blur)="onBlur()">
+           <span class="input-with-action">
+             <input class="form-control" [type]="controlKind() === 'date' ? 'date' : type() === 'password' && showPasswordToggle() && passwordVisible() ? 'text' : type()" [id]="controlId()" [placeholder]="placeholder()" [required]="required()" [readOnly]="readOnly()" [disabled]="disabled()" [attr.maxlength]="maxLength()" [attr.min]="min()" [attr.max]="max()" [attr.step]="step()" [attr.inputmode]="inputMode() || null" [autocomplete]="autocomplete()" [attr.aria-invalid]="error() ? 'true' : null" [attr.aria-describedby]="describedBy()" [value]="value()" (input)="onInput($event)" (blur)="onBlur()">
+             @if (type() === 'password' && showPasswordToggle()) {
+               <button type="button" class="password-toggle" [attr.aria-label]="passwordVisible() ? 'Hide password' : 'Show password'" [attr.aria-pressed]="passwordVisible()" (click)="togglePasswordVisibility()">
+                 <i class="bi" [class.bi-eye-slash]="passwordVisible()" [class.bi-eye]="!passwordVisible()" aria-hidden="true"></i>
+               </button>
+             }
+           </span>
         }
         @if (hint()) { <small class="cdm-control-hint" [id]="controlId() + '-hint'">{{ hint() }}</small> }
         @if (error()) { <small class="cdm-control-error" [id]="controlId() + '-error'" role="alert">{{ error() }}</small> }
@@ -38,7 +45,12 @@ const CONTROL_KIND_BY_SELECTOR: Readonly<Record<string, 'textarea'|'select'|'dat
     .cdm-control-label { color:var(--cdm-form-text); font-size:.86rem; font-weight:680; }
     .cdm-control-label>span:first-of-type { margin-left:.2rem; color:#C92A2A; }
     .cdm-control-label small,.cdm-control-hint { color:var(--cdm-form-muted); font-size:.75rem; font-weight:450; }
-    .form-control,.form-select { width:100%; min-width:0; min-height:50px; border:1px solid var(--cdm-form-border); border-radius:10px; padding:.7rem .85rem; color:var(--cdm-form-text); background:#fff; font:inherit; font-size:.9rem; box-shadow:0 1px 2px color-mix(in srgb, var(--cdm-navy) 3%, transparent); transition:border-color .15s,box-shadow .15s; }
+     .input-with-action { position:relative; display:flex; min-width:0; align-items:center; }
+     .form-control,.form-select { width:100%; min-width:0; min-height:50px; border:1px solid var(--cdm-form-border); border-radius:10px; padding:.7rem .85rem; color:var(--cdm-form-text); background:#fff; font:inherit; font-size:.9rem; box-shadow:0 1px 2px color-mix(in srgb, var(--cdm-navy) 3%, transparent); transition:border-color .15s,box-shadow .15s; }
+     .input-with-action .form-control { padding-right:3rem; }
+     .input-with-action .password-toggle { position:absolute; right:.35rem; display:grid; place-items:center; width:2.25rem; height:2.25rem; min-height:0 !important; padding:0 !important; border:0 !important; border-radius:7px; color:var(--cdm-muted) !important; background:transparent !important; cursor:pointer; }
+     .input-with-action .password-toggle:hover { color:var(--cdm-navy) !important; background:var(--cdm-page) !important; }
+     .password-toggle:focus-visible { outline:3px solid var(--cdm-btn-focus); outline-offset:1px; }
     textarea.form-control { min-height:120px; resize:vertical; line-height:1.55; }
     .form-control:focus,.form-select:focus { border-color:var(--cdm-form-green); outline:0; box-shadow:0 0 0 .22rem color-mix(in srgb, var(--cdm-green) 14%, transparent); }
     .form-control[aria-invalid=true],.form-select[aria-invalid=true] { border-color:#C92A2A; }
@@ -53,6 +65,7 @@ export class FormControlComponent implements ControlValueAccessor {
   readonly kind = input<'input'|'textarea'|'select'|'date'|undefined>(undefined);
   protected readonly controlKind = computed(() => this.kind() ?? CONTROL_KIND_BY_SELECTOR[this.hostTag] ?? 'input');
   readonly type = input<FormControlType>('text');
+  readonly showPasswordToggle = input(false);
   readonly label = input.required<string>();
   readonly controlId = input.required<string>();
   readonly placeholder = input('');
@@ -71,6 +84,7 @@ export class FormControlComponent implements ControlValueAccessor {
   readonly options = input<readonly FormSelectOption[]>([]);
   protected readonly value = signal('');
   protected readonly disabled = signal(false);
+  protected readonly passwordVisible = signal(false);
   private onChange: (value: unknown) => void = () => undefined;
   private onTouched: () => void = () => undefined;
   protected describedBy(): string | null {
@@ -81,6 +95,7 @@ export class FormControlComponent implements ControlValueAccessor {
   registerOnChange(fn: (value: unknown) => void): void { this.onChange = fn; }
   registerOnTouched(fn: () => void): void { this.onTouched = fn; }
   setDisabledState(isDisabled: boolean): void { this.disabled.set(isDisabled); }
+  protected togglePasswordVisibility(): void { this.passwordVisible.update(value => !value); }
   protected onInput(event: Event): void {
     const raw = (event.currentTarget as HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement).value;
     this.value.set(raw);

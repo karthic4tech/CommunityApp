@@ -29,8 +29,12 @@ import { SearchableSelectComponent } from '../../shared/components/searchable-se
           [searchPlaceholder]="i18n.language() === 'ta' ? 'இடங்களைத் தேடுங்கள்…' : 'Search locations…'" />
         <button type="submit" class="primary-action"><i class="bi bi-search" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'தேடுக' : 'Search' }}</button>
         <button class="secondary-action" type="button" (click)="clear()">{{ i18n.language() === 'ta' ? 'வடிகட்டிகளை நீக்கு' : 'Clear filters' }}</button>
-      </form>
-      @if (loading()) {
+       </form>
+       <a class="ai-search-link" routerLink="/service-search">
+         <i class="bi bi-stars" aria-hidden="true"></i>
+         {{ i18n.language() === 'ta' ? 'தமிழ் / ஆங்கில AI தேடலைத் திறக்கவும்' : 'Try Tamil / English AI search' }}
+       </a>
+       @if (loading()) {
         <p class="state" role="status">{{ i18n.language() === 'ta' ? 'சேவைகள் ஏற்றப்படுகின்றன…' : 'Loading services…' }}</p>
       } @else if (error()) {
         <div class="state"><p role="alert">{{ i18n.language() === 'ta' ? 'சேவைகளை ஏற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்.' : 'Unable to load services. Please try again.' }}</p>

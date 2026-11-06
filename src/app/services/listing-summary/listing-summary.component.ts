@@ -78,10 +78,13 @@ import { ServiceDirectoryService } from '../../core/services/service-directory.s
     p,.places { color:var(--cdm-muted); line-height:1.65; font-size:.86rem; } .address { white-space:pre-line; }
     .places { padding-left:1.15rem; } .image { position:relative; aspect-ratio:16/10; margin-block:.7rem; overflow:hidden; border-radius:10px; background:var(--cdm-page); } .image-placeholder { display:flex; align-items:center; justify-content:center; gap:.5rem; min-height:130px; margin-block:.7rem; border:1px dashed var(--cdm-border); border-radius:10px; background:var(--cdm-page); color:var(--cdm-muted); text-align:center; }
     img { object-fit:cover; border-radius:10px; } .gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:1rem; }
-    .detail-view { padding:clamp(1.1rem,3vw,1.75rem); border-radius:16px; }
-    .detail-view h1 { color:var(--cdm-navy); font-weight:760; }
-    .detail-view h2 { color:var(--cdm-navy); margin-bottom:.75rem; }
-    .actions { display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.4rem; }
+     .detail-view { padding:clamp(1.1rem,3vw,1.75rem); border-radius:16px; }
+     .detail-view h1 { color:var(--cdm-navy); font-weight:760; }
+     .detail-view h2 { color:var(--cdm-navy); margin-bottom:.75rem; }
+     .detail-view .gallery { width:min(100%,760px); }
+     .detail-view .image { max-height:475px; }
+     .detail-view .image img { object-fit:contain; background:#fff; }
+     .actions { display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.4rem; }
     .actions a { display:inline-flex; flex-direction:column; justify-content:center; min-height:42px; padding:.5rem .7rem; border:1px solid var(--cdm-border); border-radius:9px; color:var(--cdm-navy); background:#fff; text-decoration:none; font-size:.8rem; font-weight:650; }
     .actions a:hover { border-color:var(--cdm-green); background:var(--cdm-green-soft); }
     .contact-value { font-size:.8rem; font-weight:400; } a:focus-visible { outline:3px solid color-mix(in srgb, var(--cdm-green) 31%, transparent); outline-offset:3px; }

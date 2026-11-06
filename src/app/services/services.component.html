@@ -41,8 +41,9 @@
     </form>
 
     <nav class="hero-actions" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவை அடைவு இணைப்புகள்' : 'Service directory links'">
-      <a class="hero-action" routerLink="/essential-services"><i class="bi bi-lightning-charge" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகள்' : 'Explore Essential Services' }}</a>
-      <a class="hero-action" routerLink="/services/submit"><i class="bi bi-plus-circle" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'உங்கள் சேவையைச் சேர்க்கவும்' : 'List your service' }}</a>
+       <a class="hero-action" routerLink="/essential-services"><i class="bi bi-lightning-charge" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகள்' : 'Explore Essential Services' }}</a>
+       <a class="hero-action ai-hero-action" routerLink="/service-search"><i class="bi bi-stars" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'AI தமிழ் / ஆங்கில தேடல்' : 'AI Tamil / English Search' }}</a>
+       <a class="hero-action" routerLink="/services/submit"><i class="bi bi-plus-circle" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'உங்கள் சேவையைச் சேர்க்கவும்' : 'List your service' }}</a>
     </nav>
 
     @if (activeFilterCount()) {
