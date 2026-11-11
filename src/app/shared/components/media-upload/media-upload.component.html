@@ -69,15 +69,17 @@
       }
     </ul>
 
-    <div class="actions">
-      <button type="button" class="secondary-action" (click)="clearAll()" [disabled]="uploadingAll()">Clear all</button>
-      @if (failedDrafts().length) {
-        <button type="button" class="secondary-action" (click)="upload()" [disabled]="uploadingAll()">Retry {{ failedDrafts().length }} failed</button>
-      }
-      <button type="button" class="primary-action" (click)="upload()" [disabled]="!canUpload()">
-        @if (uploadingAll()) { Uploading… } @else { Upload {{ readyCount() }} {{ readyCount() === 1 ? 'file' : 'files' }} }
-      </button>
-    </div>
+    @if (!autoUpload()) {
+      <div class="actions">
+        <button type="button" class="secondary-action" (click)="clearAll()" [disabled]="uploadingAll()">Clear all</button>
+        @if (failedDrafts().length) {
+          <button type="button" class="secondary-action" (click)="upload()" [disabled]="uploadingAll()">Retry {{ failedDrafts().length }} failed</button>
+        }
+        <button type="button" class="primary-action" (click)="upload()" [disabled]="!canUpload()">
+          @if (uploadingAll()) { Uploading… } @else { Upload {{ readyCount() }} {{ readyCount() === 1 ? 'file' : 'files' }} }
+        </button>
+      </div>
+    }
   }
 
   @if (existingLoading()) {

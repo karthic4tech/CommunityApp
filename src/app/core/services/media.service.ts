@@ -314,7 +314,7 @@ export class MediaService {
     const rows = await this.linkedRows(entityType, entityId);
     const items: MediaGalleryItem[] = [];
     for (const { asset, isPrimary } of rows) {
-      const url = asset.bucket_name === PRIVATE_BUCKET ? await this.getSignedUrl(asset.storage_path, 120) : this.getPublicUrl(asset.storage_path);
+      const url = await this.galleryUrl(asset);
       if (!url) continue;
       items.push({
         asset,
@@ -326,6 +326,17 @@ export class MediaService {
       });
     }
     return items;
+  }
+
+  /** Reviewers and owners may need to preview private assets before moderation publishes them. */
+  private async galleryUrl(asset: MediaAsset): Promise<string | null> {
+    if (asset.visibility === 'public') return this.getPublicUrl(asset.storage_path);
+    const bucket = asset.bucket_name as MediaBucket | null;
+    if (!bucket) return null;
+    const objectPath = objectPathIn(asset.storage_path, bucket);
+    if (!objectPath) return null;
+    const { data, error } = await this.supabase.client.storage.from(bucket).createSignedUrl(objectPath, 120);
+    return error || !data?.signedUrl ? null : data.signedUrl;
   }
 
   /** Raw asset rows linked to an entity, or [] for modules that are not implemented yet. */

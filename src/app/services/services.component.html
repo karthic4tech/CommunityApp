@@ -56,6 +56,19 @@
     }
   </header>
 
+  <section class="service-discovery-toggle" aria-labelledby="service-discovery-title">
+    <div>
+      <p class="eyebrow">{{ i18n.language() === 'ta' ? 'சேவைகளை ஆராயுங்கள்' : 'DISCOVER LOCAL SERVICES' }}</p>
+      <h2 id="service-discovery-title">{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகளையும் ஆராயுங்கள்' : 'Explore All Services' }}</h2>
+      <p>{{ i18n.language() === 'ta' ? 'சிதம்பரத்தில் உள்ளூர் சேவைகள் மற்றும் வணிகங்களைப் பாருங்கள்.' : 'Browse local services and businesses in Chidambaram.' }}</p>
+    </div>
+    <button type="button" class="btn discovery-toggle" [attr.aria-expanded]="isServiceDiscoveryExpanded()" aria-controls="all-services-discovery" (click)="toggleServiceDiscovery()">
+      <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
+      <span>{{ isServiceDiscoveryExpanded() ? (i18n.language() === 'ta' ? 'அனைத்து சேவைகளையும் மறைக்க' : 'Hide All Services') : (i18n.language() === 'ta' ? 'அனைத்து சேவைகளையும் பார்க்க' : 'Browse All Services') }}</span>
+      <i class="bi" [class.bi-chevron-down]="!isServiceDiscoveryExpanded()" [class.bi-chevron-up]="isServiceDiscoveryExpanded()" aria-hidden="true"></i>
+    </button>
+  </section>
+
   @if (hasDirectoryFilters()) {
     <section class="listing-results" aria-labelledby="listing-results-title" [attr.aria-busy]="listingsLoading()">
       <div class="section-heading results-heading">
@@ -72,17 +85,17 @@
         <div class="listings row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
           @for (listing of listingResults().listings; track listing.id) { <app-listing-summary class="col" [listing]="listing" /> }
         </div>
-        @if (listingPage() > 0 || listingResults().hasMore) {
-          <nav class="pagination" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவை பக்கங்கள்' : 'Service pages'">
-            <button class="secondary-button" type="button" [disabled]="listingPage() === 0 || listingsLoading()" (click)="changePage(listingPage() - 1)">{{ i18n.language() === 'ta' ? 'முந்தைய' : 'Previous' }}</button>
-            <span>{{ i18n.language() === 'ta' ? 'பக்கம்' : 'Page' }} {{ listingPage() + 1 }}</span>
-            <button class="secondary-button" type="button" [disabled]="!listingResults().hasMore || listingsLoading()" (click)="changePage(listingPage() + 1)">{{ i18n.language() === 'ta' ? 'அடுத்த' : 'Next' }}</button>
-          </nav>
-        }
+        <nav class="pagination" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவை பக்கங்கள்' : 'Service pages'">
+          <button class="secondary-button" type="button" [disabled]="listingPage() === 0 || listingsLoading()" (click)="changePage(listingPage() - 1)">{{ i18n.language() === 'ta' ? 'முந்தைய' : 'Previous' }}</button>
+          <span aria-live="polite">{{ i18n.language() === 'ta' ? 'பக்கம்' : 'Page' }} {{ listingPage() + 1 }}</span>
+          <button class="secondary-button" type="button" [disabled]="!listingResults().hasMore || listingsLoading()" (click)="changePage(listingPage() + 1)">{{ i18n.language() === 'ta' ? 'அடுத்த' : 'Next' }}</button>
+        </nav>
       }
     </section>
   }
 
+  @if (isServiceDiscoveryExpanded()) {
+  <div id="all-services-discovery" class="all-services-discovery">
   <section id="category-results" class="category-results" aria-labelledby="category-results-title" [attr.aria-busy]="service.loading()">
     <header class="section-heading category-heading">
       <div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'முழுமையான சேவை அடைவு' : 'THE COMPLETE DIRECTORY' }}</p><h2 id="category-results-title">{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகள்' : 'All Services' }}</h2><p>{{ i18n.language() === 'ta' ? 'சமூகத்தில் உள்ள அனைத்து செயலில் உள்ள சேவை வகைகளையும் கண்டறியுங்கள்.' : 'Discover every active service category in your community.' }}</p></div>
@@ -121,4 +134,6 @@
       </div>
     }
   </section>
+  </div>
+  }
 </section>

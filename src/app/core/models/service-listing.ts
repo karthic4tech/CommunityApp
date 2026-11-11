@@ -137,6 +137,10 @@ export function normalizeContactValue(type: ContactType, value: string): string 
   if (type === 'phone' || type === 'whatsapp') {
     if (!/^\+?[\d\s().-]+$/.test(trimmed)) return null;
     const phone = trimmed.replace(/[\s().-]/g, '');
+    if (type === 'whatsapp') {
+      if (/^[6-9]\d{9}$/.test(phone)) return `+91${phone}`;
+      return /^\+91[6-9]\d{9}$/.test(phone) ? phone : null;
+    }
     return /^\+?\d{7,15}$/.test(phone) ? phone : null;
   }
 

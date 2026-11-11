@@ -38,6 +38,7 @@ button:disabled { cursor:not-allowed; opacity:.58; }
 .advanced-controls label { flex:1 1 400px; }
 .clear-button { min-height:42px; border-color:var(--cdm-border); background:#fff; color:var(--cdm-navy); }
 .active-filters { display:flex; align-items:center; flex-wrap:wrap; gap:.45rem; margin-top:1rem; }
+.service-discovery-toggle { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-top:1.25rem; padding:1rem 1.15rem; border:1px solid var(--cdm-border); border-radius:15px; background:#fff; }.service-discovery-toggle h2 { margin:0; }.service-discovery-toggle p:not(.eyebrow) { margin:.35rem 0 0; color:var(--cdm-muted); font-size:.88rem; }.discovery-toggle { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; min-height:46px; padding:.65rem .9rem; border:1px solid var(--cdm-royal-blue); border-radius:9px; color:var(--cdm-royal-blue); background:#fff; font:inherit; font-size:.82rem; font-weight:750; white-space:nowrap; }.discovery-toggle:hover { border-color:var(--cdm-teal); background:var(--cdm-page); }.discovery-toggle i:last-child { font-size:.75rem; }.all-services-discovery { overflow:hidden; }
 .active-label { margin-right:.2rem; color:var(--cdm-muted); font-size:.76rem; font-weight:700; }
 .filter-chip { display:inline-flex; align-items:center; gap:.3rem; min-height:32px; padding:.25rem .55rem; border:1px solid var(--cdm-green-soft); border-radius:999px; background:var(--cdm-page); color:var(--cdm-royal-blue); font:inherit; font-size:.74rem; cursor:pointer; }
 .filter-chip i { color:var(--cdm-navy); font-size:.9rem; }
@@ -78,6 +79,7 @@ button:disabled { cursor:not-allowed; opacity:.58; }
   .advanced-controls label { flex:auto; }
   .clear-button { align-self:flex-start; }
   .section-heading { align-items:flex-start; }
+  .service-discovery-toggle { align-items:stretch; flex-direction:column; }.discovery-toggle { width:100%; }
   .catalog-layout { grid-template-columns:1fr; }
   .category-sidebar { display:none; }
   .mobile-category-filters { display:block; padding:.4rem .8rem; border:1px solid var(--cdm-border); border-radius:10px; background:#fff; }

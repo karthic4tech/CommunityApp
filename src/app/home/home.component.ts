@@ -102,7 +102,7 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
         </div>
       </div>
        <nav class="main-nav container-xl" [attr.aria-label]="i18n.language() === 'ta' ? 'முதன்மை வழிசெலுத்தல்' : 'Main navigation'">
-         <a routerLink="/" routerLinkActive="nav-active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page"><i class="bi bi-house-door" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'முகப்பு' : 'Home' }}</span></a>
+          <a routerLink="/" routerLinkActive="nav-active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page"><i class="bi bi-house-door" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'முகப்பு' : 'Home' }}</span></a>
          <a routerLink="/essential-services" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-lightning-charge" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகள்' : 'Essential Services' }}</span></a>
          <a routerLink="/services" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-grid" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகள்' : 'Explore All Services' }}</span></a>
          <a routerLink="/marketplace" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-shop-window" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'சந்தை' : 'Marketplace' }}</span></a>

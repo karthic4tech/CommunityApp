@@ -51,6 +51,15 @@ export class AdminReviewService {
     return data ?? [];
   }
 
+  async pendingCount(): Promise<number> {
+    const [listings, revisions] = await Promise.all([
+      this.supabase.client.from('service_listings').select('id', { count: 'exact', head: true }).eq('status', 'pending_review'),
+      this.supabase.client.from('service_listing_revisions').select('id', { count: 'exact', head: true }).eq('status', 'pending_review'),
+    ]);
+    if (listings.error || revisions.error) throw new Error('Unable to load pending review notifications.');
+    return (listings.count ?? 0) + (revisions.count ?? 0);
+  }
+
   async published(): Promise<ReviewListingRow[]> {
     const { data, error } = await this.supabase.client.from('service_listings')
       .select(REVIEW_COLUMNS)

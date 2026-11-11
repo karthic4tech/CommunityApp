@@ -88,6 +88,8 @@ describe('Home and Services navigation', () => {
     ]));
     const harness = await RouterTestingHarness.create('/services');
     const element = harness.routeNativeElement!;
+    element.querySelector<HTMLButtonElement>('.discovery-toggle')!.click();
+    harness.detectChanges();
     expect(element.querySelector('app-category-card strong')?.textContent).toBe('Home Services');
     element.querySelector<HTMLAnchorElement>('app-category-card a')!.click();
     await harness.fixture.whenStable();
@@ -104,6 +106,8 @@ describe('Home and Services navigation', () => {
   it('shows empty, loading and error states on Services with retry', async () => {
     const harness = await RouterTestingHarness.create('/services');
     const element = harness.routeNativeElement!;
+    element.querySelector<HTMLButtonElement>('.discovery-toggle')!.click();
+    harness.detectChanges();
     expect(element.querySelector('[role="status"]')?.textContent).toContain('No service categories');
     element.querySelector<HTMLButtonElement>('.state button')?.click();
     expect(refresh).toHaveBeenCalledTimes(1);
@@ -126,7 +130,7 @@ describe('Home and Services navigation', () => {
     ]));
     const harness = await RouterTestingHarness.create('/services?q=தச்சர்');
     const element = harness.routeNativeElement!;
-    expect(element.querySelectorAll('.categories app-category-card')).toHaveLength(1);
+    expect(element.querySelectorAll('.categories app-category-card')).toHaveLength(0);
     await harness.navigateByUrl('/services?q=missing');
     await new Promise<void>(resolve => setTimeout(resolve, 0));
     await harness.fixture.whenStable();
@@ -135,7 +139,7 @@ describe('Home and Services navigation', () => {
     element.querySelector<HTMLButtonElement>('.state button')?.click();
     await harness.fixture.whenStable();
     harness.detectChanges();
-    expect(element.querySelectorAll('.categories app-category-card')).toHaveLength(2);
+    expect(element.querySelectorAll('.categories app-category-card')).toHaveLength(0);
     expect(load).toHaveBeenCalledTimes(1);
   });
 });

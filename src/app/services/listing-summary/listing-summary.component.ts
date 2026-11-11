@@ -1,9 +1,10 @@
 import { NgOptimizedImage } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, afterRenderEffect, computed, inject, input, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, afterRenderEffect, computed, effect, inject, input, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ServiceListing, contactHref } from '../../core/models/service-listing';
 import { LanguageService } from '../../core/services/language.service';
 import { ServiceDirectoryService } from '../../core/services/service-directory.service';
+import { MediaService } from '../../core/services/media.service';
 
 @Component({
   selector: 'app-listing-summary',
@@ -75,8 +76,8 @@ import { ServiceDirectoryService } from '../../core/services/service-directory.s
     .category-label { justify-self:start; margin-bottom:.45rem; padding:.25rem .55rem; border:1px solid var(--cdm-border); border-radius:999px; background:var(--cdm-page); color:var(--cdm-royal-blue); font-size:.72rem; font-weight:650; }
     .verified { display:inline-flex; align-items:center; justify-self:start; gap:.25rem; margin-bottom:.45rem; color:var(--cdm-royal-blue); font-size:.77rem; font-weight:700; }
     .description { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:3; white-space:pre-line; line-height:1.65; }
-    p,.places { color:var(--cdm-muted); line-height:1.65; font-size:.86rem; } .address { white-space:pre-line; }
-    .places { padding-left:1.15rem; } .image { position:relative; aspect-ratio:16/10; margin-block:.7rem; overflow:hidden; border-radius:10px; background:var(--cdm-page); } .image-placeholder { display:flex; align-items:center; justify-content:center; gap:.5rem; min-height:130px; margin-block:.7rem; border:1px dashed var(--cdm-border); border-radius:10px; background:var(--cdm-page); color:var(--cdm-muted); text-align:center; }
+     p,.places { color:var(--cdm-muted); line-height:1.65; font-size:.86rem; } .address { white-space:pre-line; }
+     .places { padding-left:1.15rem; } .image { position:relative; aspect-ratio:16/10; margin-block:.7rem; overflow:hidden; border-radius:10px; background:var(--cdm-page); } .image-placeholder { display:flex; align-items:center; justify-content:center; gap:.5rem; min-height:54px; margin-block:.45rem; padding:.6rem; border:1px dashed var(--cdm-border); border-radius:10px; background:var(--cdm-page); color:var(--cdm-muted); font-size:.75rem; text-align:center; } .detail-view .image-placeholder { min-height:130px; margin-block:.7rem; }
     img { object-fit:cover; border-radius:10px; } .gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:1rem; }
      .detail-view { padding:clamp(1.1rem,3vw,1.75rem); border-radius:16px; }
      .detail-view h1 { color:var(--cdm-navy); font-weight:760; }
@@ -95,13 +96,18 @@ export class ListingSummaryComponent {
   readonly detail = input(false);
   protected readonly i18n = inject(LanguageService);
   private readonly directory = inject(ServiceDirectoryService);
+  private readonly media = inject(MediaService);
   private readonly heading = viewChild<ElementRef<HTMLHeadingElement>>('heading');
   protected readonly failedImages = signal<readonly string[]>([]);
-  protected readonly images = computed(() => [...this.listing().listing_media]
+  private readonly fallbackImages = signal<readonly string[]>([]);
+  protected readonly images = computed(() => {
+    const embedded = [...this.listing().listing_media]
     .sort((a, b) => a.sort_order - b.sort_order)
     .filter(media => media.media_assets?.visibility === 'public' && media.media_assets.media_type === 'image')
     .map(media => this.directory.imageUrl(media.media_assets!.storage_path))
-    .filter((url): url is string => url !== null));
+    .filter((url): url is string => url !== null);
+    return embedded.length ? embedded : this.fallbackImages();
+  });
   protected readonly visibleImages = computed(() => {
     const failed = new Set(this.failedImages());
     const available = this.images().filter(image => !failed.has(image));
@@ -138,6 +144,22 @@ export class ListingSummaryComponent {
 
   constructor() {
     afterRenderEffect(() => this.heading()?.nativeElement.focus({ preventScroll: true }));
+    effect(() => {
+      const listing = this.listing();
+      const hasEmbeddedImage = listing.listing_media.some((media) => media.media_assets?.visibility === 'public' && media.media_assets.media_type === 'image');
+      if (hasEmbeddedImage) { this.fallbackImages.set([]); return; }
+      void this.loadFallbackImages(listing.id);
+    });
+  }
+
+  private async loadFallbackImages(listingId: string): Promise<void> {
+    try {
+      const gallery = await this.media.getMediaGallery('listing', listingId);
+      if (this.listing().id !== listingId) return;
+      this.fallbackImages.set(gallery.filter((item) => item.asset.visibility === 'public').map((item) => item.url));
+    } catch {
+      this.fallbackImages.set([]);
+    }
   }
 
   protected hideImage(image: string): void { this.failedImages.update(images => [...images, image]); }

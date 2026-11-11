@@ -84,8 +84,12 @@ export class AllServicesComponent implements OnInit {
   protected readonly listingResults = signal<DirectoryPage>({ listings: [], hasMore: false });
   protected readonly listingsLoading = signal(false);
   protected readonly listingsError = signal(false);
+  protected readonly isServiceDiscoveryExpanded = signal(false);
 
   constructor() {
+    effect(() => {
+      if (this.hasDirectoryFilters()) this.isServiceDiscoveryExpanded.set(false);
+    });
     effect((onCleanup) => {
       const keyword = this.searchTerm().trim().slice(0, 200);
       const categoryId = this.categoryFilter();
@@ -119,6 +123,8 @@ export class AllServicesComponent implements OnInit {
     void this.service.load();
     void this.ensureLocations().catch(() => this.locationsError.set(true));
   }
+
+  protected toggleServiceDiscovery(): void { this.isServiceDiscoveryExpanded.update((expanded) => !expanded); }
 
   protected applyFilters(event: Event, keyword: string, categoryId: string, locationId: string): void {
     event.preventDefault();

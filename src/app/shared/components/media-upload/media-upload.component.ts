@@ -36,6 +36,8 @@ export class MediaUploadComponent implements OnInit, OnDestroy {
   readonly maxWidth = input(1600);
   readonly altText = input<string | null>(null);
   readonly headingId = input('media-upload-title');
+  /** Upload selected images immediately instead of showing a separate batch action. */
+  readonly autoUpload = input(false);
 
   /** Emitted after each successful batch of uploads. */
   readonly uploaded = output<MediaAsset[]>();
@@ -77,6 +79,7 @@ export class MediaUploadComponent implements OnInit, OnDestroy {
   protected async onFilesSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     await this.addFiles(Array.from(input.files ?? []));
+    if (this.autoUpload()) await this.upload();
     input.value = '';
   }
 
@@ -87,6 +90,7 @@ export class MediaUploadComponent implements OnInit, OnDestroy {
     if (this.disabled()) return;
     const files = Array.from(event.dataTransfer?.files ?? []);
     await this.addFiles(files);
+    if (this.autoUpload()) await this.upload();
   }
 
   protected onDragOver(event: DragEvent): void {
@@ -110,7 +114,7 @@ export class MediaUploadComponent implements OnInit, OnDestroy {
   private async addFiles(files: File[]): Promise<void> {
     this.error.set(null);
     this.message.set(null);
-    const room = Math.max(0, this.maxFiles() - this.drafts().length);
+    const room = Math.max(0, this.maxFiles() - this.existing().length - this.drafts().length);
     if (room <= 0) {
       this.error.set(`You can upload up to ${this.maxFiles()} images.`);
       return;
@@ -168,6 +172,10 @@ export class MediaUploadComponent implements OnInit, OnDestroy {
   // -- upload -------------------------------------------------------
   protected async upload(): Promise<void> {
     const targets = this.drafts().filter((d) => d.status !== 'uploading');
+    if (this.existing().length + targets.length > this.maxFiles()) {
+      this.error.set(`You can upload up to ${this.maxFiles()} images in total.`);
+      return;
+    }
     if (!targets.length || this.disabled()) return;
     this.error.set(null);
     this.message.set(null);

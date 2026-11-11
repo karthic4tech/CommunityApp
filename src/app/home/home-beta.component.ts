@@ -1,20 +1,35 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LanguageService } from '../core/services/language.service';
+import { ContactRequestService } from '../core/services/contact-request.service';
 import { LocalBrandsComponent } from './local-brands.component';
 import { ServiceDiscoveryPreviewComponent } from './service-discovery-preview.component';
 
 @Component({
   selector: 'app-home-beta',
   standalone: true,
-  imports: [NgOptimizedImage, RouterLink, LocalBrandsComponent, ServiceDiscoveryPreviewComponent],
+  imports: [NgOptimizedImage, RouterLink, ReactiveFormsModule, LocalBrandsComponent, ServiceDiscoveryPreviewComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home-beta.component.html',
   styleUrl: './home-beta.component.scss'
 })
 export class HomeBetaComponent implements OnInit, OnDestroy {
   readonly i18n = inject(LanguageService);
+  private readonly formBuilder = inject(NonNullableFormBuilder);
+  private readonly contactRequests = inject(ContactRequestService);
+
+  readonly contactForm = this.formBuilder.group({
+    name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(160)]],
+    email: ['', [Validators.required, Validators.email, Validators.maxLength(254)]],
+    mobile: ['', [Validators.required, Validators.pattern(/^(?:\+91[\s-]?)?[6-9]\d{9}$/)]],
+    message: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(4000)]],
+  });
+  readonly contactSubmitting = signal(false);
+  readonly contactSubmitted = signal(false);
+  readonly contactSuccess = signal(false);
+  readonly contactError = signal('');
 
   // Use one original landscape image set at every viewport size.
   readonly heroSlides = [
@@ -86,7 +101,34 @@ export class HomeBetaComponent implements OnInit, OnDestroy {
     this.touchStart = null;
   }
 
-  onSubmitContact(): void {
-    alert('Thank you for reaching out! We will get back to you soon.');
+  async onSubmitContact(): Promise<void> {
+    this.contactSubmitted.set(true);
+    this.contactSuccess.set(false);
+    this.contactError.set('');
+    if (this.contactForm.invalid || this.contactSubmitting()) {
+      this.contactForm.markAllAsTouched();
+      return;
+    }
+
+    this.contactSubmitting.set(true);
+    try {
+      const value = this.contactForm.getRawValue();
+      await this.contactRequests.submit({
+        ...value,
+        mobile: this.normalizeMobile(value.mobile),
+      });
+      this.contactForm.reset();
+      this.contactSubmitted.set(false);
+      this.contactSuccess.set(true);
+    } catch (error) {
+      this.contactError.set(error instanceof Error ? error.message : 'Unable to send your message right now. Please try again.');
+    } finally {
+      this.contactSubmitting.set(false);
+    }
+  }
+
+  private normalizeMobile(value: string): string {
+    const mobile = value.replace(/[\s-]/g, '');
+    return mobile.startsWith('+91') ? mobile : `+91${mobile}`;
   }
 }

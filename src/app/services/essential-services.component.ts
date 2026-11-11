@@ -19,7 +19,8 @@ import { SearchableSelectOption } from '../shared/components/searchable-select/s
   imports: [CategoryCardComponent, ListingSummaryComponent, RouterLink, FormsModule, SearchableSelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="essential-page container-xl" aria-labelledby="essential-title" [attr.aria-busy]="categoriesLoading() || listingsLoading()">
+    <section class="essential-page container-xl" [class.results-mode]="searchMode()" [attr.aria-labelledby]="searchMode() ? 'results-search-title' : 'essential-title'" [attr.aria-busy]="categoriesLoading() || listingsLoading()">
+      @if (!searchMode()) {
       <header class="essential-hero">
         <p class="eyebrow">{{ i18n.language() === 'ta' ? 'சிடிஎம் 360 / அத்தியாவசிய சேவைகள்' : 'CDM 360 / ESSENTIAL SERVICES' }}</p>
         <div class="hero-heading">
@@ -56,8 +57,23 @@ import { SearchableSelectOption } from '../shared/components/searchable-select/s
            <i class="bi bi-arrow-right" aria-hidden="true"></i>
          </a>
       </header>
+      } @else {
+      <section class="results-search" aria-labelledby="results-search-title">
+        <div class="results-search-heading"><div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'தேடல் முடிவுகள்' : 'SEARCH RESULTS' }}</p><h1 id="results-search-title">{{ resultsHeading() }}</h1></div><button type="button" class="clear-button" (click)="clearSearch()">{{ i18n.language() === 'ta' ? 'தேடலை நீக்கு' : 'Clear Search' }}</button></div>
+        <form class="essential-search compact-search cdm-form" (submit)="applySearch($event, resultQuery.value, resultCategory.value, resultLocation.value)">
+          <label class="keyword-field" for="result-query"><span>{{ i18n.language() === 'ta' ? 'சேவை' : 'Service' }}</span><span class="input-wrap"><i class="bi bi-search" aria-hidden="true"></i><input #resultQuery id="result-query" type="search" maxlength="200" [value]="searchTerm()" [placeholder]="i18n.language() === 'ta' ? 'சேவையைத் தேடுங்கள்…' : 'Search services…'"></span></label>
+           <div id="result-filters" class="result-filter-controls" [class.filters-open]="filtersExpanded()">
+            <app-searchable-select #resultLocation="ngModel" name="result-location" controlId="result-location" [label]="i18n.language() === 'ta' ? 'இடம்' : 'Location'" [options]="searchablePlaces()" [loading]="locationsLoading()" [disabled]="locationsError()" [ngModel]="locationFilter()" [emptyValue]="''" [clearable]="true" [ngModelOptions]="{standalone:true}" [placeholder]="i18n.language() === 'ta' ? 'அனைத்து இடங்களும்' : 'All locations'" [searchPlaceholder]="i18n.language() === 'ta' ? 'இடங்களைத் தேடுங்கள்…' : 'Search locations…'" />
+            <app-searchable-select #resultCategory="ngModel" name="result-category" controlId="result-category" [label]="i18n.language() === 'ta' ? 'வகை' : 'Category'" [options]="categoryOptions()" [ngModel]="categoryFilter()" [emptyValue]="''" [clearable]="true" [ngModelOptions]="{standalone:true}" [placeholder]="i18n.language() === 'ta' ? 'அனைத்து வகைகளும்' : 'All categories'" [searchPlaceholder]="i18n.language() === 'ta' ? 'வகையைத் தேடுங்கள்…' : 'Search categories…'" />
+          </div>
+          <button type="submit" class="search-button"><i class="bi bi-search" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'தேடுக' : 'Search' }}</button>
+          <button type="button" class="filter-toggle" [attr.aria-expanded]="filtersExpanded()" aria-controls="result-filters" (click)="filtersExpanded.update(open => !open)"><i class="bi bi-sliders" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'வடிகட்டிகள்' : 'Filters' }}</button>
+        </form>
+      </section>
+      }
 
-      @if (emergencyShortcuts().length) {
+      @if (!searchMode() && emergencyShortcuts().length) {
+      
         <section class="emergency-band" aria-labelledby="emergency-title">
           <div class="emergency-intro"><span class="emergency-icon"><i class="bi bi-telephone-forward" aria-hidden="true"></i></span><div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'விரைவான அணுகல்' : 'QUICK ACCESS' }}</p><h2 id="emergency-title">{{ i18n.language() === 'ta' ? 'அவசர உதவி தொடர்புகள்' : 'Emergency contacts' }}</h2><p>{{ i18n.language() === 'ta' ? 'பட்டியலிடப்பட்ட சேவைகளைப் பார்த்து நேரடியாக தொடர்பு கொள்ளுங்கள்.' : 'Open an available listing to view its published contact options.' }}</p></div></div>
           <div class="emergency-links">
@@ -69,6 +85,19 @@ import { SearchableSelectOption } from '../shared/components/searchable-select/s
         </section>
       }
 
+      @if (searchMode() && emergencyShortcuts().length) {
+        <details class="emergency-disclosure"><summary><i class="bi bi-telephone-forward" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'அவசர தொடர்புகள்' : 'Emergency contacts' }}</summary><div class="emergency-links">@for (shortcut of emergencyShortcuts(); track shortcut.id) { <a [routerLink]="shortcut.destination"><i class="bi" [class]="shortcut.icon || 'bi bi-telephone'" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? (shortcut.title_ta || shortcut.title) : shortcut.title }}</a> }</div></details>
+      }
+
+      <section class="essential-discovery" aria-labelledby="discovery-title">
+        <div class="discovery-heading">
+          <div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'சேவைகளை ஆராயுங்கள்' : 'DISCOVER LOCAL SERVICES' }}</p><h2 id="discovery-title">{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகளை ஆராயுங்கள்' : 'Explore Essential Services' }}</h2><p>{{ i18n.language() === 'ta' ? 'சிதம்பரத்தில் உள்ளூர் சேவைகள் மற்றும் வகைகளைப் பாருங்கள்.' : 'Browse local services and categories in Chidambaram.' }}</p></div>
+          <button type="button" class="discovery-toggle btn btn-outline-primary" [attr.aria-expanded]="discoveryExpanded()" aria-controls="essential-discovery-content" (click)="toggleDiscovery()"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i><span>{{ discoveryExpanded() ? (i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகளை மறைக்க' : 'Hide Essential Services') : (i18n.language() === 'ta' ? 'அனைத்து அத்தியாவசிய சேவைகளையும் பார்க்க' : 'Browse All Essential Services') }}</span><i class="bi" [class.bi-chevron-down]="!discoveryExpanded()" [class.bi-chevron-up]="discoveryExpanded()" aria-hidden="true"></i></button>
+        </div>
+      </section>
+
+      @if (discoveryExpanded()) {
+      <div id="essential-discovery-content" class="collapse show" aria-labelledby="discovery-title">
       <section class="priority-section" aria-labelledby="priority-title">
         <div class="section-heading"><div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகள்' : 'CURATED FOR YOUR TOWN' }}</p><h2 id="priority-title">{{ i18n.language() === 'ta' ? 'முக்கிய சேவைகளை விரைவாகக் கண்டறியுங்கள்' : 'Find what matters, faster.' }}</h2><p>{{ i18n.language() === 'ta' ? 'நிர்வாகத்தால் தேர்ந்தெடுக்கப்பட்ட சேவைகள்.' : 'A focused selection of services chosen for local everyday needs.' }}</p></div><span class="count">{{ shortcuts().length }} {{ i18n.language() === 'ta' ? 'குறுக்குவழிகள்' : 'shortcuts' }}</span></div>
         @if (categoriesLoading()) {
@@ -100,9 +129,11 @@ import { SearchableSelectOption } from '../shared/components/searchable-select/s
           </div>
         }
       </section>
+      </div>
+      }
 
       <section class="listing-section" aria-labelledby="results-title" [attr.aria-busy]="listingsLoading()">
-        <div class="section-heading"><div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'உள்ளூர் வழங்குநர்கள்' : 'LOCAL PROVIDERS' }}</p><h2 id="results-title">{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவை வழங்குநர்கள்' : 'Essential service listings' }}</h2></div>
+        <div class="section-heading"><div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'உள்ளூர் வழங்குநர்கள்' : 'LOCAL PROVIDERS' }}</p><h2 id="results-title">{{ searchMode() ? resultsHeading() : (i18n.language() === 'ta' ? 'அத்தியாவசிய சேவை வழங்குநர்கள்' : 'Essential service listings') }}</h2></div>
           @if (!listingsLoading() && !listingsError()) { <span class="count" aria-live="polite">{{ listingResults().listings.length }} {{ i18n.language() === 'ta' ? 'இந்தப் பக்கத்தில்' : 'on this page' }}</span> }
         </div>
         @if (listingsLoading()) {
@@ -110,22 +141,24 @@ import { SearchableSelectOption } from '../shared/components/searchable-select/s
         } @else if (listingsError()) {
           <div class="state error-state"><p role="alert">{{ i18n.language() === 'ta' ? 'சேவைகளை ஏற்ற முடியவில்லை.' : 'Unable to load essential listings.' }}</p><button type="button" class="secondary-button" (click)="retrySearch()">{{ i18n.text().retry }}</button></div>
         } @else if (!listingResults().listings.length) {
-          <p class="state" role="status">{{ i18n.language() === 'ta' ? 'இந்த வடிகட்டிகளுக்கு சேவை பட்டியல்கள் இல்லை.' : 'No published listings match these essential service filters.' }}</p>
+          <div class="state" role="status"><p>{{ searchMode() ? (i18n.language() === 'ta' ? 'உங்கள் தேடலுக்கு சேவைகள் கிடைக்கவில்லை.' : 'No services found for your search.') : (i18n.language() === 'ta' ? 'இந்த வடிகட்டிகளுக்கு சேவை பட்டியல்கள் இல்லை.' : 'No published listings match these essential service filters.') }}</p><button type="button" class="secondary-button" (click)="clearSearch()">{{ i18n.language() === 'ta' ? 'தேடலை மாற்றுங்கள்' : 'Change search' }}</button><a class="secondary-button" routerLink="/services">{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகளும்' : 'Explore all services' }}</a></div>
         } @else {
           <div class="listing-grid row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
             @for (listing of listingResults().listings; track listing.id) { <app-listing-summary class="col" [listing]="listing" /> }
           </div>
-          @if (listingPage() > 0 || listingResults().hasMore) {
-            <nav class="pagination" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவை பக்கங்கள்' : 'Service listing pages'">
-              <button type="button" class="secondary-button" [disabled]="listingPage() === 0 || listingsLoading()" (click)="changePage(listingPage() - 1)">{{ i18n.language() === 'ta' ? 'முந்தைய' : 'Previous' }}</button>
-              <span>{{ i18n.language() === 'ta' ? 'பக்கம்' : 'Page' }} {{ listingPage() + 1 }}</span>
-              <button type="button" class="secondary-button" [disabled]="!listingResults().hasMore || listingsLoading()" (click)="changePage(listingPage() + 1)">{{ i18n.language() === 'ta' ? 'அடுத்த' : 'Next' }}</button>
-            </nav>
-          }
+          <nav class="pagination" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவை பக்கங்கள்' : 'Service listing pages'">
+            <button type="button" class="secondary-button" [disabled]="listingPage() === 0 || listingsLoading()" (click)="changePage(listingPage() - 1)">{{ i18n.language() === 'ta' ? 'முந்தைய' : 'Previous' }}</button>
+            <span aria-live="polite">{{ i18n.language() === 'ta' ? 'பக்கம்' : 'Page' }} {{ listingPage() + 1 }}</span>
+            <button type="button" class="secondary-button" [disabled]="!listingResults().hasMore || listingsLoading()" (click)="changePage(listingPage() + 1)">{{ i18n.language() === 'ta' ? 'அடுத்த' : 'Next' }}</button>
+          </nav>
         }
       </section>
 
-      <footer class="all-services-cta"><div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'மேலும் கண்டறியுங்கள்' : 'LOOKING FOR MORE?' }}</p><h2>{{ i18n.language() === 'ta' ? 'முழுமையான சேவை அடைவை ஆராயுங்கள்.' : 'Explore the complete service directory.' }}</h2></div><a routerLink="/services" class="secondary-button">{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகளையும் பார்க்க' : 'Browse All Services' }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a></footer>
+      @if (searchMode()) {
+        <details class="explore-disclosure"><summary>{{ i18n.language() === 'ta' ? 'பிற சேவைகளை ஆராயுங்கள்' : 'Explore other services' }}</summary><div class="shortcut-grid">@for (shortcut of shortcuts(); track shortcut.id) { <a class="shortcut-tile" [routerLink]="shortcut.destination"><span class="shortcut-icon"><i class="bi" [class]="shortcut.icon || 'bi bi-grid'" aria-hidden="true"></i></span><span class="shortcut-copy"><strong>{{ i18n.language() === 'ta' ? (shortcut.title_ta || shortcut.title) : shortcut.title }}</strong><small>{{ i18n.language() === 'ta' ? shortcut.subcategoryNameTamil || shortcut.categoryNameTamil : shortcut.subcategoryName || shortcut.categoryName }}</small></span></a> }</div></details>
+      } @else {
+        <footer class="all-services-cta"><div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'மேலும் கண்டறியுங்கள்' : 'LOOKING FOR MORE?' }}</p><h2>{{ i18n.language() === 'ta' ? 'முழுமையான சேவை அடைவை ஆராயுங்கள்.' : 'Explore the complete service directory.' }}</h2></div><a routerLink="/services" class="secondary-button">{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகளையும் பார்க்க' : 'Browse All Services' }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a></footer>
+      }
     </section>
   `,
   styles: `
@@ -168,10 +201,13 @@ import { SearchableSelectOption } from '../shared/components/searchable-select/s
     .state,.loading-state { display:flex; align-items:center; flex-wrap:wrap; gap:.7rem; min-height:70px; padding:1rem; border:1px solid var(--cdm-border); border-radius:12px; color:var(--cdm-muted); background:#fff; line-height:1.55; }.state p { margin:0; }.error-state { border-color:var(--cdm-form-danger); color:#C92A2A; background:var(--cdm-page); }
     .loading-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }.loading-grid span { height:180px; border-radius:13px; background:linear-gradient(100deg,var(--cdm-page) 20%,var(--cdm-page) 45%,var(--cdm-page) 70%); background-size:200% 100%; animation:shimmer 1.4s linear infinite; }
     .pagination { display:flex; align-items:center; justify-content:center; gap:.8rem; margin-top:1rem; }.pagination span { min-width:70px; color:var(--cdm-muted); font-size:.83rem; text-align:center; }
-    .all-services-cta { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-top:2.5rem; padding:1.3rem 1.5rem; border:1px solid var(--cdm-green-soft); border-radius:15px; background:var(--cdm-page); }.all-services-cta .eyebrow { margin-bottom:.3rem; }
-    @keyframes shimmer { to { background-position:-200% 0; } }
-    @media(max-width:900px) { .essential-search { grid-template-columns:repeat(2,minmax(0,1fr)); }.keyword-field { grid-column:1/-1; }.shortcut-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }.emergency-band { grid-template-columns:1fr; }.emergency-band > small { grid-column:auto; } }
-    @media(max-width:600px) { .essential-page { padding:1rem .75rem 2.5rem; }.essential-hero { padding:1.1rem; border-radius:17px; }.hero-symbol { display:none; }.essential-search { grid-template-columns:1fr; gap:.6rem; margin-top:1.1rem; padding:.8rem; }.keyword-field { grid-column:auto; }.search-button,.clear-button { width:100%; }.shortcut-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:.55rem; }.shortcut-tile { min-height:78px; padding:.6rem; gap:.55rem; }.shortcut-icon { flex-basis:36px; width:36px; height:36px; }.shortcut-copy strong { font-size:.78rem; }.shortcut-copy small { font-size:.68rem; }.section-heading { align-items:flex-start; }.all-services-cta { align-items:stretch; flex-direction:column; }.all-services-cta > a { width:100%; } }
+     .all-services-cta { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-top:2.5rem; padding:1.3rem 1.5rem; border:1px solid var(--cdm-green-soft); border-radius:15px; background:var(--cdm-page); }.all-services-cta .eyebrow { margin-bottom:.3rem; }
+     .essential-discovery { margin-top:1.35rem; padding:1rem 0; }.discovery-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; }.discovery-heading h2 { margin:0; color:var(--cdm-navy); font-size:clamp(1.25rem,2.3vw,1.65rem); }.discovery-heading p:not(.eyebrow) { margin:.35rem 0 0; color:var(--cdm-muted); font-size:.88rem; }.discovery-toggle { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; min-height:46px; padding:.65rem .9rem; border-color:var(--cdm-royal-blue); color:var(--cdm-royal-blue); font-size:.82rem; font-weight:750; white-space:nowrap; }.discovery-toggle:hover { color:var(--cdm-navy); border-color:var(--cdm-teal); background:var(--cdm-green-soft); }.discovery-toggle i:last-child { font-size:.75rem; }.essential-discovery-content { overflow:hidden; }
+     .results-mode { padding-top:clamp(.75rem,2vw,1.35rem); }.results-search { padding:1rem 0 .35rem; }.results-search-heading { display:flex; align-items:end; justify-content:space-between; gap:1rem; margin-bottom:.75rem; }.results-search-heading h1 { max-width:none; color:var(--cdm-navy); font-size:clamp(1.35rem,3vw,2rem); letter-spacing:-.025em; }.results-search-heading .eyebrow { margin-bottom:.25rem; }.compact-search { grid-template-columns:minmax(190px,1.4fr) minmax(160px,1fr) auto auto; margin-top:0; padding:.7rem; border:1px solid var(--cdm-border); box-shadow:0 5px 18px color-mix(in srgb, var(--cdm-navy) 7%, transparent); }.result-filter-controls { display:contents; }.filter-toggle { display:none; min-height:44px; padding:.6rem .9rem; border:1px solid var(--cdm-btn-border); border-radius:9px; color:var(--cdm-navy); background:#fff; font:inherit; font-size:.82rem; font-weight:750; cursor:pointer; }.emergency-disclosure,.explore-disclosure { margin-top:1rem; border:1px solid var(--cdm-border); border-radius:12px; background:#fff; }.emergency-disclosure summary,.explore-disclosure summary { min-height:46px; padding:.7rem .85rem; color:var(--cdm-navy); font-weight:750; cursor:pointer; }.emergency-disclosure summary i { margin-right:.45rem; color:var(--cdm-form-danger); }.emergency-disclosure .emergency-links { padding:.25rem .85rem .85rem; }.explore-disclosure { margin-top:2rem; padding-bottom:.85rem; }.explore-disclosure .shortcut-grid { padding:0 .85rem; }.explore-disclosure .shortcut-tile { min-height:68px; }.results-mode .listing-section { margin-top:1rem; }.results-mode .listing-section .section-heading { margin-bottom:.7rem; }.results-mode .listing-section .section-heading h2 { font-size:clamp(1.15rem,2.4vw,1.55rem); }
+     @keyframes shimmer { to { background-position:-200% 0; } }
+     @media(max-width:900px) { .essential-search { grid-template-columns:repeat(2,minmax(0,1fr)); }.keyword-field { grid-column:1/-1; }.shortcut-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }.emergency-band { grid-template-columns:1fr; }.emergency-band > small { grid-column:auto; }.compact-search { grid-template-columns:minmax(180px,1fr) auto auto; }.compact-search .keyword-field { grid-column:auto; }.compact-search .result-filter-controls { display:grid; grid-column:1/-1; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem; order:5; }.compact-search .filter-toggle { display:inline-flex; order:4; }.compact-search .result-filter-controls:not(.filters-open) { display:none; } }
+      @media(max-width:600px) { .essential-page { padding:1rem .75rem 2.5rem; }.essential-hero { padding:1.1rem; border-radius:17px; }.hero-symbol { display:none; }.essential-search { grid-template-columns:1fr; gap:.6rem; margin-top:1.1rem; padding:.8rem; }.keyword-field { grid-column:auto; }.search-button,.clear-button { width:100%; }.shortcut-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:.55rem; }.shortcut-tile { min-height:78px; padding:.6rem; gap:.55rem; }.shortcut-icon { flex-basis:36px; width:36px; height:36px; }.shortcut-copy strong { font-size:.78rem; }.shortcut-copy small { font-size:.68rem; }.section-heading { align-items:flex-start; }.all-services-cta { align-items:stretch; flex-direction:column; }.all-services-cta > a { width:100%; }.discovery-heading { align-items:stretch; flex-direction:column; }.discovery-toggle { width:100%; } }
+     @media(max-width:600px) { .results-search { padding-top:.25rem; }.results-search-heading { align-items:flex-start; flex-direction:column; }.results-search-heading .clear-button { width:auto; min-height:42px; }.compact-search { grid-template-columns:1fr auto; padding:.65rem; }.compact-search .keyword-field { grid-column:1/-1; }.compact-search .search-button { width:auto; }.compact-search .filter-toggle { width:auto; }.compact-search .result-filter-controls { grid-template-columns:1fr; }.results-mode .listing-section { margin-top:1rem; } }
     @media(prefers-reduced-motion:reduce) { .shortcut-tile,.loading-grid span { transition:none; animation:none; } }
   `,
 })
@@ -194,12 +230,20 @@ export class EssentialServicesComponent implements OnInit {
   protected readonly listingResults = signal<DirectoryPage>({ listings: [], hasMore: false });
   protected readonly listingsLoading = signal(true);
   protected readonly listingsError = signal(false);
+  protected readonly discoveryExpanded = signal(false);
   private searchAttempt = signal(0);
 
   protected readonly searchTerm = computed(() => this.queryParams().get('q') ?? '');
   protected readonly categoryFilter = computed(() => this.queryParams().get('category') ?? '');
   protected readonly locationParam = computed(() => this.queryParams().get('location'));
   protected readonly locationFilter = computed(() => this.locationParam() ?? this.defaultLocationId());
+  protected readonly searchMode = computed(() => Boolean(this.searchTerm().trim() || this.categoryFilter() || this.locationParam()));
+  protected readonly filtersExpanded = signal(false);
+  protected readonly resultsHeading = computed(() => {
+    const query = this.searchTerm().trim();
+    if (query) return `${this.i18n.language() === 'ta' ? 'முடிவுகள்' : 'Results for'} "${query}"`;
+    return this.i18n.language() === 'ta' ? 'தேர்ந்தெடுத்த சேவைகள்' : 'Filtered essential services';
+  });
   protected readonly listingPage = computed(() => {
     const page = Number(this.queryParams().get('page') ?? 1);
     return Number.isSafeInteger(page) && page > 0 && page <= 10000 ? page - 1 : 0;
@@ -221,6 +265,8 @@ export class EssentialServicesComponent implements OnInit {
     return options;
   });
   protected readonly essentialCategoryCount = computed(() => this.categoryOptions().length);
+
+  protected toggleDiscovery(): void { this.discoveryExpanded.update(expanded => !expanded); }
 
   constructor() {
     effect((onCleanup) => {

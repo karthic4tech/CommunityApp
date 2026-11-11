@@ -193,7 +193,9 @@ export class ServiceSubmissionService {
   }
 
   private validateInput(input: SubmissionFormInput): void {
-    if (!input.listing.title.trim() || !input.listing.description.trim() || !input.listing.category_id) throw new Error('Complete the service details before saving.');
+    if (!input.listing.title.trim() || !input.listing.category_id) throw new Error('Complete the required service details before saving.');
+    if (!input.contacts.some(contact => contact.contact_type === 'phone' && Boolean(normalizeContactValue('phone', contact.contact_value)))) throw new Error('Enter a valid mobile number.');
+    if (!input.locations.length) throw new Error('Choose a service location.');
     if (!input.provider.display_name.trim()) throw new Error('Enter a provider or business name.');
     for (const contact of input.contacts) {
       const message = contactValidationMessage(contact.contact_type, contact.contact_value);

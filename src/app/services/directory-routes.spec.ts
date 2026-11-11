@@ -69,8 +69,14 @@ describe('Directory routes', () => {
     const element = harness.routeNativeElement!;
     expect(element.querySelector('.essential-page')).not.toBeNull();
     expect(element.querySelector('h1')?.textContent).toContain('Everything Important. Just a Click Away.');
-    expect(element.querySelectorAll('app-category-card')).toHaveLength(1);
+    expect(element.querySelectorAll('app-category-card')).toHaveLength(0);
+    expect(element.querySelector<HTMLButtonElement>('.discovery-toggle')?.getAttribute('aria-expanded')).toBe('false');
     expect(element.textContent).toContain('Essential Services');
+
+    element.querySelector<HTMLButtonElement>('.discovery-toggle')!.click();
+    await settle(harness);
+    expect(element.querySelectorAll('app-category-card')).toHaveLength(1);
+    expect(element.querySelector<HTMLButtonElement>('.discovery-toggle')?.getAttribute('aria-expanded')).toBe('true');
 
     expect(element.querySelector<HTMLAnchorElement>('.emergency-links a')?.getAttribute('href')).toBe('/services/parent/child');
     const query = element.querySelector<HTMLInputElement>('#essential-query')!;
@@ -78,6 +84,18 @@ describe('Directory routes', () => {
     element.querySelector<HTMLFormElement>('.essential-search')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await settle(harness);
     expect(searchEssential).toHaveBeenLastCalledWith(null, 'town', 'ambulance', 0);
+  });
+
+  it('switches essential services to the focused results mode for a deep-linked query', async () => {
+    const harness = await RouterTestingHarness.create('/essential-services?q=electrician');
+    await settle(harness);
+    const element = harness.routeNativeElement!;
+    expect(element.querySelector('.essential-page')?.classList.contains('results-mode')).toBe(true);
+    expect(element.querySelector('.essential-hero')).toBeNull();
+    expect(element.querySelector('#essential-discovery-content')).toBeNull();
+    expect(element.querySelector<HTMLButtonElement>('.discovery-toggle')?.getAttribute('aria-expanded')).toBe('false');
+    expect(element.querySelector('#results-search-title')?.textContent).toContain('Results for "electrician"');
+    expect(searchEssential).toHaveBeenLastCalledWith(null, 'town', 'electrician', 0);
   });
 
   it('keeps parent and provider browsing as distinct levels', async () => {

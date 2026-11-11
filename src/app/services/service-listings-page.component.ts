@@ -40,10 +40,13 @@ interface CategorySelection {
         </div>
       } @else if (selection(); as selected) {
         <header class="listing-page-heading">
-          <p class="eyebrow">{{ i18n.language() === 'ta' ? 'உள்ளூர் சேவை' : 'LOCAL SERVICE CATEGORY' }}</p>
-          <h1 #heading tabindex="-1" id="listing-page-title">{{ i18n.language() === 'ta' ? selected.subcategory.nameTamil : selected.subcategory.nameEnglish }}</h1>
-          <p class="secondary" [lang]="i18n.secondaryLanguage()">{{ i18n.language() === 'ta' ? selected.subcategory.nameEnglish : selected.subcategory.nameTamil }}</p>
-          @if (selected.subcategory.description) { <p class="description" [lang]="i18n.language()">{{ selected.subcategory.description }}</p> }
+          <div class="heading-copy">
+            <p class="eyebrow">{{ i18n.language() === 'ta' ? 'உள்ளூர் சேவை' : 'LOCAL SERVICE CATEGORY' }}</p>
+            <h1 #heading tabindex="-1" id="listing-page-title">{{ i18n.language() === 'ta' ? selected.subcategory.nameTamil : selected.subcategory.nameEnglish }}</h1>
+            <p class="secondary" [lang]="i18n.secondaryLanguage()">{{ i18n.language() === 'ta' ? selected.subcategory.nameEnglish : selected.subcategory.nameTamil }}</p>
+            @if (selected.subcategory.description) { <p class="description" [lang]="i18n.language()">{{ selected.subcategory.description }}</p> }
+          </div>
+          <a class="post-job-button" routerLink="/jobs/submit"><i class="bi bi-plus-circle" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'புதிய வேலை இடுகையிடவும்' : 'Post New Job' }}</a>
         </header>
         <app-listing-directory [category]="selected.subcategory" />
       } @else {
@@ -59,7 +62,10 @@ interface CategorySelection {
     .service-listings-page { width:100%; max-width:var(--cdm-content-width); margin:0 auto; }
     .breadcrumbs { display:flex; align-items:center; flex-wrap:wrap; gap:.55rem; margin-bottom:1rem; color:var(--cdm-muted); font-size:.84rem; }
     .breadcrumbs a, .state-link { color:var(--cdm-royal-blue); }
-    .listing-page-heading { padding:clamp(1.25rem,3vw,2rem); border:1px solid var(--cdm-border); border-radius:16px; background:#fff; }
+    .listing-page-heading { display:flex; align-items:center; justify-content:space-between; gap:1.25rem; padding:clamp(1.25rem,3vw,2rem); border:1px solid var(--cdm-border); border-radius:16px; background:#fff; }
+    .heading-copy { min-width:0; }
+    .post-job-button { display:inline-flex; align-items:center; justify-content:center; gap:.45rem; min-height:44px; flex:none; padding:.65rem .9rem; border-radius:9px; background:var(--cdm-btn-primary); color:var(--cdm-white); font-weight:750; text-decoration:none; white-space:nowrap; }
+    .post-job-button:hover { background:var(--cdm-navy); color:var(--cdm-white); }
     .eyebrow { margin:0 0 .4rem; color:var(--cdm-royal-blue); font-size:.72rem; font-weight:800; letter-spacing:.12em; }
     h1 { color:var(--cdm-navy); font-size:clamp(1.55rem,3vw,2rem); margin:0; overflow-wrap:anywhere; }
     .secondary, .description { color:var(--cdm-muted); line-height:1.7; }
@@ -68,7 +74,8 @@ interface CategorySelection {
     .state { display:flex; align-items:center; flex-wrap:wrap; gap:.75rem; margin:1rem 0; padding:1rem 1.15rem; border:1px solid var(--cdm-border); border-radius:13px; background:white; color:var(--cdm-muted); line-height:1.7; }
     .state-link { display:inline-flex; align-items:center; min-height:44px; margin-top:1rem; }
     button { min-height:44px; border:1px solid var(--cdm-btn-primary); border-radius:9px; background:var(--cdm-btn-primary); color:var(--cdm-white); padding:.65rem .9rem; font:inherit; font-weight:700; cursor:pointer; }
-    button:focus-visible,a:focus-visible { outline:3px solid color-mix(in srgb, var(--cdm-btn-primary) 31%, transparent); outline-offset:3px; }
+     button:focus-visible,a:focus-visible { outline:3px solid color-mix(in srgb, var(--cdm-btn-primary) 31%, transparent); outline-offset:3px; }
+     @media (max-width:600px) { .listing-page-heading { align-items:stretch; flex-direction:column; } .post-job-button { width:100%; } }
   `,
 })
 export class ServiceListingsPageComponent implements OnInit {

@@ -29,7 +29,7 @@ export interface SubmissionFormInput {
   listing: {
     category_id: string;
     title: string;
-    description: string;
+    description: string | null;
   };
   contacts: SubmissionContactInput[];
   locations: SubmissionLocationInput[];
@@ -41,7 +41,7 @@ export interface SubmissionRow {
   provider_id: string;
   category_id: string;
   title: string;
-  description: string;
+  description: string | null;
   status: SubmissionStatus;
   submitted_at: string | null;
   published_at: string | null;

@@ -114,4 +114,21 @@ describe('ServicesComponent advanced listing filters', () => {
     await harness.fixture.whenStable();
     expect(directorySearch).toHaveBeenCalledWith(null, locationId, '', 0);
   });
+
+  it('collapses the category discovery by default and expands it without changing search state', async () => {
+    const harness = await RouterTestingHarness.create('/services');
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    const element = harness.routeNativeElement!;
+    const toggle = element.querySelector<HTMLButtonElement>('.discovery-toggle')!;
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(element.querySelector('#all-services-discovery')).toBeNull();
+
+    toggle.click();
+    harness.detectChanges();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(element.querySelectorAll('app-category-card')).toHaveLength(1);
+    expect(TestBed.inject(Router).url).toBe('/services');
+  });
 });

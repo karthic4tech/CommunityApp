@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../core/auth/auth.service';
 import { LanguageService } from '../core/services/language.service';
+import { AdminReviewService } from '../core/services/admin-review.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -54,6 +55,11 @@ import { LanguageService } from '../core/services/language.service';
           <a routerLink="/admin/essential-services">{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகளை நிர்வகி' : 'Manage Essential Services' }}</a>
         </article>
         <article class="card col-12 col-md-6">
+          <h2>Contact requests</h2>
+          <p>Read messages submitted through the public Contact Us form and remove requests that have been handled.</p>
+          <a routerLink="/admin/contact-requests">View contact requests</a>
+        </article>
+        <article class="card col-12 col-md-6">
           <h2>Marketplace</h2>
           <p>Moderate product advertisements and reports, and manage the local marketplace catalogue.</p>
           <a routerLink="/admin/marketplace">Manage marketplace</a>
@@ -68,8 +74,13 @@ import { LanguageService } from '../core/services/language.service';
           <p>{{ i18n.language() === 'ta' ? 'முகப்புப் பக்கத்தில் இடம்பெறும் சரிபார்க்கப்பட்ட வணிகங்களையும் அவற்றின் வரிசையையும் நிர்வகிக்கவும்.' : 'Feature verified businesses on the homepage and set their display order.' }}</p>
           <a routerLink="/admin/local-brands">{{ i18n.language() === 'ta' ? 'பிராண்டுகளை நிர்வகி' : 'Manage local brands' }}</a>
         </article>
-        <article class="card col-12 col-md-6">
+        <article class="card col-12 col-md-6 review-card">
           <h2>{{ i18n.language() === 'ta' ? 'சமர்ப்பிப்பு மதிப்பாய்வு' : 'Listing review' }}</h2>
+          @if (pendingReviewCount() > 0) {
+            <p class="review-alert" role="status"><i class="bi bi-bell-fill" aria-hidden="true"></i> {{ pendingReviewCount() }} {{ pendingReviewCount() === 1 ? 'listing' : 'listings' }} awaiting review</p>
+          } @else if (pendingReviewCount() === 0) {
+            <p class="review-clear" role="status"><i class="bi bi-check-circle" aria-hidden="true"></i> No listings awaiting review</p>
+          }
           <p>{{ i18n.language() === 'ta' ? 'சமூக சேவை சமர்ப்பிப்புகளை சரிபார்த்து வெளியிடவும்.' : 'Review, request changes, reject and publish community service submissions.' }}</p>
           <a routerLink="/admin/listings/review">{{ i18n.language() === 'ta' ? 'மதிப்பாய்வு வரிசையைத் திறக்கவும்' : 'Open review queue' }}</a>
         </article>
@@ -88,16 +99,28 @@ import { LanguageService } from '../core/services/language.service';
      .admin-grid { align-items:stretch; }
      .card { padding:1.25rem; border:1px solid var(--cdm-border); border-radius:var(--cdm-radius-lg); background:white; }
     .card a { display:inline-flex; align-items:center; min-height:44px; color:var(--cdm-royal-blue); }
-    .verified { color:var(--cdm-royal-blue) !important; font-weight:700; }
+     .verified { color:var(--cdm-royal-blue) !important; font-weight:700; }
+     .review-alert,.review-clear { display:flex; align-items:center; gap:.45rem; margin:.45rem 0!important; font-weight:800; }
+     .review-alert { color:#a33b20!important; }
+     .review-clear { color:#087f6c!important; }
     ul { padding-left:1.25rem; color:var(--cdm-muted); line-height:1.8; }
     :is(a,button):focus-visible { outline:3px solid var(--cdm-royal-blue); outline-offset:3px; }
      @media (max-width:650px) { .admin-header { flex-direction:column; } }
   `,
 })
-export class AdminDashboardComponent {
+export class AdminDashboardComponent implements OnInit {
   protected readonly auth = inject(AuthService);
   protected readonly i18n = inject(LanguageService);
+  private readonly reviews = inject(AdminReviewService);
   private readonly router = inject(Router);
+  protected readonly pendingReviewCount = signal(-1);
+
+  ngOnInit(): void { void this.loadPendingReviewCount(); }
+
+  private async loadPendingReviewCount(): Promise<void> {
+    try { this.pendingReviewCount.set(await this.reviews.pendingCount()); }
+    catch { this.pendingReviewCount.set(-1); }
+  }
 
   protected async signOut(): Promise<void> {
     try {
