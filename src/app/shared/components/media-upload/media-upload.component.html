@@ -9,31 +9,51 @@
     (dragover)="onDragOver($event)"
     (dragleave)="onDragLeave()"
     (dragend)="onDragEnd()"
-    aria-describedby="dropzone-hint"
+    [attr.aria-describedby]="headingId() + '-hint'"
   >
-    <i class="bi bi-cloud-arrow-up dropzone-icon" aria-hidden="true"></i>
-    <p class="dropzone-text">Drag and drop {{ uploadType() === 'image' ? 'images' : 'files' }} here</p>
-    <button type="button" class="browse-button" [disabled]="disabled()" (click)="picker.click()">
-      Browse {{ uploadType() === 'image' ? 'images' : 'files' }}
-    </button>
-    <p class="dropzone-hint" id="dropzone-hint">
-      @if (uploadType() === 'image') {
-        JPEG, PNG, WebP or GIF. Up to {{ maxFileSizeMb() }} MB each, {{ maxFiles() }} {{ maxFiles() === 1 ? 'image' : 'images' }} max.
-      } @else {
-        PDF or image. Up to {{ maxFileSizeMb() }} MB each.
-      }
-    </p>
-    <input
-      #picker
-      type="file"
-      class="visually-hidden-input"
-      [accept]="acceptAttr()"
-      [multiple]="multiple()"
-      [disabled]="disabled()"
-      tabindex="-1"
-      aria-hidden="true"
-      (change)="onFilesSelected($event)"
-    />
+    @if (uploadType() === 'image' && showCameraActions()) {
+      <i class="bi bi-images dropzone-icon" aria-hidden="true"></i>
+      <p class="dropzone-text">{{ language.language() === 'ta' ? 'சேவைப் படங்களைச் சேர்க்கவும்' : 'Add service photos' }}</p>
+      <div class="image-actions">
+        <button type="button" class="image-action camera-action" [disabled]="disabled() || selectingFiles() || uploadingAll() || existingLoading()" (click)="cameraInput.click()">
+          <i class="bi bi-camera" aria-hidden="true"></i>
+          <span>{{ language.language() === 'ta' ? 'புகைப்படம் எடுக்க' : 'Take Photo' }}</span>
+        </button>
+        <button type="button" class="image-action gallery-action" [disabled]="disabled() || selectingFiles() || uploadingAll() || existingLoading()" (click)="galleryInput.click()">
+          <i class="bi bi-images" aria-hidden="true"></i>
+          <span>{{ language.language() === 'ta' ? 'படங்களைத் தேர்வு' : 'Choose Photos' }}</span>
+        </button>
+      </div>
+      <input #cameraInput type="file" accept="image/*" capture="environment" [disabled]="disabled() || selectingFiles() || uploadingAll() || existingLoading()" hidden (change)="onCameraSelected($event)" (cancel)="onCameraCancelled()" />
+      <input #galleryInput type="file" accept="image/*" multiple [disabled]="disabled() || selectingFiles() || uploadingAll() || existingLoading()" hidden (change)="onGallerySelected($event)" />
+      <p class="dropzone-hint" [id]="headingId() + '-hint'">
+        {{ language.language() === 'ta' ? 'JPEG, PNG, WebP அல்லது GIF. ஒவ்வொன்றும் ' + maxFileSizeMb() + ' MB வரை; மொத்தம் ' + maxFiles() + ' படங்கள் வரை.' : 'JPEG, PNG, WebP or GIF. Up to ' + maxFileSizeMb() + ' MB each; ' + maxFiles() + ' photos max.' }}
+      </p>
+    } @else {
+      <i class="bi bi-cloud-arrow-up dropzone-icon" aria-hidden="true"></i>
+      <p class="dropzone-text">Drag and drop {{ uploadType() === 'image' ? 'images' : 'files' }} here</p>
+      <button type="button" class="browse-button" [disabled]="disabled() || selectingFiles() || uploadingAll()" (click)="picker.click()">
+        Browse {{ uploadType() === 'image' ? 'images' : 'files' }}
+      </button>
+      <p class="dropzone-hint" [id]="headingId() + '-hint'">
+        @if (uploadType() === 'image') {
+          JPEG, PNG, WebP or GIF. Up to {{ maxFileSizeMb() }} MB each, {{ maxFiles() }} {{ maxFiles() === 1 ? 'image' : 'images' }} max.
+        } @else {
+          PDF or image. Up to {{ maxFileSizeMb() }} MB each.
+        }
+      </p>
+      <input
+        #picker
+        type="file"
+        class="visually-hidden-input"
+        [accept]="acceptAttr()"
+        [multiple]="multiple()"
+        [disabled]="disabled() || selectingFiles() || uploadingAll() || existingLoading()"
+        tabindex="-1"
+        aria-hidden="true"
+        (change)="onFilesSelected($event)"
+      />
+    }
   </div>
 
   @if (error(); as errorMessage) {
@@ -42,8 +62,27 @@
   @if (message(); as successMessage) {
     <p class="alert alert-success" role="status">{{ successMessage }}</p>
   }
+  @if (uploadProgress(); as progress) {
+    <p class="upload-status" role="status">{{ language.language() === 'ta' ? 'படம் ' + progress.current + ' / ' + progress.total + ' பதிவேற்றப்படுகிறது…' : 'Uploading photo ' + progress.current + ' of ' + progress.total + '…' }}</p>
+  }
 
   @if (drafts().length) {
+    @if (uploadType() === 'image' && allowPreview()) {
+      <ul class="photo-grid draft-grid" aria-live="polite" [attr.aria-label]="language.language() === 'ta' ? 'தேர்ந்தெடுத்த படங்கள்' : 'Selected photos'">
+        @for (draft of drafts(); track draft.id) {
+          <li class="photo-card">
+            @if (draft.previewUrl) { <img class="photo-thumb" [src]="draft.previewUrl" [alt]="draft.file.name" width="240" height="180" loading="lazy" /> }
+            <span class="photo-name">{{ draft.file.name }}</span>
+            <span class="photo-size">{{ formatSize(draft.file.size) }}@if (draft.status === 'uploading') { · {{ language.language() === 'ta' ? 'பதிவேற்றப்படுகிறது…' : 'Uploading…' }} }</span>
+            @if (draft.status === 'failed' && draft.error) { <span class="draft-error" role="alert">{{ draft.error }}</span> }
+            @if (draft.status === 'uploading') { <span class="progress" role="progressbar" [attr.aria-label]="(language.language() === 'ta' ? 'பதிவேற்றம்: ' : 'Uploading ') + draft.file.name" aria-valuetext="Uploading"></span> }
+            <button type="button" class="icon-button photo-remove" [attr.aria-label]="(language.language() === 'ta' ? 'படத்தை நீக்கு: ' : 'Remove photo: ') + draft.file.name" [disabled]="draft.status === 'uploading'" (click)="removeDraft(draft.id)">
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+          </li>
+        }
+      </ul>
+    } @else {
     <ul class="draft-list" aria-live="polite" aria-label="Selected files">
       @for (draft of drafts(); track draft.id) {
         <li class="draft">
@@ -62,22 +101,23 @@
               <span class="progress" role="progressbar" [attr.aria-label]="'Uploading ' + draft.file.name" aria-valuetext="Uploading"></span>
             }
           </span>
-          <button type="button" class="icon-button" [attr.aria-label]="'Remove ' + draft.file.name" [disabled]="draft.status === 'uploading'" (click)="removeDraft(draft.id)">
+          <button type="button" class="icon-button" [attr.aria-label]="(language.language() === 'ta' ? 'கோப்பை நீக்கு: ' : 'Remove ') + draft.file.name" [disabled]="draft.status === 'uploading'" (click)="removeDraft(draft.id)">
             <i class="bi bi-x-lg" aria-hidden="true"></i>
           </button>
         </li>
       }
     </ul>
+    }
 
-    @if (!autoUpload()) {
+    @if (!autoUpload() || failedDrafts().length) {
       <div class="actions">
-        <button type="button" class="secondary-action" (click)="clearAll()" [disabled]="uploadingAll()">Clear all</button>
+        @if (!autoUpload()) { <button type="button" class="secondary-action" (click)="clearAll()" [disabled]="uploadingAll()">Clear all</button> }
         @if (failedDrafts().length) {
-          <button type="button" class="secondary-action" (click)="upload()" [disabled]="uploadingAll()">Retry {{ failedDrafts().length }} failed</button>
+          <button type="button" class="secondary-action" (click)="upload()" [disabled]="uploadingAll() || existingLoading() || !entityId()">{{ language.language() === 'ta' ? 'தோல்வியடைந்த ' + failedDrafts().length + ' படங்களை மீண்டும் முயற்சி' : 'Retry ' + failedDrafts().length + ' failed' }}</button>
         }
-        <button type="button" class="primary-action" (click)="upload()" [disabled]="!canUpload()">
+        @if (!autoUpload()) { <button type="button" class="primary-action" (click)="upload()" [disabled]="!canUpload()">
           @if (uploadingAll()) { Uploading… } @else { Upload {{ readyCount() }} {{ readyCount() === 1 ? 'file' : 'files' }} }
-        </button>
+        </button> }
       </div>
     }
   }
@@ -85,6 +125,28 @@
   @if (existingLoading()) {
     <p class="existing-state" role="status">Loading images…</p>
   } @else if (existing().length) {
+    @if (uploadType() === 'image' && allowPreview()) {
+    <ul class="photo-grid existing-grid" [attr.aria-label]="language.language() === 'ta' ? 'பதிவேற்றிய படங்கள்' : 'Uploaded photos'">
+      @for (item of existing(); track item.asset.id) {
+        <li class="photo-card existing-photo-card">
+          <img class="photo-thumb" [src]="item.url" [alt]="item.alt" width="240" height="180" loading="lazy" />
+          <span class="photo-name">{{ item.fileName }}@if (item.primary) { <span class="primary-badge">{{ language.language() === 'ta' ? 'முதன்மை' : 'Primary' }}</span> }</span>
+          <span class="photo-size">{{ formatSize(item.size) }}</span>
+          <span class="existing-actions">
+            @if (allowReplace()) { <button type="button" class="secondary-action small" [disabled]="disabled()" (click)="requestReplace(item.asset.id, replacePicker)">{{ language.language() === 'ta' ? 'மாற்று' : 'Replace' }}</button> }
+            @if (allowDelete()) {
+              @if (confirmDeleteId() === item.asset.id) {
+                <button type="button" class="danger-action small" (click)="confirmDelete()">{{ language.language() === 'ta' ? 'நீக்க உறுதிசெய்' : 'Confirm delete' }}</button>
+                <button type="button" class="secondary-action small" (click)="cancelDelete()">{{ language.language() === 'ta' ? 'ரத்து' : 'Cancel' }}</button>
+              } @else {
+                <button type="button" class="secondary-action small" [disabled]="disabled()" (click)="requestDelete(item.asset.id)">{{ language.language() === 'ta' ? 'நீக்கு' : 'Delete' }}</button>
+              }
+            }
+          </span>
+        </li>
+      }
+    </ul>
+    } @else {
     <ul class="existing-list" aria-label="Uploaded images">
       @for (item of existing(); track item.asset.id) {
         <li class="existing-item">
@@ -111,6 +173,7 @@
         </li>
       }
     </ul>
+    }
   }
 
   <input

@@ -17,6 +17,12 @@
 .dropzone-icon { font-size: 1.75rem; color:var(--cdm-royal-blue); }
 .dropzone-text { margin: 0; color: var(--cdm-navy); font-weight: 650; }
 .dropzone-hint { margin: 0; color: var(--cdm-muted); font-size: .85rem; }
+.image-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; width: min(100%, 460px); }
+.image-action { display: inline-flex; min-width: 0; min-height: 52px; align-items: center; justify-content: center; gap: .5rem; padding: .65rem .75rem; border: 1px solid var(--cdm-border); border-radius: 10px; color: var(--cdm-navy); background: #fff; font: inherit; font-weight: 750; cursor: pointer; }
+.image-action i { color: #0DA68C; font-size: 1.15rem; }
+.camera-action { border-color: #0DA68C; }
+.image-action:disabled { opacity: .6; cursor: default; }
+.upload-status { margin: 0; color: var(--cdm-navy); font-size: .9rem; font-weight: 650; }
 
 .browse-button, .primary-action, .secondary-action, .danger-action {
   display: inline-flex; align-items: center; justify-content: center;
@@ -34,6 +40,13 @@
 .alert-success { border: 1px solid var(--cdm-green); background: var(--cdm-green-soft); color: var(--cdm-navy); }
 
 .draft-list, .existing-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 132px), 1fr)); gap: .65rem; list-style: none; margin: 0; padding: 0; }
+.photo-card { position: relative; display: grid; align-content: start; gap: .25rem; min-width: 0; padding: .45rem; border: 1px solid var(--cdm-border); border-radius: 12px; background: #fff; }
+.photo-thumb { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; background: var(--cdm-page); }
+.photo-name { min-width: 0; overflow-wrap: anywhere; padding-inline-end: 1.75rem; color: var(--cdm-navy); font-size: .84rem; font-weight: 650; }
+.photo-size { color: var(--cdm-muted); font-size: .78rem; }
+.photo-remove { position: absolute; top: .65rem; inset-inline-end: .65rem; background: #fff; box-shadow: 0 1px 4px rgb(0 32 80 / .18); }
+.existing-photo-card .existing-actions { justify-content: flex-start; padding: .2rem 0 0; }
 .draft, .existing-item {
   display: flex; align-items: center; gap: .75rem;
   padding: .5rem .6rem; border: 1px solid var(--cdm-border); border-radius: 12px; background: #fff;
@@ -65,6 +78,7 @@
 :is(button, input):focus-visible { outline: 3px solid var(--cdm-royal-blue); outline-offset: 2px; }
 
 @media (max-width: 560px) {
+  .image-action { min-height: 54px; padding-inline: .45rem; font-size: .9rem; }
   .draft, .existing-item { flex-wrap: wrap; }
   .draft-thumb, .existing-thumb { width: 72px; height: 72px; flex-basis: 72px; }
   .existing-actions { width: 100%; justify-content: flex-start; padding-inline-start: calc(72px + .75rem); }

@@ -10,10 +10,11 @@ import { MediaService } from '../core/services/media.service';
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="review-page cdm-form" aria-labelledby="review-title" [attr.aria-busy]="loading() || saving()">
+    <section class="review-page cdm-form" [class.pending-tab]="activeTab() === 'pending'" [class.published-tab]="activeTab() === 'published'" aria-labelledby="review-title" [attr.aria-busy]="loading() || saving()">
       <header class="page-header"><div><a class="back-link" routerLink="/admin"><i class="bi bi-arrow-left" aria-hidden="true"></i> Admin dashboard</a><p class="eyebrow">MODERATION</p><h1 id="review-title">Listing review</h1><p class="intro">Review submissions before they become public.</p></div><button type="button" class="secondary" (click)="load()"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Refresh</button></header>
       @if (loading()) { <p class="state" role="status">Loading review queue…</p> } @else if (errorMessage(); as message) { <div class="state"><p role="alert">{{ message }}</p><button type="button" (click)="load()">Try again</button></div> } @else {
-        <section class="filters" aria-labelledby="filter-title">
+         <nav class="review-tabs" role="tablist" aria-label="Listing review sections"><button type="button" role="tab" [class.active]="activeTab() === 'pending'" [attr.aria-selected]="activeTab() === 'pending'" (click)="setTab('pending')">Pending <span>{{ filteredPending().length }}</span></button><button type="button" role="tab" [class.active]="activeTab() === 'published'" [attr.aria-selected]="activeTab() === 'published'" (click)="setTab('published')">Published <span>{{ filteredPublished().length }}</span></button></nav>
+         <section class="filters" aria-labelledby="filter-title">
           <div><h2 id="filter-title">Review queue</h2><p>Find and review listings quickly.</p></div>
           <label>Search listings<input class="filter-input" type="search" [value]="filter()" (input)="setFilter($event)" placeholder="Title, provider or category" /></label>
           <label>Items per page<select class="filter-input" [value]="pageSize()" (change)="setPageSize($event)"><option value="6">6</option><option value="12">12</option><option value="24">24</option></select></label>
@@ -33,7 +34,51 @@ import { MediaService } from '../core/services/media.service';
     @media(max-width:800px) { .filters { grid-template-columns:1fr 1fr; }.filters > div { grid-column:1/-1; } }
      @media(max-width:600px) { .filters,.card-grid,.published-grid { grid-template-columns:1fr; }.filters > div { grid-column:auto; }.published-card { min-height:0; } }
      .review-table-section { padding:1.25rem; border:1px solid var(--cdm-border); border-radius:16px; background:#fff; }.data-table { overflow:hidden; margin-top:1rem; border:1px solid var(--cdm-border); border-radius:12px; }.data-table-head,.data-row { display:grid; grid-template-columns:1.35fr 1.1fr 1fr .8fr auto; align-items:center; gap:1rem; }.data-table-head { padding:.75rem .9rem; color:var(--cdm-muted); background:var(--cdm-btn-primary-light); font-size:.76rem; font-weight:800; }.data-row { width:100%; min-height:72px; padding:.75rem .9rem; border:0; border-top:1px solid var(--cdm-border); border-radius:0; color:var(--cdm-navy); text-align:left; }.data-row:first-of-type { border-top:0; }.data-row span { color:var(--cdm-muted); }.data-row:hover,.data-row.selected { background:var(--cdm-btn-primary-light); }.status-pill { width:max-content; padding:.25rem .5rem; border-radius:999px; color:var(--cdm-royal-blue)!important; background:#e7f0ff; font-size:.72rem; font-weight:700; }.published-status { color:#087f5b!important; background:#e5f7f1; }.row-action { color:var(--cdm-royal-blue)!important; font-weight:700; white-space:nowrap; }.row-button { min-height:40px; padding:.45rem .65rem; }
-     @media(max-width:800px) { .data-table { overflow-x:auto; }.data-table-head,.data-row { min-width:760px; } }
+      .review-tabs { display:none; }
+      @media(max-width:800px) {
+        .review-tabs { display:flex; gap:.35rem; padding:.25rem; border:1px solid var(--cdm-border); border-radius:12px; background:#f4f7fb; }
+        .review-tabs button { flex:1; min-height:44px; padding:.55rem .65rem; border:0; border-radius:9px; background:transparent; color:var(--cdm-muted); font-size:.88rem; }
+        .review-tabs button.active { background:#fff; color:var(--cdm-navy); box-shadow:0 1px 5px rgba(0,32,80,.12); }
+        .review-tabs span { display:inline-flex; align-items:center; justify-content:center; min-width:1.35rem; margin-left:.2rem; padding:.1rem .3rem; border-radius:999px; background:var(--cdm-btn-primary-light); color:var(--cdm-royal-blue); font-size:.75rem; }
+        .pending-tab > .published { display:none; }
+        .published-tab > .review-table-section { display:none; }
+        .published-tab > .detail { display:none; }
+        .published-tab > .review-image-panel { display:none; }
+        .review-page { min-width:0; }
+        .page-header { padding:1rem; border-radius:14px; }
+        .page-header > div { min-width:0; }
+        .page-header .secondary { flex:none; padding:.55rem .65rem; font-size:.86rem; }
+        .filters { grid-template-columns:1fr; padding:.85rem; }
+        .filters > div { grid-column:auto; }
+        .review-table-section,.published { padding:.85rem; min-width:0; }
+        .data-table { overflow:visible; margin-top:.75rem; border:0; }
+        .data-table-head { display:none; }
+        .data-row { display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; width:100%; min-width:0; min-height:0; gap:.45rem; margin-bottom:.7rem; padding:1rem; border:1px solid var(--cdm-border); border-radius:14px; background:#fff; box-shadow:0 2px 8px rgba(0,32,80,.05); text-align:left; overflow-wrap:anywhere; }
+        .data-row:last-child { margin-bottom:0; }
+        .data-row strong { max-width:100%; line-height:1.35; overflow-wrap:anywhere; }
+        .data-row span { max-width:100%; line-height:1.4; overflow-wrap:anywhere; }
+        .data-row:hover,.data-row.selected { border-color:var(--cdm-royal-blue); background:var(--cdm-btn-primary-light); }
+        .data-row .row-action { display:inline-flex; align-items:center; min-height:44px; padding:.55rem .75rem; border:1px solid var(--cdm-royal-blue); border-radius:9px; color:var(--cdm-royal-blue)!important; background:#fff; }
+        .data-row .row-button { min-height:44px; }
+        .section-heading { align-items:flex-start; }
+        .section-heading > span { white-space:nowrap; }
+        .detail,.review-image-panel { padding:.9rem; min-width:0; }
+        .detail h2 { overflow-wrap:anywhere; }
+        .detail textarea { box-sizing:border-box; max-width:100%; }
+        .detail .actions { display:flex; flex-direction:column; gap:.6rem; }
+        .detail .actions button { width:100%; min-height:48px; }
+        .review-images { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.5rem; }
+        .review-images img { width:100%; height:auto; aspect-ratio:3/2; object-fit:cover; }
+        .published-list .revision { min-width:0; }
+      }
+      @media(max-width:430px) {
+        :host { padding-block: .75rem 1.5rem; }
+        .review-page { gap:.75rem; }
+        .page-header { align-items:stretch; flex-direction:column; gap:.75rem; }
+        .page-header .secondary { width:100%; }
+        .data-row { padding:.85rem; }
+        .review-images { grid-template-columns:1fr; }
+      }
     :host { display:block; padding-block:1.5rem 2.5rem; }.review-page { display:grid; gap:1.25rem; }.page-header { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:clamp(1.5rem,4vw,2.5rem); border-radius:20px; background:linear-gradient(120deg,var(--cdm-btn-primary-light),var(--cdm-page)); border:1px solid var(--cdm-btn-primary-light); }.back-link { display:inline-flex; align-items:center; min-height:44px; color:var(--cdm-royal-blue); }.eyebrow { margin:0 0 .35rem; color:var(--cdm-muted); font-size:.72rem; font-weight:800; letter-spacing:.12em; } h1 { margin:0; color:var(--cdm-navy); font-size:clamp(1.7rem,4vw,2.5rem); }.intro,.provider,.published-list span { color:var(--cdm-muted); line-height:1.7; }.secondary,button { min-height:44px; border:1px solid var(--cdm-btn-primary); border-radius:9px; padding:.65rem .9rem; background:white; color:var(--cdm-royal-blue); font:inherit; font-weight:700; cursor:pointer; }.review-layout { display:grid; grid-template-columns:minmax(220px, .8fr) minmax(0,1.7fr); gap:1rem; }.queue,.detail,.published { padding:1.25rem; border:1px solid var(--cdm-border); border-radius:16px; background:white; }.queue h2,.detail h2,.published h2 { margin-top:0; color:var(--cdm-navy); }.queue { display:grid; align-content:start; gap:.5rem; }.queue-item { display:grid; gap:.2rem; min-height:70px; border:1px solid var(--cdm-border); border-radius:10px; padding:.75rem; background:white; text-align:left; color:var(--cdm-navy); }.queue-item span,.queue-item small { color:var(--cdm-muted); }.queue-item.selected { border-color:var(--cdm-royal-blue); background:var(--cdm-btn-primary-light); }.detail p { line-height:1.7; color:var(--cdm-muted); }.detail h3 { color:var(--cdm-navy); font-size:1rem; }.detail textarea { width:100%; border:1px solid var(--cdm-border); border-radius:9px; padding:.7rem; font:inherit; }.detail ul { color:var(--cdm-muted); line-height:1.7; }.check { display:flex; align-items:center; gap:.5rem; margin-block:1rem; color:var(--cdm-white); }.check input { width:1.1rem; height:1.1rem; }.actions { display:flex; flex-wrap:wrap; gap:.6rem; }.actions button { background:var(--cdm-btn-primary); color:var(--cdm-white); }.actions .approve { background:var(--cdm-btn-primary); }.actions .danger { background:#fff; color:#C92A2A; border-color:#C92A2A; }.state { padding:1.25rem; border:1px solid var(--cdm-border); border-radius:14px; background:white; color:var(--cdm-muted); line-height:1.7; }.state button { margin-top:.5rem; }.published-list { display:grid; gap:.5rem; }.published-list article { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; padding:.75rem; border-top:1px solid var(--cdm-border); }.published-list strong { margin-right:auto; color:var(--cdm-white); }.published-list button { color:#C92A2A; border-color:#C92A2A; } :is(a,button,textarea,input):focus-visible { outline:3px solid var(--cdm-royal-blue); outline-offset:3px; } @media(max-width:750px) { .page-header { flex-direction:column; }.review-layout { grid-template-columns:1fr; } }
   `,
 })
@@ -61,9 +106,12 @@ export class AdminReviewComponent implements OnInit {
   protected readonly publishedPageCount = computed(() => Math.max(1, Math.ceil(this.filteredPublished().length / this.pageSize())));
   protected readonly pagedPending = computed(() => this.pageItems(this.filteredPending(), this.pendingPage()));
   protected readonly pagedPublished = computed(() => this.pageItems(this.filteredPublished(), this.publishedPage()));
+  protected readonly activeTab = signal<'pending' | 'published'>('pending');
 
   ngOnInit(): void { void this.load(); }
   protected async select(item: ReviewListingRow): Promise<void> { this.selected.set(item); this.selectedImages.set([]); this.selectedImagesLoading.set(true); try { this.selectedImages.set(await this.media.getMediaGallery('listing', item.id)); } catch { this.selectedImages.set([]); } finally { this.selectedImagesLoading.set(false); } }
+  protected setTab(tab: 'pending' | 'published'): void { this.activeTab.set(tab); }
+  protected closeReview(): void { this.selected.set(null); this.selectedImages.set([]); }
   protected setFilter(event: Event): void { this.filter.set((event.target as HTMLInputElement).value); this.pendingPage.set(1); this.publishedPage.set(1); }
   protected setPageSize(event: Event): void { this.pageSize.set(Number((event.target as HTMLSelectElement).value)); this.pendingPage.set(1); this.publishedPage.set(1); }
   protected changePendingPage(delta: number): void { this.pendingPage.update((page) => Math.min(this.pendingPageCount(), Math.max(1, page + delta))); }

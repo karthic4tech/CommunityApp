@@ -9,7 +9,7 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./home/home.component').then((m) => m.HomeComponent),
     children: [
-      { path: '', pathMatch: 'full', loadComponent: () => import('./home/home-beta.component').then((m) => m.HomeBetaComponent) },
+      { path: '', pathMatch: 'full', loadComponent: () => import('./community-hub/community-hub.component').then((m) => m.CommunityHubComponent) },
       { path: 'beta', redirectTo: '', pathMatch: 'full' },
       { path: 'admin/login', loadComponent: () => import('./admin/admin-login.component').then((m) => m.AdminLoginComponent) },
       { path: 'admin/categories/new', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-category-form.component').then((m) => m.AdminCategoryFormComponent) },
@@ -32,6 +32,7 @@ export const routes: Routes = [
       { path: 'auth/forgot-password', loadComponent: () => import('./auth/auth-forgot-password.component').then((m) => m.AuthForgotPasswordComponent) },
       { path: 'auth/reset-password', loadComponent: () => import('./auth/auth-reset-password.component').then((m) => m.AuthResetPasswordComponent) },
       { path: 'account', canActivate: [userGuard], loadComponent: () => import('./account/account.component').then((m) => m.AccountComponent) },
+      { path: 'community-hub', redirectTo: '/', pathMatch: 'full' },
       { path: 'my-submissions', canActivate: [userGuard], loadComponent: () => import('./services/my-submissions.component').then((m) => m.MySubmissionsComponent) },
       { path: 'services/submit/:id', canActivate: [userGuard], loadComponent: () => import('./services/submit-service.component').then((m) => m.SubmitServiceComponent) },
       { path: 'services/submit', canActivate: [userGuard], loadComponent: () => import('./services/submit-service.component').then((m) => m.SubmitServiceComponent) },

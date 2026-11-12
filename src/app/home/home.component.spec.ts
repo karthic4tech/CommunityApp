@@ -44,24 +44,34 @@ describe('Home and Services navigation', () => {
 
   afterEach(() => TestBed.inject(LanguageService).setLanguage('ta'));
 
-  it('makes the homepage All Services and Essential Services actions navigate to separate routes', async () => {
+  it('uses Community Hub as the single Home destination and keeps service navigation available', async () => {
     const harness = await RouterTestingHarness.create('/');
     const element = harness.routeNativeElement!;
-    expect(element.querySelector<HTMLAnchorElement>('.service-actions a[href="/services"]')).not.toBeNull();
-    expect(element.querySelector<HTMLAnchorElement>('.service-actions a[href="/essential-services"]')).not.toBeNull();
-    expect(element.querySelector<HTMLAnchorElement>('.main-nav a[href="/services"]')).not.toBeNull();
+    expect(element.querySelector('app-community-hub .hub')).not.toBeNull();
+    expect(element.querySelector('app-community-hub h1')?.textContent).toContain('One Place for');
+    expect(element.querySelectorAll('.main-nav a[href="/"]')).toHaveLength(1);
+    expect(element.querySelector('.main-nav a[href="/community-hub"]')).toBeNull();
     expect(element.querySelector<HTMLAnchorElement>('.main-nav a[href="/essential-services"]')).not.toBeNull();
-    element.querySelector<HTMLAnchorElement>('.service-actions a[href="/services"]')!.click();
+    expect(element.querySelector<HTMLAnchorElement>('.main-nav a[href="/services"]')).not.toBeNull();
+    element.querySelector<HTMLAnchorElement>('.main-nav a[href="/services"]')!.click();
     await harness.fixture.whenStable();
     harness.detectChanges();
     expect(TestBed.inject(Router).url).toBe('/services');
     expect(element.querySelector('app-all-services h1')?.textContent).toContain('Explore Services Across Your Community');
     await harness.navigateByUrl('/');
-    harness.routeNativeElement!.querySelector<HTMLAnchorElement>('.service-actions a[href="/essential-services"]')!.click();
+    harness.routeNativeElement!.querySelector<HTMLAnchorElement>('.main-nav a[href="/essential-services"]')!.click();
     await harness.fixture.whenStable();
     harness.detectChanges();
     expect(TestBed.inject(Router).url).toBe('/essential-services');
     expect(element.querySelector('app-essential-services h1')?.textContent).toContain('Everything Important. Just a Click Away.');
+  });
+
+  it('redirects the previous Community Hub URL to Home', async () => {
+    const harness = await RouterTestingHarness.create('/community-hub');
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(TestBed.inject(Router).url).toBe('/');
+    expect(harness.routeNativeElement!.querySelector('app-community-hub .hub')).not.toBeNull();
   });
 
   it('shows sign-in and sign-up for visitors and a greeting for signed-in members', async () => {

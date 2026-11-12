@@ -1,0 +1,67 @@
+{
+  "description": "12 original service-specific vector-style illustrations, not web photographs. Commercial use: original generated graphics.",
+  "dimensions": "960x720",
+  "format": "WebP",
+  "files": [
+    {
+      "filename": "ac-repair.webp",
+      "category": "Home Services",
+      "label": "AC & Refrigeration"
+    },
+    {
+      "filename": "water-purifier.webp",
+      "category": "Home Services",
+      "label": "RO / Water Purifier"
+    },
+    {
+      "filename": "carpenter.webp",
+      "category": "Home Services",
+      "label": "Carpenter"
+    },
+    {
+      "filename": "marriage-hall.webp",
+      "category": "Marriage Services",
+      "label": "Marriage Halls"
+    },
+    {
+      "filename": "matrimony.webp",
+      "category": "Marriage Services",
+      "label": "Matrimony Services"
+    },
+    {
+      "filename": "wedding-catering.webp",
+      "category": "Marriage Services",
+      "label": "Wedding Catering"
+    },
+    {
+      "filename": "building-contractor.webp",
+      "category": "Construction Services",
+      "label": "Building Contractors"
+    },
+    {
+      "filename": "civil-engineer.webp",
+      "category": "Construction Services",
+      "label": "Civil Engineers"
+    },
+    {
+      "filename": "architect.webp",
+      "category": "Construction Services",
+      "label": "Architects"
+    },
+    {
+      "filename": "hospital.webp",
+      "category": "Medical & Emergency",
+      "label": "Hospitals"
+    },
+    {
+      "filename": "clinic.webp",
+      "category": "Medical & Emergency",
+      "label": "Clinics"
+    },
+    {
+      "filename": "ambulance.webp",
+      "category": "Medical & Emergency",
+      "label": "Ambulance Services"
+    }
+  ]
+}

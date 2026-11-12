@@ -61,6 +61,7 @@ const contactValidator = (type: AdvancedContact): ValidatorFn => (control: Abstr
           @if (pendingUpdate()) {
             <div class="notice notice--info" role="alert">An update is already awaiting review. Please return to My Services.</div>
           } @else {
+            @if (photoSetupNotice()) { <div class="notice notice--info" role="status">Your service is saved. You can add photos here now and anytime later.</div> }
             <form [formGroup]="form" (ngSubmit)="save()" novalidate>
               <fieldset class="field-group">
                 <legend>Provider type <span aria-hidden="true">*</span></legend>
@@ -158,13 +159,8 @@ const contactValidator = (type: AdvancedContact): ValidatorFn => (control: Abstr
                     <div class="field-group"><label for="provider_description">Provider bio <span class="optional">(Optional)</span></label><textarea id="provider_description" formControlName="provider_description" rows="2" maxlength="2000"></textarea></div>
                     <div class="field-group"><label for="address">Business address <span class="optional">(Optional)</span></label><input id="address" formControlName="address" maxlength="500" /></div>
                     <div class="field-group"><label for="postal_code">Postal code <span class="optional">(Optional)</span></label><input id="postal_code" formControlName="postal_code" maxlength="16" inputmode="numeric" /></div>
-                    @if (editing()) {
-                      @if (existingId(); as listingId) {
-                        <app-media-upload entityType="listing" [entityId]="listingId" [maxFiles]="10" [maxFileSizeMb]="5" [maxWidth]="1600" [autoUpload]="true" headingId="service-images-title" />
-                      }
-                    } @else {
-                      <p class="details-help">Save your service first, then return to add up to 10 service images.</p>
-                    }
+                    @if (!editing()) { <p class="details-help">Take or choose photos now. They will be uploaded after you save your service.</p> }
+                    <app-media-upload entityType="listing" [entityId]="existingId() ?? ''" [maxFiles]="10" [maxFileSizeMb]="5" [maxWidth]="1600" [autoUpload]="true" [showCameraActions]="true" headingId="service-images-title" />
                   </div>
                 }
               </section>
@@ -197,7 +193,7 @@ export class SubmitServiceComponent implements OnInit {
     provider_description: this.fb.control('', Validators.maxLength(2000)), whatsapp: this.fb.control('', indianWhatsAppValidator()), email: this.fb.control('', contactValidator('email')), website: this.fb.control('', contactValidator('website')), facebook: this.fb.control('', contactValidator('facebook')), instagram: this.fb.control('', contactValidator('instagram')), youtube: this.fb.control('', contactValidator('youtube')), address: this.fb.control(''), postal_code: this.fb.control(''),
   });
   protected readonly providerTypes = [{ value: 'individual', label: 'Individual' }, { value: 'business', label: 'Business' }, { value: 'organisation', label: 'Organisation' }] as const;
-  protected readonly loading = signal(true); protected readonly saving = signal(false); protected readonly success = signal(false); protected readonly errorMessage = signal<string | null>(null); protected readonly pendingUpdate = signal(false); protected readonly contactDetailsExpanded = signal(false); protected readonly businessDetailsExpanded = signal(false);
+  protected readonly loading = signal(true); protected readonly saving = signal(false); protected readonly success = signal(false); protected readonly errorMessage = signal<string | null>(null); protected readonly pendingUpdate = signal(false); protected readonly contactDetailsExpanded = signal(false); protected readonly businessDetailsExpanded = signal(false); protected readonly photoSetupNotice = signal(false);
   protected readonly categorySuggesting = signal(false); protected readonly categorySuggestion = signal<ServiceCategorySuggestion | null>(null); protected readonly categorySuggestionError = signal<string | null>(null); protected readonly locationRows = signal<DirectoryLocation[]>([]); protected readonly existingId = signal<string | null>(null); protected readonly existingStatus = signal<string | null>(null);
   protected readonly selectedParentSlug = signal('');
   protected readonly editing = computed(() => Boolean(this.existingId())); protected readonly published = computed(() => this.existingStatus() === 'published');
@@ -225,7 +221,17 @@ export class SubmitServiceComponent implements OnInit {
       // Keep compatibility with the currently deployed NOT NULL constraint. An empty
       // description is an intentional optional value, not generated placeholder text.
       const input: SubmissionFormInput = { listingId: this.existingId(), providerId: this.loadedProviderId, provider: { provider_type: raw.provider_type, display_name: raw.display_name.trim(), description: raw.provider_description.trim() || null, public_email: email, website_url: website, address: raw.address.trim() || null, postal_code: raw.postal_code.trim() || null, latitude: this.preservedCoordinates.latitude, longitude: this.preservedCoordinates.longitude }, listing: { category_id: raw.category_id, title: raw.title.trim(), description: raw.description.trim() }, contacts, locations: [{ location_id: raw.based_location_id, coverage_type: 'based_here' }, ...this.preservedLocations.filter(location => location.location_id !== raw.based_location_id)], submitForReview: true };
-      this.success.set(false); await (this.published() ? this.submissions.saveRevision(input) : this.submissions.save(input)); this.success.set(true);
+      this.success.set(false);
+      const creating = !this.existingId();
+      const savedListingId = await (this.published() ? this.submissions.saveRevision(input) : this.submissions.save(input));
+      if (creating) {
+        this.existingId.set(savedListingId);
+        this.existingStatus.set('pending_review');
+        this.businessDetailsExpanded.set(true);
+        this.photoSetupNotice.set(true);
+      } else {
+        this.success.set(true);
+      }
     } catch (error) { this.errorMessage.set(error instanceof Error ? error.message : 'Unable to submit this service. Please try again.'); } finally { this.saving.set(false); }
   }
   private async load(): Promise<void> { try { await this.categories.load(); this.locationRows.set(await this.directory.locations()); const id = this.route.snapshot.paramMap.get('id'); const verifiedPhone = this.auth.phoneVerified() ? this.auth.user()?.phone ?? '' : ''; if (!id) { this.form.controls.phone.setValue(verifiedPhone.replace(/^\+91/, '').replace(/\D/g, '').slice(-10)); return; } const existing = await this.submissions.getMine(id); if (!existing) throw new Error('This submission was not found.'); this.existingId.set(existing.id); this.existingStatus.set(existing.status); this.pendingUpdate.set(Boolean(existing.service_listing_revisions?.some(revision => revision.status === 'pending_review'))); this.loadedProviderId = existing.provider_id; this.preservedCoordinates = { latitude: existing.service_providers.latitude, longitude: existing.service_providers.longitude }; const path = findCategoryPathById(this.categories.categories(), existing.category_id); this.selectedParentSlug.set(path?.[0]?.slug ?? ''); this.preservedContacts = (existing.listing_contacts ?? []).map(contact => ({ ...contact })); this.preservedLocations = (existing.listing_locations ?? []).flatMap(location => location.locations?.id ? [{ location_id: location.locations.id, coverage_type: location.coverage_type }] : []); const contactValue = (type: SubmissionContactInput['contact_type']): string => this.preservedContacts.find(contact => contact.contact_type === type)?.contact_value ?? ''; const phone = contactValue('phone') || verifiedPhone; this.form.patchValue({ provider_type: existing.service_providers.provider_type as 'individual' | 'business' | 'organisation', display_name: existing.service_providers.display_name, provider_description: existing.service_providers.description ?? '', parent_slug: path?.[0]?.slug ?? '', category_id: existing.category_id, title: existing.title, description: existing.description ?? '', based_location_id: this.preservedLocations.find(location => location.coverage_type === 'based_here')?.location_id ?? '', phone: phone.replace(/^\+91/, '').replace(/\D/g, '').slice(-10), whatsapp: contactValue('whatsapp'), email: contactValue('email') || existing.service_providers.public_email || '', website: contactValue('website') || existing.service_providers.website_url || '', facebook: contactValue('facebook'), instagram: contactValue('instagram'), youtube: contactValue('youtube'), address: existing.service_providers.address ?? '', postal_code: existing.service_providers.postal_code ?? '' }); } catch (error) { this.errorMessage.set(error instanceof Error ? error.message : 'Unable to load the submission form.'); } finally { this.loading.set(false); } }

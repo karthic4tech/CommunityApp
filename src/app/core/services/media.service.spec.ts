@@ -61,6 +61,7 @@ describe('MediaService', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.stubGlobal('createImageBitmap', vi.fn().mockResolvedValue({ width: 640, height: 480, close: vi.fn() }));
     upload.mockResolvedValue({ data: {}, error: null });
     remove.mockResolvedValue({ data: [], error: null });
     getPublicUrl.mockReturnValue({ data: { publicUrl: 'https://cdn.example.test/public.webp' } });
@@ -105,6 +106,11 @@ describe('MediaService', () => {
   it('rejects unsupported file types', () => {
     expect(() => service.validateFileType(new File(['x'], 'a.exe', { type: 'application/x-msdownload' }))).toThrow(/not a supported file type/i);
     expect(() => service.validateFileType(imageFile())).not.toThrow();
+  });
+
+  it('gives HEIC and HEIF files an explicit conversion message', () => {
+    expect(() => service.validateFileType(new File(['x'], 'phone-photo.heic', { type: 'image/heic' }))).toThrow(/HEIC\/HEIF.*convert.*JPEG/i);
+    expect(() => service.validateFileType(new File(['x'], 'phone-photo.HEIF', { type: '' }))).toThrow(/HEIC\/HEIF.*convert.*JPEG/i);
   });
 
   it('enforces the configured size limit and the absolute cap', () => {

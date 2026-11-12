@@ -70,6 +70,11 @@ export class MediaService {
   // Validation
   // ---------------------------------------------------------------
   validateFileType(file: File, allowedTypes: readonly string[] = PUBLIC_IMAGE_MIME_TYPES): void {
+    const mime = file.type.toLowerCase();
+    const fileName = file.name.toLowerCase();
+    if (mime.includes('heic') || mime.includes('heif') || /\.(heic|heif)$/.test(fileName)) {
+      throw new Error('HEIC/HEIF photos are not supported yet. Choose JPEG, PNG, WebP or GIF, or convert the photo to JPEG first.');
+    }
     if (!allowedTypes.includes(file.type)) {
       throw new Error(`"${file.name || 'This file'}" is not a supported file type.`);
     }
@@ -78,7 +83,7 @@ export class MediaService {
   validateFileSize(file: File, maxFileBytes = ABSOLUTE_MAX_PUBLIC_BYTES, absoluteLimit = ABSOLUTE_MAX_PUBLIC_BYTES): void {
     const limit = Math.min(maxFileBytes, absoluteLimit);
     if (file.size > limit) {
-      throw new Error('The file size must not exceed the allowed limit.');
+      throw new Error(`The file size must not exceed ${Math.floor(limit / (1024 * 1024))} MB.`);
     }
   }
 
@@ -86,9 +91,9 @@ export class MediaService {
   async validateImageDimensions(file: File): Promise<{ width: number; height: number } | null> {
     if (!file.type.startsWith('image/')) return null;
     try {
-      const bitmap = await createImageBitmap(file);
-      const dims = { width: bitmap.width, height: bitmap.height };
-      bitmap.close();
+      const decoded = await this.decodeImage(file);
+      const dims = { width: decoded.source.width, height: decoded.source.height };
+      decoded.release();
       return dims;
     } catch {
       throw new Error('Please select a valid image file.');
@@ -161,7 +166,7 @@ export class MediaService {
       if (uploadError) {
         if (options.signal?.aborted) throw new Error('Upload cancelled.');
         console.error('Storage upload failed', { bucket, objectPath, code: (uploadError as { code?: string }).code, message: uploadError.message });
-        throw new Error('Unable to upload image. Please try again.');
+        throw new Error('Unable to upload image. Check your connection and try again.');
       }
 
       const asset = await this.insertAsset(bucket, objectPath, file, visibility, options, userId, width, height, mediaType ?? (file.type.startsWith('image/') ? 'image' : 'document'));
@@ -313,7 +318,7 @@ export class MediaService {
   async getMediaGallery(entityType: MediaEntityType, entityId: string): Promise<MediaGalleryItem[]> {
     const rows = await this.linkedRows(entityType, entityId);
     const items: MediaGalleryItem[] = [];
-    for (const { asset, isPrimary } of rows) {
+    for (const { asset, isPrimary, sortOrder } of rows) {
       const url = await this.galleryUrl(asset);
       if (!url) continue;
       items.push({
@@ -323,6 +328,7 @@ export class MediaService {
         size: asset.file_size_bytes,
         alt: asset.alt_text || asset.original_filename || 'Uploaded image',
         primary: isPrimary,
+        sortOrder,
       });
     }
     return items;
@@ -344,13 +350,13 @@ export class MediaService {
     return (await this.linkedRows(entityType, entityId)).map((row) => row.asset);
   }
 
-  private async linkedRows(entityType: MediaEntityType, entityId: string): Promise<{ asset: MediaAsset; isPrimary: boolean }[]> {
+  private async linkedRows(entityType: MediaEntityType, entityId: string): Promise<{ asset: MediaAsset; isPrimary: boolean; sortOrder: number }[]> {
     if (!UUID.test(entityId)) return [];
     if (entityType === 'profile') {
       const { data, error } = await this.supabase.client.from('profiles').select('avatar_path').eq('id', entityId).maybeSingle<{ avatar_path: string | null }>();
       if (error || !data?.avatar_path) return [];
       const { data: asset } = await this.supabase.client.from('media_assets').select(ASSET_COLUMNS).eq('storage_path', data.avatar_path).is('deleted_at', null).maybeSingle<MediaAsset>();
-      return asset ? [{ asset, isPrimary: true }] : [];
+      return asset ? [{ asset, isPrimary: true, sortOrder: 0 }] : [];
     }
     const isProvider = entityType === 'provider';
     if (!isProvider && entityType !== 'listing') return []; // events, announcements, categories, banners: not implemented yet
@@ -364,8 +370,8 @@ export class MediaService {
     if (isProvider) query = query.order('role', { ascending: true });
     const { data, error } = await query.order('sort_order', { ascending: true });
     if (error) throw new Error('Unable to load the images.');
-    const rows = (data ?? []) as unknown as { is_primary: boolean; media_assets: MediaAsset }[];
-    return rows.map((row) => ({ asset: row.media_assets, isPrimary: row.is_primary }));
+    const rows = (data ?? []) as unknown as { is_primary: boolean; sort_order: number; media_assets: MediaAsset }[];
+    return rows.map((row) => ({ asset: row.media_assets, isPrimary: row.is_primary, sortOrder: row.sort_order }));
   }
 
   // ---------------------------------------------------------------
@@ -542,27 +548,52 @@ export class MediaService {
       return { file };
     }
     if (maxWidth <= 0) return { file };
+    let decoded: Awaited<ReturnType<MediaService['decodeImage']>> | null = null;
     try {
-      const bitmap = await createImageBitmap(file);
-      const scale = Math.min(1, maxWidth / Math.max(bitmap.width, bitmap.height));
-      const width = Math.max(1, Math.round(bitmap.width * scale));
-      const height = Math.max(1, Math.round(bitmap.height * scale));
+      decoded = await this.decodeImage(file);
+      const scale = Math.min(1, maxWidth / Math.max(decoded.source.width, decoded.source.height));
+      const width = Math.max(1, Math.round(decoded.source.width * scale));
+      const height = Math.max(1, Math.round(decoded.source.height * scale));
       if (scale === 1 && file.type === 'image/webp' && file.size <= ABSOLUTE_MAX_PUBLIC_BYTES / 2) {
-        bitmap.close();
         return { file, width, height };
       }
       const canvas = this.document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
       const context = canvas.getContext('2d');
-      if (!context) { bitmap.close(); return { file, width, height }; }
-      context.drawImage(bitmap, 0, 0, width, height);
-      bitmap.close();
+      if (!context) return { file, width, height };
+      context.drawImage(decoded.source, 0, 0, width, height);
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', 0.8));
       if (!blob || blob.type !== 'image/webp' || blob.size >= file.size) return { file, width, height };
       return { file: new File([blob], file.name.replace(/\.[^.]+$/, '') + '.webp', { type: 'image/webp' }), width, height };
     } catch {
       return { file };
+    } finally {
+      decoded?.release();
+    }
+  }
+
+  /** Prefer createImageBitmap; HTMLImageElement is a Safari/older-browser fallback. */
+  private async decodeImage(file: File): Promise<{ source: ImageBitmap | HTMLImageElement; release: () => void }> {
+    try {
+      const bitmap = await createImageBitmap(file);
+      return { source: bitmap, release: () => bitmap.close() };
+    } catch {
+      const view = this.document.defaultView;
+      if (!view) throw new Error('Image decoding is unavailable.');
+      const objectUrl = view.URL.createObjectURL(file);
+      const image = this.document.createElement('img');
+      try {
+        await new Promise<void>((resolve, reject) => {
+          image.onload = () => resolve();
+          image.onerror = () => reject(new Error('Unable to decode image.'));
+          image.src = objectUrl;
+        });
+      } catch (error) {
+        view.URL.revokeObjectURL(objectUrl);
+        throw error;
+      }
+      return { source: image, release: () => view.URL.revokeObjectURL(objectUrl) };
     }
   }
 }

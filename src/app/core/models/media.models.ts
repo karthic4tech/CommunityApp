@@ -63,6 +63,7 @@ export interface MediaGalleryItem {
   size: number | null;
   alt: string;
   primary: boolean;
+  sortOrder?: number;
 }
 
 export interface UploadImageOptions {

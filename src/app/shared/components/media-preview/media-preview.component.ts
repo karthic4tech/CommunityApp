@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { MediaGalleryItem } from '../../../core/models/media.models';
 
@@ -18,9 +18,11 @@ import { MediaGalleryItem } from '../../../core/models/media.models';
   template: `
     <button type="button" class="backdrop" aria-label="Close image viewer" (click)="close()"></button>
 
-    <figure class="stage">
-      <img class="stage-image" [src]="current()?.url" [alt]="current()?.alt ?? 'Uploaded image'" />
-      <figcaption class="stage-caption">{{ current()?.alt }}</figcaption>
+     <figure class="stage">
+       @if (loading()) { <p class="viewer-status" role="status">Loading image…</p> }
+       @if (loadError()) { <p class="viewer-status viewer-error" role="alert">Unable to load this image.</p> }
+       @if (!loadError()) { <img class="stage-image" [class.is-loading]="loading()" [src]="current()?.url" [alt]="current()?.alt ?? 'Uploaded image'" (load)="markLoaded()" (error)="markFailed()" /> }
+       <figcaption class="stage-caption">{{ current()?.alt }}</figcaption>
     </figure>
 
     <button type="button" class="close-button" #closeButton aria-label="Close image viewer" (click)="close()">
@@ -41,7 +43,7 @@ import { MediaGalleryItem } from '../../../core/models/media.models';
     :host { position: fixed; inset: 0; z-index: 1050; display: contents; }
     .backdrop { position: fixed; inset: 0; border: 0; padding: 0; background: rgb(0 0 0 / .72); cursor: zoom-out; }
     .stage { position: fixed; inset: 4vh 4vw; display: grid; grid-template-rows: 1fr auto; gap: .5rem; margin: 0; pointer-events: none; }
-    .stage-image { max-width: 100%; max-height: 100%; place-self: center; pointer-events: auto; border-radius: 8px; box-shadow: 0 8px 40px rgb(0 0 0 / .5); }
+     .stage-image { max-width: 100%; max-height: 100%; place-self: center; pointer-events: auto; border-radius: 8px; box-shadow: 0 8px 40px rgb(0 0 0 / .5); object-fit: contain; transition: opacity .15s ease; } .stage-image.is-loading { opacity:0; } .viewer-status { place-self:center; margin:0; padding:.75rem 1rem; border-radius:10px; background:rgb(0 0 0 / .55); color:#fff; } .viewer-error { background:#6f1d1b; }
     .stage-caption { place-self: center; margin: 0; padding: .4rem .8rem; border-radius: 99px; background: rgb(0 0 0 / .55); color: #fff; font-size: .9rem; overflow-wrap: anywhere; }
     .close-button { position: fixed; top: 1rem; right: 1rem; }
     .nav, .close-button {
@@ -71,6 +73,8 @@ export class MediaPreviewComponent {
     return Math.min(Math.max(0, this.index()), Math.max(0, this.items().length - 1));
   });
   protected readonly current = computed<MediaGalleryItem | null>(() => this.items()[this.effectiveIndex()] ?? null);
+  protected readonly loading = signal(true);
+  protected readonly loadError = signal(false);
 
   private readonly restoredFocus: HTMLElement | null;
 
@@ -78,6 +82,7 @@ export class MediaPreviewComponent {
     const previous = this.document.activeElement;
     this.document.documentElement.style.overflow = 'hidden';
     this.restoredFocus = previous instanceof HTMLElement ? previous : null;
+    effect(() => { this.current(); this.loading.set(true); this.loadError.set(false); });
     // Move focus into the dialog.
     queueMicrotask(() => this.document.querySelector<HTMLButtonElement>('app-media-preview .close-button')?.focus());
   }
@@ -92,6 +97,9 @@ export class MediaPreviewComponent {
     this.indexOverride.set((this.effectiveIndex() + 1) % this.items().length);
   }
 
+  protected markLoaded(): void { this.loading.set(false); }
+  protected markFailed(): void { this.loading.set(false); this.loadError.set(true); }
+
   protected previous(): void {
     this.indexOverride.set((this.effectiveIndex() - 1 + this.items().length) % this.items().length);
   }
@@ -100,5 +108,12 @@ export class MediaPreviewComponent {
     if (event.key === 'Escape') { event.preventDefault(); this.close(); }
     else if (event.key === 'ArrowRight') { event.preventDefault(); this.next(); }
     else if (event.key === 'ArrowLeft') { event.preventDefault(); this.previous(); }
+    else if (event.key === 'Tab') {
+      const buttons = Array.from(this.document.querySelectorAll<HTMLButtonElement>('app-media-preview button:not([disabled])'));
+      if (buttons.length < 2) return;
+      const first = buttons[0]; const last = buttons[buttons.length - 1];
+      if (event.shiftKey && this.document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && this.document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
   }
 }

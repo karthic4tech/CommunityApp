@@ -36,16 +36,23 @@ import { SearchableSelectComponent } from '../shared/components/searchable-selec
       </section>
 
       <section class="mp-categories" aria-labelledby="mp-categories-title">
-        <header class="mp-section-head"><div><p class="mp-eyebrow">BROWSE THE MARKET</p><h2 id="mp-categories-title">Shop by category</h2><p>Explore products from your community.</p></div><a routerLink="/marketplace" class="mp-view-link">All categories <i class="bi bi-arrow-right" aria-hidden="true"></i></a></header>
-        @if (categoriesLoading()) { <p class="mp-state" role="status">Loading categories…</p> }
-        @else if (error(); as message) { <div class="mp-state mp-error"><p role="alert">{{ message }}</p><button type="button" class="mp-secondary" (click)="load()">Try again</button></div> }
-        @else if (categories().length) {
-          <div class="mp-category-grid">
-            @for (category of categories(); track category.id) {
-              <a class="mp-category-tile" [routerLink]="['/marketplace/category', category.slug]"><span><i class="bi" [class]="category.icon || 'bi bi-grid'" aria-hidden="true"></i></span><strong>{{ category.name }}</strong><small>{{ category.subcategories.length }} subcategories</small></a>
-            }
-          </div>
-        } @else { <p class="mp-state" role="status">No marketplace categories are available right now.</p> }
+        <header class="mp-section-head">
+          <div><p class="mp-eyebrow">BROWSE THE MARKET</p><h2 id="mp-categories-title">Shop by category</h2><p>Explore products from your community.</p></div>
+          <details class="mp-category-disclosure">
+            <summary class="mp-category-menu-toggle"><i class="bi bi-list" aria-hidden="true"></i><span>Browse categories</span><i class="bi bi-chevron-down mp-category-chevron" aria-hidden="true"></i></summary>
+            <div class="mp-category-menu">
+              @if (categoriesLoading()) { <p class="mp-state" role="status">Loading categories…</p> }
+              @else if (error(); as message) { <div class="mp-state mp-error"><p role="alert">{{ message }}</p><button type="button" class="mp-secondary" (click)="load()">Try again</button></div> }
+              @else if (categories().length) {
+                <div class="mp-category-grid" aria-label="Marketplace categories">
+                  @for (category of categories(); track category.id) {
+                    <a class="mp-category-tile" [routerLink]="['/marketplace/category', category.slug]"><span><i class="bi" [class]="category.icon || 'bi bi-grid'" aria-hidden="true"></i></span><strong>{{ category.name }}</strong><small>{{ category.subcategories.length }} subcategories</small></a>
+                  }
+                </div>
+              } @else { <p class="mp-state" role="status">No marketplace categories are available right now.</p> }
+            </div>
+          </details>
+        </header>
       </section>
 
       @if (searched()) {

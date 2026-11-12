@@ -1,17 +1,19 @@
 import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ElementRef, afterRenderEffect, computed, effect, inject, input, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ServiceListing, contactHref } from '../../core/models/service-listing';
+import { ListingContact, ServiceListing, contactHref } from '../../core/models/service-listing';
 import { LanguageService } from '../../core/services/language.service';
 import { ServiceDirectoryService } from '../../core/services/service-directory.service';
 import { MediaService } from '../../core/services/media.service';
+import { MediaGalleryItem } from '../../core/models/media.models';
+import { MediaPreviewComponent } from '../../shared/components/media-preview/media-preview.component';
 
 @Component({
   selector: 'app-listing-summary',
-  imports: [RouterLink, NgOptimizedImage],
+  imports: [RouterLink, NgOptimizedImage, MediaPreviewComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <article [class.detail-view]="detail()">
+    <article [class.detail-view]="detail()" [class.compact-view]="compact()">
       @if (detail()) {
         <h1 #heading tabindex="-1">{{ listing().service_providers.display_name }}</h1>
         <h2>{{ listing().title }}</h2>
@@ -28,7 +30,7 @@ import { MediaService } from '../../core/services/media.service';
       @if (visibleImages().length) {
         <div [class.gallery]="detail()">
           @for (image of visibleImages(); track image) {
-            <div class="image"><img [ngSrc]="image" fill [alt]="listing().title" sizes="(max-width: 650px) 100vw, 33vw" (error)="hideImage(image)"></div>
+             <button type="button" class="image image-button" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவை படத்தைப் பார்க்கவும்' : 'View service image'" (click)="openPreview(image)"><img [ngSrc]="image" fill [alt]="listing().title" sizes="(max-width: 650px) 100vw, 33vw" (error)="hideImage(image)"></button>
           }
         </div>
       } @else {
@@ -53,17 +55,39 @@ import { MediaService } from '../../core/services/media.service';
       } @else { <p>{{ i18n.language() === 'ta' ? 'இடம் குறிப்பிடப்படவில்லை' : 'Location not provided' }}</p> }
       <div class="actions">
         @for (contact of contacts(); track $index) {
-          <a [href]="contact.href">
-            {{ contact.label }}<span class="contact-value">{{ contact.value }}</span>
-          </a>
+          @if (contact.type === 'phone') {
+            <button type="button" class="contact-trigger" [attr.aria-label]="(i18n.language() === 'ta' ? 'தொடர்பு முறையைத் தேர்ந்தெடுக்கவும்: ' : 'Choose how to contact: ') + contact.value" (click)="openContactOptions(contact)">
+              {{ contact.label }}<span class="contact-value">{{ contact.value }}</span>
+            </button>
+          } @else {
+            <a [href]="contact.href">
+              {{ contact.label }}<span class="contact-value">{{ contact.value }}</span>
+            </a>
+          }
         }
         @if (mapsHref(); as maps) { <a [href]="maps" target="_blank" rel="noopener noreferrer">{{ i18n.language() === 'ta' ? 'Google Maps வழிகள்' : 'Google Maps directions' }}</a> }
         @if (!detail()) {
           <a [routerLink]="listing().slug ? ['/services', listing().slug] : ['/providers', listing().id]">{{ i18n.language() === 'ta' ? 'விவரங்கள்' : 'View details' }}</a>
         }
       </div>
+      <dialog #contactDialog class="contact-dialog" [attr.aria-labelledby]="'contact-options-title-' + listing().id" [attr.aria-describedby]="'contact-options-description-' + listing().id" (close)="onContactDialogClosed()">
+        @if (contactOptions(); as options) {
+          <h2 [id]="'contact-options-title-' + listing().id">{{ i18n.language() === 'ta' ? 'தொடர்பு கொள்ளுங்கள்' : 'Contact this service' }}</h2>
+          <p [id]="'contact-options-description-' + listing().id">{{ i18n.language() === 'ta' ? 'அழைக்கவா அல்லது WhatsApp மூலம் செய்தி அனுப்பவா?' : 'Would you like to call or message on WhatsApp?' }}</p>
+          <div class="contact-dialog__actions">
+            <a class="contact-dialog__action" [href]="options.callHref" (click)="closeContactOptions()"><i class="bi bi-telephone" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'அழைக்க' : 'Call' }}</span><span class="contact-value">{{ options.phone }}</span></a>
+            @if (options.whatsappHref) {
+              <a class="contact-dialog__action whatsapp-action" [href]="options.whatsappHref" target="_blank" rel="noopener noreferrer" (click)="closeContactOptions()"><i class="bi bi-whatsapp" aria-hidden="true"></i><span>WhatsApp</span><span class="contact-value">{{ options.whatsappPhone }}</span></a>
+            }
+          </div>
+          <button type="button" class="contact-dialog__cancel" (click)="closeContactOptions()">{{ i18n.language() === 'ta' ? 'ரத்து' : 'Cancel' }}</button>
+        }
+      </dialog>
       @if (detail() && !contacts().length) {
         <p role="status">{{ i18n.language() === 'ta' ? 'பொது தொடர்பு விவரங்கள் இல்லை.' : 'No public contact details available.' }}</p>
+      }
+      @if (previewIndex() !== null && previewItems().length) {
+        <app-media-preview [items]="previewItems()" [index]="previewIndex()!" (closed)="closePreview()" />
       }
     </article>
   `,
@@ -78,7 +102,7 @@ import { MediaService } from '../../core/services/media.service';
     .description { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:3; white-space:pre-line; line-height:1.65; }
      p,.places { color:var(--cdm-muted); line-height:1.65; font-size:.86rem; } .address { white-space:pre-line; }
      .places { padding-left:1.15rem; } .image { position:relative; aspect-ratio:16/10; margin-block:.7rem; overflow:hidden; border-radius:10px; background:var(--cdm-page); } .image-placeholder { display:flex; align-items:center; justify-content:center; gap:.5rem; min-height:54px; margin-block:.45rem; padding:.6rem; border:1px dashed var(--cdm-border); border-radius:10px; background:var(--cdm-page); color:var(--cdm-muted); font-size:.75rem; text-align:center; } .detail-view .image-placeholder { min-height:130px; margin-block:.7rem; }
-    img { object-fit:cover; border-radius:10px; } .gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:1rem; }
+     img { object-fit:cover; border-radius:10px; } .image-button { display:block; width:100%; padding:0; border:0; color:inherit; cursor:zoom-in; text-align:initial; } .image-button:focus-visible { outline:3px solid var(--cdm-royal-blue); outline-offset:3px; } .gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:1rem; }
      .detail-view { padding:clamp(1.1rem,3vw,1.75rem); border-radius:16px; }
      .detail-view h1 { color:var(--cdm-navy); font-weight:760; }
      .detail-view h2 { color:var(--cdm-navy); margin-bottom:.75rem; }
@@ -86,14 +110,26 @@ import { MediaService } from '../../core/services/media.service';
      .detail-view .image { max-height:475px; }
      .detail-view .image img { object-fit:contain; background:#fff; }
      .actions { display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.4rem; }
-    .actions a { display:inline-flex; flex-direction:column; justify-content:center; min-height:42px; padding:.5rem .7rem; border:1px solid var(--cdm-border); border-radius:9px; color:var(--cdm-navy); background:#fff; text-decoration:none; font-size:.8rem; font-weight:650; }
-    .actions a:hover { border-color:var(--cdm-green); background:var(--cdm-green-soft); }
-    .contact-value { font-size:.8rem; font-weight:400; } a:focus-visible { outline:3px solid color-mix(in srgb, var(--cdm-green) 31%, transparent); outline-offset:3px; }
+     .actions a, .contact-trigger { display:inline-flex; flex-direction:column; justify-content:center; min-height:42px; padding:.5rem .7rem; border:1px solid var(--cdm-border); border-radius:9px; color:var(--cdm-navy); background:#fff; text-decoration:none; font:inherit; font-size:.8rem; font-weight:650; text-align:start; cursor:pointer; }
+     .actions a:hover, .contact-trigger:hover { border-color:var(--cdm-green); background:var(--cdm-green-soft); }
+     .contact-value { font-size:.8rem; font-weight:400; }
+     .contact-dialog { width:min(92vw, 27rem); max-width:27rem; padding:1.25rem; border:1px solid var(--cdm-border); border-radius:14px; color:var(--cdm-navy); background:#fff; box-shadow:0 18px 55px rgb(0 32 80 / .22); }
+     .contact-dialog::backdrop { background:rgb(0 32 80 / .48); }
+     .contact-dialog h2 { margin:0 0 .4rem; font-size:1.2rem; }
+     .contact-dialog p { margin:0 0 1rem; }
+     .contact-dialog__actions { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:.6rem; }
+     .contact-dialog__action { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; min-height:58px; padding:.65rem .75rem; border:1px solid var(--cdm-border); border-radius:10px; color:var(--cdm-navy); background:#fff; text-decoration:none; font-size:.85rem; font-weight:700; }
+     .contact-dialog__action i { color:var(--cdm-royal-blue); font-size:1.1rem; }
+     .contact-dialog__action.whatsapp-action i { color:#0DA68C; }
+     .contact-dialog__action:hover { border-color:var(--cdm-green); background:var(--cdm-green-soft); }
+     .contact-dialog__cancel { display:block; min-height:44px; margin:.85rem 0 0 auto; padding:.45rem .75rem; border:1px solid var(--cdm-border); border-radius:8px; color:var(--cdm-navy); background:#fff; font:inherit; font-weight:650; cursor:pointer; }
+     :is(a,button):focus-visible { outline:3px solid color-mix(in srgb, var(--cdm-green) 45%, transparent); outline-offset:3px; }
   `,
 })
 export class ListingSummaryComponent {
   readonly listing = input.required<ServiceListing>();
   readonly detail = input(false);
+  readonly compact = input(false);
   protected readonly i18n = inject(LanguageService);
   private readonly directory = inject(ServiceDirectoryService);
   private readonly media = inject(MediaService);
@@ -113,6 +149,13 @@ export class ListingSummaryComponent {
     const available = this.images().filter(image => !failed.has(image));
     return this.detail() ? available : available.slice(0, 1);
   });
+  protected readonly previewItems = computed<MediaGalleryItem[]>(() => this.visibleImages().map((url, index) => ({
+    asset: { id: `${this.listing().id}-image-${index}`, original_filename: null, stored_filename: null, bucket_name: null, storage_path: url, media_type: 'image', mime_type: null, file_size_bytes: null, file_extension: null, width: null, height: null, alt_text: this.listing().title, caption: null, visibility: 'public', upload_status: 'uploaded', owner_user_id: null, created_at: '', updated_at: '', deleted_at: null },
+    url, fileName: this.listing().title, size: null, alt: this.listing().title, primary: index === 0,
+  })));
+  protected readonly previewIndex = signal<number | null>(null);
+  protected readonly contactOptions = signal<{ phone: string; callHref: string; whatsappPhone: string; whatsappHref: string | null } | null>(null);
+  private readonly contactDialog = viewChild<ElementRef<HTMLDialogElement>>('contactDialog');
   protected readonly mapsHref = computed(() => {
     const { latitude, longitude } = this.listing().service_providers;
     if (typeof latitude !== 'number' || typeof longitude !== 'number' || !Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
@@ -125,20 +168,22 @@ export class ListingSummaryComponent {
   protected readonly contacts = computed(() => {
     const provider = this.listing().service_providers;
     const rows = [...this.listing().listing_contacts].filter(contact => contact.is_public).sort((a, b) => a.sort_order - b.sort_order);
+    const hasPhone = rows.some(contact => contact.contact_type === 'phone' && contactHref('phone', contact.contact_value) !== null);
     if (provider.public_email) rows.push({ contact_type: 'email', contact_value: provider.public_email, is_public: true, sort_order: 0 });
     if (provider.website_url) rows.push({ contact_type: 'website', contact_value: provider.website_url, is_public: true, sort_order: 0 });
     const seen = new Set<string>();
     return rows.flatMap(contact => {
+      if (hasPhone && contact.contact_type === 'whatsapp') return [];
       const href = contactHref(contact.contact_type, contact.contact_value);
       if (!href || seen.has(href)) return [];
       seen.add(href);
       const tamil = this.i18n.language() === 'ta';
       const labels = {
-         phone: tamil ? 'அழைக்க' : 'Call', whatsapp: tamil ? 'WhatsApp விசாரணை' : 'Enquire via WhatsApp',
+          phone: tamil ? 'அழை / WhatsApp' : 'Call or WhatsApp', whatsapp: tamil ? 'WhatsApp விசாரணை' : 'Enquire via WhatsApp',
          email: tamil ? 'மின்னஞ்சல் விசாரணை' : 'Enquire by email', website: tamil ? 'இணையதளம்' : 'Website',
          facebook: 'Facebook', instagram: 'Instagram', youtube: 'YouTube', other: '',
       };
-      return [{ href, value: contact.contact_value, label: labels[contact.contact_type] }];
+      return [{ href, value: contact.contact_value, label: labels[contact.contact_type], type: contact.contact_type }];
     });
   });
 
@@ -163,4 +208,16 @@ export class ListingSummaryComponent {
   }
 
   protected hideImage(image: string): void { this.failedImages.update(images => [...images, image]); }
+  protected openPreview(image: string): void { const index = this.visibleImages().indexOf(image); if (index >= 0) this.previewIndex.set(index); }
+  protected closePreview(): void { this.previewIndex.set(null); }
+  protected openContactOptions(contact: { type: ListingContact['contact_type']; value: string; href: string }): void {
+    if (contact.type !== 'phone') return;
+    const whatsappContact = this.listing().listing_contacts.find(item => item.is_public && item.contact_type === 'whatsapp');
+    const whatsappPhone = whatsappContact?.contact_value ?? contact.value;
+    this.contactOptions.set({ phone: contact.value, callHref: contact.href, whatsappPhone, whatsappHref: contactHref('whatsapp', whatsappPhone) });
+    const dialog = this.contactDialog()?.nativeElement;
+    if (dialog && !dialog.open) dialog.showModal();
+  }
+  protected closeContactOptions(): void { this.contactDialog()?.nativeElement.close(); }
+  protected onContactDialogClosed(): void { this.contactOptions.set(null); }
 }

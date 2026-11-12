@@ -203,7 +203,7 @@ describe('Directory routes', () => {
     expect(harness.routeNativeElement!.textContent).toContain('Plumbing repairs');
   });
 
-  it('opens a stable detail URL and offers only valid, public call/enquiry actions', async () => {
+  it('opens a stable detail URL and offers a public phone call-or-WhatsApp choice', async () => {
     detail.mockResolvedValueOnce(listing({ listing_locations: [{ coverage_type: 'based_here', locations: places[1] }], listing_contacts: [
       { contact_type: 'phone', contact_value: '+91 98765 43210', is_public: true, sort_order: 0 },
       { contact_type: 'email', contact_value: 'hello@example.com', is_public: true, sort_order: 1 },
@@ -215,11 +215,23 @@ describe('Directory routes', () => {
     const element = harness.routeNativeElement!;
     expect(detail).toHaveBeenCalledWith(listingId);
     expect(element.querySelector('app-listing-summary h1')?.textContent).toBe('Local Plumbing');
-    expect(element.querySelector('a[href="tel:+919876543210"]')).not.toBeNull();
+    expect(element.querySelector('a[href^="tel:"]')).toBeNull();
+    const contactTrigger = element.querySelector<HTMLButtonElement>('.contact-trigger');
+    expect(contactTrigger?.textContent).toContain('Call or WhatsApp');
+    expect(contactTrigger?.textContent).toContain('+91 98765 43210');
     expect(element.querySelector('a[href="mailto:hello@example.com"]')?.textContent).toContain('Enquire');
     expect(element.textContent).toContain('Chidambaram');
     expect(element.textContent).not.toContain('+919999999999');
     expect(element.querySelector('a[href^="javascript:"]')).toBeNull();
+
+    const dialog = element.querySelector<HTMLDialogElement>('.contact-dialog')!;
+    Object.defineProperty(dialog, 'showModal', { configurable: true, value: vi.fn(() => dialog.setAttribute('open', '')) });
+    Object.defineProperty(dialog, 'close', { configurable: true, value: vi.fn(() => { dialog.removeAttribute('open'); dialog.dispatchEvent(new Event('close')); }) });
+    contactTrigger!.click();
+    await settle(harness);
+    expect(dialog.open).toBe(true);
+    expect(dialog.querySelector('a[href="tel:+919876543210"]')?.textContent).toContain('Call');
+    expect(dialog.querySelector('a[href="https://wa.me/919876543210"]')?.textContent).toContain('WhatsApp');
   });
 
   it('resolves listing slugs at /services/:slug while preserving the provider-id route', async () => {

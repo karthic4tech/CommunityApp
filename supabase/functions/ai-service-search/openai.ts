@@ -8,8 +8,13 @@ export function createClassifier(options: {
   fetcher?: typeof fetch;
   monitor: (event: Record<string, string | number | boolean>) => void;
 }) {
-  return async (query: string, catalog: Catalog): Promise<Intent> => {
-    if (!options.apiKey) throw new Error('ai_unavailable');
+  return async (query: string, catalog: Catalog, correlationId = crypto.randomUUID()): Promise<Intent> => {
+    const started = Date.now();
+    const model = options.model || DEFAULT_MODEL;
+    const log = (stage: string, fields: Record<string, string | number | boolean> = {}) => options.monitor({ event: 'ai_classification', correlation_id: correlationId, model, stage, elapsed_ms: Date.now() - started, ...fields });
+    log('start');
+    try {
+    if (!options.apiKey) throw new Error('ai_not_configured');
     // English slugs already describe categories; avoid sending every bilingual
     // description or any listing/contact data to the provider.
     const taxonomy = JSON.stringify({
@@ -34,7 +39,14 @@ export function createClassifier(options: {
           } } } },
       }),
     });
-    if (!response.ok) throw new Error('ai_unavailable');
+    log('http_response', { status: response.status });
+    if (!response.ok) {
+      let providerCode = 'unknown';
+      try { const body: unknown = await response.json(); if (record(body) && record(body.error) && typeof body.error.code === 'string' && /^[a-z0-9_]{1,80}$/i.test(body.error.code)) providerCode = body.error.code; } catch { /* Do not log raw provider bodies. */ }
+      const code = response.status === 401 || response.status === 403 ? 'ai_auth_failed' : providerCode === 'insufficient_quota' ? 'ai_quota_exceeded' : response.status === 429 ? 'ai_rate_limited' : 'ai_provider_error';
+      log('provider_error', { status: response.status, provider_code: providerCode, code });
+      throw new Error(code);
+    }
     const data: unknown = await response.json();
     const outputText = record(data) && Array.isArray(data.output)
       ? data.output.flatMap(item => record(item) && Array.isArray(item.content) ? item.content : [])
@@ -47,7 +59,14 @@ export function createClassifier(options: {
         input_tokens: typeof usage.input_tokens === 'number' ? usage.input_tokens : 0,
         output_tokens: typeof usage.output_tokens === 'number' ? usage.output_tokens : 0 });
     }
-    try { return parseIntent(JSON.parse(outputText.text)); } catch { throw new Error('invalid_intent'); }
+    try { const intent = parseIntent(JSON.parse(outputText.text)); log('validated'); return intent; } catch { throw new Error('invalid_intent'); }
+    } catch (error) {
+      const timeout = error instanceof Error && ['TimeoutError', 'AbortError'].includes(error.name);
+      const allowed = ['ai_not_configured', 'ai_auth_failed', 'ai_quota_exceeded', 'ai_rate_limited', 'ai_provider_error', 'catalog_too_large', 'invalid_intent'];
+      const code = timeout ? 'ai_timeout' : error instanceof Error && allowed.includes(error.message) ? error.message : error instanceof SyntaxError ? 'ai_invalid_response' : 'ai_network_error';
+      log('failed', { code, aborted: timeout });
+      throw new Error(code);
+    }
   };
 }
 
@@ -59,7 +78,7 @@ export function createCategoryClassifier(options: {
   monitor: (event: Record<string, string | number | boolean>) => void;
 }) {
   return async (query: string, catalog: Catalog): Promise<CategoryIntent> => {
-    if (!options.apiKey) throw new Error('ai_unavailable');
+    if (!options.apiKey) { options.monitor({ event: 'ai_failure', code: 'ai_not_configured', model: options.model || DEFAULT_MODEL }); throw new Error('ai_not_configured'); }
     const hierarchy = catalog.categories
       .filter(row => row.parent_id === null)
       .map(parent => ({
@@ -84,7 +103,11 @@ export function createCategoryClassifier(options: {
           } } } },
       }),
     });
-    if (!response.ok) throw new Error('ai_unavailable');
+    if (!response.ok) {
+      const code = response.status === 401 || response.status === 403 ? 'ai_auth_failed' : response.status === 429 ? 'ai_rate_or_quota_limited' : 'ai_provider_error';
+      options.monitor({ event: 'ai_failure', status: response.status, code, model: options.model || DEFAULT_MODEL });
+      throw new Error(code);
+    }
     const data: unknown = await response.json();
     const outputText = record(data) && Array.isArray(data.output)
       ? data.output.flatMap(item => record(item) && Array.isArray(item.content) ? item.content : [])

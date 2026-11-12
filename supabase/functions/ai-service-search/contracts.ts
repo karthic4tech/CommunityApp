@@ -31,21 +31,30 @@ function normalized(value: string): string {
 const COMMON_ALIASES: Readonly<Record<string, readonly string[]>> = {
   restaurants: ['batter', 'idly', 'idli', 'dosa', 'dosai', 'food shop', 'சமையல்', 'இட்லி', 'தோசை', 'மாவு'],
   plumber: ['plumber', 'plumbing', 'பிளம்பர்', 'குழாய் பழுது', 'pipe repair'],
-  electrician: ['electrician', 'electrical service', 'எலக்ட்ரீஷியன்', 'மின்சார வேலை'],
+  electrician: ['electrician', 'electrical service', 'எலக்ட்ரீஷியன்', 'மின்சார வேலை', 'மின்சார வேலை செய்பவர்', 'current work aal'],
   ambulance: ['ambulance', 'ஆம்புலன்ஸ்', 'அவசர ஊர்தி'],
   'ac-service': ['ac service', 'air conditioner repair', 'ஏசி சர்வீஸ்'],
+  'ac-refrigeration': ['ac service', 'ac repair', 'air conditioner repair', 'ஏசி சர்வீஸ்'],
+  'ambulance-services': ['ambulance', 'ஆம்புலன்ஸ்', 'அவசர ஊர்தி'],
 };
 
 /** Resolve only unambiguous catalog names/aliases. AI is used when this is inconclusive. */
 export function directIntent(query: string, catalog: Catalog, explicitLocation: CatalogRow | null): Intent | null {
   const text = normalized(query);
   const categoryMatches = catalog.categories.flatMap(row => {
-    const terms = [row.slug.replace(/-/gu, ' '), row.name_en ?? '', row.name_ta, ...(COMMON_ALIASES[row.slug] ?? [])]
+    const aliases = (COMMON_ALIASES[row.slug] ?? []).map(normalized).filter(term => term.length >= 2);
+    const names = [row.slug.replace(/-/gu, ' '), row.name_en ?? '', row.name_ta]
       .map(normalized).filter(term => term.length >= 2);
-    const matches = terms.filter(term => text.includes(term));
-    return matches.length ? [{ row, score: Math.max(...matches.map(term => term.length)) }] : [];
-  }).sort((a, b) => b.score - a.score);
+    const aliasMatches = aliases.filter(term => text.includes(term));
+    const nameMatches = names.filter(term => text.includes(term));
+    if (!aliasMatches.length && !nameMatches.length) return [];
+    // At the same phrase length an explicit service synonym outranks a
+    // translated catalog label. This resolves the live Tamil collision where
+    // "எலக்ட்ரீஷியன்" labels both Electrician and Electrician Labour.
+    return [{ row, score: Math.max(...aliasMatches.concat(nameMatches).map(term => term.length)), aliasMatch: aliasMatches.length > 0 }];
+  }).sort((a, b) => b.score - a.score || Number(b.aliasMatch) - Number(a.aliasMatch));
   if (!categoryMatches.length || (categoryMatches[1] && categoryMatches[0].score === categoryMatches[1].score
+    && categoryMatches[0].aliasMatch === categoryMatches[1].aliasMatch
     && categoryMatches[0].row.id !== categoryMatches[1].row.id)) return null;
 
   const locationMatches = explicitLocation ? [] : catalog.locations.flatMap(row => {

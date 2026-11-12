@@ -6,6 +6,7 @@
 @use './styles/responsive';
 @use './styles/forms';
 @use './app/marketplace/marketplace';
+@use './app/community-hub/community-hub.component';
 
 @font-face {
   font-family: 'bootstrap-icons';

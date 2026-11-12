@@ -4,7 +4,7 @@ import { getCorsHeaders, handlePreflight, isAllowedOrigin } from '../_shared/cor
 interface Dependencies {
   allowedOrigins?: string[];
   authorize(request: Request): Promise<SearchSession>;
-  classify(query: string, catalog: Catalog): Promise<Intent>;
+  classify(query: string, catalog: Catalog, correlationId?: string): Promise<Intent>;
   classifyCategory?(query: string, catalog: Catalog): Promise<CategoryIntent>;
   monitor(event: Record<string, string | number | boolean>): void;
   cacheVersion?: string;
@@ -18,6 +18,7 @@ export function createSearchHandler(deps: Dependencies) {
   const now = deps.now ?? Date.now;
   return async (request: Request): Promise<Response> => {
     const start = now();
+    const correlationId = crypto.randomUUID();
     const origin = request.headers.get('origin');
     const corsOptions = { methods: 'POST, OPTIONS', additionalOrigins: deps.allowedOrigins ?? [] };
     const corsHeaders = getCorsHeaders(request, corsOptions);
@@ -96,7 +97,7 @@ export function createSearchHandler(deps: Dependencies) {
             pending = (async () => {
               // Fail closed on a quota database outage: no unmetered AI calls.
               if (!await session.reserve()) throw new Error('rate_limited');
-              return parseIntent(await deps.classify(query, catalog));
+               return parseIntent(await deps.classify(query, catalog, correlationId));
             })();
             inFlight.set(key, pending);
           }
@@ -111,7 +112,8 @@ export function createSearchHandler(deps: Dependencies) {
            cache.set(key, { intent, expires: now() + 86_400_000 });
         }
        mode = 'ai';
-      } catch (error) {
+       } catch (error) {
+        deps.monitor({ event: 'ai_fallback', correlation_id: correlationId, stage: 'classification', code: error instanceof Error && /^[a-z_]+$/.test(error.message) ? error.message : 'ai_provider_error', elapsed_ms: now() - start });
         reason = error instanceof Error && ['rate_limited', 'invalid_intent'].includes(error.message) ? error.message : 'ai_unavailable';
       }
       const rows = publicListings(await session.search(resolved));
