@@ -11,6 +11,18 @@
     </div>
   </header>
 
+  <nav class="account-section-nav" aria-label="{{ copy().sections }}" (keydown.escape)="closeAccountMenu()">
+    <button #accountMenuButton type="button" class="account-menu-toggle text-button" [attr.aria-expanded]="accountMenuOpen()" aria-controls="account-section-menu"
+      [attr.aria-label]="accountMenuOpen() ? copy().closeSections : copy().openSections" (click)="toggleAccountMenu()">
+      <i class="bi" [class.bi-list]="!accountMenuOpen()" [class.bi-x-lg]="accountMenuOpen()" aria-hidden="true"></i>
+      <span>{{ copy().sections }}</span>
+    </button>
+    <div id="account-section-menu" class="account-section-menu" [hidden]="!accountMenuOpen()">
+      <button type="button" class="text-button" [attr.aria-current]="activeAccountSection() === 'profile' ? 'true' : null" (click)="showAccountSection('profile')">{{ copy().profile }}</button>
+      <button type="button" class="text-button" [attr.aria-current]="activeAccountSection() === 'submissions' ? 'true' : null" (click)="showAccountSection('submissions')">{{ copy().recentSubmissions }}</button>
+    </div>
+  </nav>
+
   @if (!auth.emailVerified()) {
     <section class="verification-notice" aria-labelledby="verification-title">
       <span class="notice-icon bi bi-envelope-exclamation" aria-hidden="true"></span>
@@ -42,7 +54,8 @@
         }
       </section>
 
-      <section id="profile-form" class="panel profile-panel" aria-labelledby="profile-heading">
+      @if (activeAccountSection() === 'profile') {
+      <section id="profile-form" class="panel profile-panel" tabindex="-1" aria-labelledby="profile-heading">
         <div class="panel-heading">
           <div><h2 id="profile-heading">{{ copy().profile }}</h2><p>{{ copy().profileHint }}</p></div>
           <span class="panel-icon bi bi-person-vcard" aria-hidden="true"></span>
@@ -116,6 +129,7 @@
           </form>
         }
       </section>
+      }
     </div>
 
     <aside class="side-column col-12 col-lg-4" aria-label="{{ copy().activity }}">
@@ -135,7 +149,8 @@
         <a routerLink="/services" class="quick-link"><span class="quick-link-icon"><i class="bi bi-search" aria-hidden="true"></i></span><span><strong>{{ copy().browseServices }}</strong><small>CDM360</small></span><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
       </nav>
 
-      <section class="panel submissions-panel" aria-labelledby="submissions-heading">
+      @if (activeAccountSection() === 'submissions') {
+      <section id="recent-submissions" class="panel submissions-panel" tabindex="-1" aria-labelledby="submissions-heading">
         <div class="panel-heading">
           <div><h2 id="submissions-heading">{{ copy().recentSubmissions }}</h2><p>{{ copy().approvalProgress }}</p></div>
           <a class="icon-action" routerLink="/my-submissions" [attr.aria-label]="copy().viewAll"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
@@ -163,6 +178,7 @@
           </div>
         }
       </section>
+      }
 
       <section class="panel settings-panel" aria-labelledby="settings-heading">
         <div class="panel-heading"><div><h2 id="settings-heading">{{ copy().accountSettings }}</h2></div><span class="panel-icon bi bi-gear" aria-hidden="true"></span></div>

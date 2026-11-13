@@ -214,6 +214,34 @@ Deno.test('suggest_category resolves direct matches and validates the real paren
   equal(body.suggestion, { parent, subcategory: child }); equal(calls.length, 0);
 });
 
+Deno.test('hotel category suggestions resolve locally without requiring the AI classifier', async () => {
+  const parent = { id: 'hospitality-parent', parent_id: null, slug: 'food-restaurant-services', name_ta: 'உணவு மற்றும் தங்குமிடம்', name_en: 'Food and Hospitality' };
+  const child = { id: 'hotel-child', parent_id: parent.id, slug: 'hotels', name_ta: 'தங்கும் விடுதிகள்', name_en: 'Hotels' };
+  const session: SearchSession = { identity: 'anon', catalog: async () => ({ categories: [parent, child], locations: [] }),
+    reserve: async () => true, search: async () => [] };
+  const handler = createSearchHandler({ allowedOrigins: [], authorize: async () => session,
+    classify: async () => intent, classifyCategory: async () => { throw new Error('AI should not run for a direct hotel match'); }, monitor: () => {} });
+  const response = await handler(new Request('http://edge', { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ operation: 'suggest_category', query: 'hotel' }) }));
+  const body = await json(response);
+  equal(response.status, 200); equal(body.reason, 'direct_match');
+  equal(body.suggestion, { parent, subcategory: child });
+});
+
+Deno.test('transport wording resolves to the active Cab / Taxi category without AI', async () => {
+  const parent = { id: 'transport-parent', parent_id: null, slug: 'transport-tourism-services', name_ta: 'போக்குவரத்து', name_en: 'Transport' };
+  const child = { id: 'cab-child', parent_id: parent.id, slug: 'cab-services', name_ta: 'கேப் / டாக்ஸி', name_en: 'Cab / Taxi' };
+  const session: SearchSession = { identity: 'anon', catalog: async () => ({ categories: [parent, child], locations: [] }),
+    reserve: async () => true, search: async () => [] };
+  const handler = createSearchHandler({ allowedOrigins: [], authorize: async () => session,
+    classify: async () => intent, classifyCategory: async () => { throw new Error('AI should not run for a direct transport match'); }, monitor: () => {} });
+  const response = await handler(new Request('http://edge', { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ operation: 'suggest_category', query: 'transport' }) }));
+  const body = await json(response);
+  equal(response.status, 200); equal(body.reason, 'direct_match');
+  equal(body.suggestion, { parent, subcategory: child });
+});
+
 Deno.test('suggest_category uses the existing classifier, rejects invalid relationships, and enforces quota', async () => {
   const parent = { id: 'home-parent', parent_id: null, slug: 'home-services', name_ta: 'வீட்டு சேவைகள்', name_en: 'Home Services' };
   const child = { id: 'ac-child', parent_id: parent.id, slug: 'ac-service', name_ta: 'குளிரூட்டும்', name_en: 'Cooling' };

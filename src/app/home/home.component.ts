@@ -103,8 +103,10 @@ const SERVICE_HIGHLIGHTS: readonly ServiceHighlight[] = [
       </div>
        <nav class="main-nav container-xl" [attr.aria-label]="i18n.language() === 'ta' ? 'முதன்மை வழிசெலுத்தல்' : 'Main navigation'">
           <a routerLink="/" routerLinkActive="nav-active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page"><i class="bi bi-house-door" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'முகப்பு' : 'Home' }}</span></a>
-         <a routerLink="/essential-services" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-lightning-charge" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகள்' : 'Essential Services' }}</span></a>
-         <a routerLink="/services" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-grid" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகள்' : 'Explore All Services' }}</span></a>
+            <a routerLink="/essential-services" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-lightning-charge" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'முக்கிய சேவைகள்' : 'Core Services' }}</span></a>
+          <a routerLink="/jobs" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-briefcase" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'வேலைகள்' : 'Jobs' }}</span></a>
+           <a routerLink="/tourism" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-airplane" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'சுற்றுலா' : 'Tourism' }}</span></a>
+          <a routerLink="/services" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-grid" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகள்' : 'Explore All Services' }}</span></a>
          <a routerLink="/marketplace" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-shop-window" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'சந்தை' : 'Marketplace' }}</span></a>
           <a routerLink="/account" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-person-circle" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'கணக்கு' : 'Account' }}</span></a>
           <a routerLink="/help" routerLinkActive="nav-active" ariaCurrentWhenActive="page"><i class="bi bi-question-circle" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'உதவி' : 'Help' }}</span></a>

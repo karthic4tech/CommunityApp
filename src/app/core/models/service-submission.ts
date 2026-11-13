@@ -1,3 +1,5 @@
+import { ServiceLocationSource } from './service-location';
+
 export type SubmissionStatus = 'draft' | 'pending_review' | 'published' | 'rejected' | 'suspended' | 'archived';
 
 export interface SubmissionContactInput {
@@ -25,11 +27,15 @@ export interface SubmissionFormInput {
     postal_code: string | null;
     latitude: number | null;
     longitude: number | null;
+    google_maps_url: string | null;
+    location_source: ServiceLocationSource | null;
   };
   listing: {
     category_id: string;
     title: string;
     description: string | null;
+    room_amenities: string[];
+    indicative_room_price: number | null;
   };
   contacts: SubmissionContactInput[];
   locations: SubmissionLocationInput[];
@@ -46,6 +52,8 @@ export interface SubmissionRow {
   submitted_at: string | null;
   published_at: string | null;
   updated_at: string;
+  room_amenities?: string[];
+  indicative_room_price?: number | null;
   service_providers: {
     id: string;
     owner_user_id: string;
@@ -59,6 +67,8 @@ export interface SubmissionRow {
     postal_code: string | null;
     latitude: number | null;
     longitude: number | null;
+    google_maps_url?: string | null;
+    location_source?: ServiceLocationSource | null;
   };
   service_categories: {
     id: string;

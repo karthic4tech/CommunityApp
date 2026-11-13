@@ -52,6 +52,8 @@ describe('Home and Services navigation', () => {
     expect(element.querySelectorAll('.main-nav a[href="/"]')).toHaveLength(1);
     expect(element.querySelector('.main-nav a[href="/community-hub"]')).toBeNull();
     expect(element.querySelector<HTMLAnchorElement>('.main-nav a[href="/essential-services"]')).not.toBeNull();
+    expect(element.querySelector<HTMLAnchorElement>('.main-nav a[href="/jobs"]')?.textContent).toContain('Jobs');
+    expect(element.querySelector<HTMLAnchorElement>('.main-nav a[href="/tourism"]')?.textContent).toContain('Tourism');
     expect(element.querySelector<HTMLAnchorElement>('.main-nav a[href="/services"]')).not.toBeNull();
     element.querySelector<HTMLAnchorElement>('.main-nav a[href="/services"]')!.click();
     await harness.fixture.whenStable();

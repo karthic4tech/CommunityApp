@@ -20,6 +20,16 @@ import { AdminReviewService } from '../core/services/admin-review.service';
       </header>
 
       <div class="admin-grid row g-3">
+        <article class="card col-12 col-md-6 review-card">
+          <h2>{{ i18n.language() === 'ta' ? 'சமர்ப்பிப்பு மதிப்பாய்வு' : 'Listing review' }}</h2>
+          @if (pendingReviewCount() > 0) {
+            <p class="review-alert" role="status"><i class="bi bi-bell-fill" aria-hidden="true"></i> {{ pendingReviewCount() }} {{ pendingReviewCount() === 1 ? 'listing' : 'listings' }} awaiting review</p>
+          } @else if (pendingReviewCount() === 0) {
+            <p class="review-clear" role="status"><i class="bi bi-check-circle" aria-hidden="true"></i> No listings awaiting review</p>
+          }
+          <p>{{ i18n.language() === 'ta' ? 'சமூக சேவை சமர்ப்பிப்புகளை சரிபார்த்து வெளியிடவும்.' : 'Review, request changes, reject and publish community service submissions.' }}</p>
+          <a routerLink="/admin/listings/review">{{ i18n.language() === 'ta' ? 'மதிப்பாய்வு வரிசையைத் திறக்கவும்' : 'Open review queue' }}</a>
+        </article>
         <article class="card col-12 col-md-6"><h2>User Management</h2><p>Review registered members, providers and mobile verification status.</p><a routerLink="/admin/users">Manage users</a></article>
         <article class="card col-12 col-md-6">
           <h2>{{ i18n.language() === 'ta' ? 'உங்கள் அணுகல்' : 'Your access' }}</h2>
@@ -74,15 +84,10 @@ import { AdminReviewService } from '../core/services/admin-review.service';
           <p>{{ i18n.language() === 'ta' ? 'முகப்புப் பக்கத்தில் இடம்பெறும் சரிபார்க்கப்பட்ட வணிகங்களையும் அவற்றின் வரிசையையும் நிர்வகிக்கவும்.' : 'Feature verified businesses on the homepage and set their display order.' }}</p>
           <a routerLink="/admin/local-brands">{{ i18n.language() === 'ta' ? 'பிராண்டுகளை நிர்வகி' : 'Manage local brands' }}</a>
         </article>
-        <article class="card col-12 col-md-6 review-card">
-          <h2>{{ i18n.language() === 'ta' ? 'சமர்ப்பிப்பு மதிப்பாய்வு' : 'Listing review' }}</h2>
-          @if (pendingReviewCount() > 0) {
-            <p class="review-alert" role="status"><i class="bi bi-bell-fill" aria-hidden="true"></i> {{ pendingReviewCount() }} {{ pendingReviewCount() === 1 ? 'listing' : 'listings' }} awaiting review</p>
-          } @else if (pendingReviewCount() === 0) {
-            <p class="review-clear" role="status"><i class="bi bi-check-circle" aria-hidden="true"></i> No listings awaiting review</p>
-          }
-          <p>{{ i18n.language() === 'ta' ? 'சமூக சேவை சமர்ப்பிப்புகளை சரிபார்த்து வெளியிடவும்.' : 'Review, request changes, reject and publish community service submissions.' }}</p>
-          <a routerLink="/admin/listings/review">{{ i18n.language() === 'ta' ? 'மதிப்பாய்வு வரிசையைத் திறக்கவும்' : 'Open review queue' }}</a>
+        <article class="card col-12 col-md-6">
+          <h2>{{ i18n.language() === 'ta' ? 'விடுதி மதிப்பீடுகள்' : 'Lodge reviews' }}</h2>
+          <p>{{ i18n.language() === 'ta' ? 'விருந்தினர் மதிப்பீடுகளையும் புகார்களையும் பரிசீலிக்கவும்.' : 'Review guest ratings and reported lodge reviews.' }}</p>
+          <a routerLink="/admin/lodge-reviews">{{ i18n.language() === 'ta' ? 'மதிப்பீடுகளை நிர்வகிக்கவும்' : 'Manage lodge reviews' }}</a>
         </article>
       </div>
     </section>

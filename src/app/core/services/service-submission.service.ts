@@ -2,10 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
 import { contactValidationMessage, normalizeContactValue } from '../models/service-listing';
 import { SubmissionFormInput, SubmissionHistoryRow, SubmissionLocationInput, SubmissionRow } from '../models/service-submission';
+import { isValidServiceCoordinates, validateGoogleMapsLocationUrl } from '../models/service-location';
 import { SupabaseService } from './supabase.service';
 
-const SUBMISSION_COLUMNS = `id,provider_id,category_id,title,description,status,submitted_at,published_at,updated_at,
-  service_providers!inner(id,owner_user_id,provider_type,display_name,description,verification_status,public_email,website_url,address,postal_code,latitude,longitude),
+const SUBMISSION_COLUMNS = `id,provider_id,category_id,title,description,status,submitted_at,published_at,updated_at,room_amenities,indicative_room_price,
+  service_providers!inner(id,owner_user_id,provider_type,display_name,description,verification_status,public_email,website_url,address,postal_code,latitude,longitude,google_maps_url,location_source),
   service_categories(id,parent_id,name_ta,name_en,slug),
   listing_contacts(contact_type,contact_value,is_public,sort_order),
   listing_locations(coverage_type,locations(id,name_ta,name_en)),
@@ -86,6 +87,8 @@ export class ServiceSubmissionService {
         postal_code: input.provider.postal_code,
         latitude: input.provider.latitude,
         longitude: input.provider.longitude,
+        google_maps_url: input.provider.google_maps_url,
+        location_source: input.provider.location_source,
       }).eq('id', providerId).eq('owner_user_id', user.id);
       if (error) throw this.databaseError('Unable to save provider details.', error);
     } else {
@@ -101,6 +104,8 @@ export class ServiceSubmissionService {
         postal_code: input.provider.postal_code,
         latitude: input.provider.latitude,
         longitude: input.provider.longitude,
+        google_maps_url: input.provider.google_maps_url,
+        location_source: input.provider.location_source,
       }).select('id').single<{ id: string }>();
       if (error) {
         const databaseError = this.databaseError('Unable to create provider details.', error);
@@ -124,6 +129,8 @@ export class ServiceSubmissionService {
         category_id: input.listing.category_id,
         title: input.listing.title,
         description: input.listing.description,
+        room_amenities: input.listing.room_amenities,
+        indicative_room_price: input.listing.indicative_room_price,
         status: input.submitForReview ? 'pending_review' : 'draft',
         submitted_at: input.submitForReview ? new Date().toISOString() : null,
       }).eq('id', listingId);
@@ -134,6 +141,8 @@ export class ServiceSubmissionService {
         category_id: input.listing.category_id,
         title: input.listing.title,
         description: input.listing.description,
+        room_amenities: input.listing.room_amenities,
+        indicative_room_price: input.listing.indicative_room_price,
         status: input.submitForReview ? 'pending_review' : 'draft',
         submitted_at: input.submitForReview ? new Date().toISOString() : null,
       }).select('id').single<{ id: string }>();
@@ -194,9 +203,20 @@ export class ServiceSubmissionService {
 
   private validateInput(input: SubmissionFormInput): void {
     if (!input.listing.title.trim() || !input.listing.category_id) throw new Error('Complete the required service details before saving.');
-    if (!input.contacts.some(contact => contact.contact_type === 'phone' && Boolean(normalizeContactValue('phone', contact.contact_value)))) throw new Error('Enter a valid mobile number.');
     if (!input.locations.length) throw new Error('Choose a service location.');
     if (!input.provider.display_name.trim()) throw new Error('Enter a provider or business name.');
+    const { latitude, longitude } = input.provider;
+    if ((latitude !== null && !isValidServiceCoordinates(latitude, 0)) || (longitude !== null && !isValidServiceCoordinates(0, longitude))) {
+      throw new Error('Service coordinates are outside the valid latitude/longitude range.');
+    }
+    const { google_maps_url, location_source } = input.provider;
+    if (google_maps_url !== null && !validateGoogleMapsLocationUrl(google_maps_url)) throw new Error('Enter a secure, supported Google Maps location link.');
+    if (location_source === 'gps' && (!isValidServiceCoordinates(latitude, longitude) || google_maps_url !== null)) {
+      throw new Error('Confirm a valid GPS location before saving.');
+    }
+    if (location_source === 'google_maps_link' && (!google_maps_url || (latitude === null) !== (longitude === null))) {
+      throw new Error('Confirm a valid Google Maps location link before saving.');
+    }
     for (const contact of input.contacts) {
       const message = contactValidationMessage(contact.contact_type, contact.contact_value);
       if (message) throw new Error(message);

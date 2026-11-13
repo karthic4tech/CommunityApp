@@ -8,6 +8,18 @@ export interface JobCategory {
   slug: string;
 }
 
+export interface PublishedJob {
+  id: string;
+  title: string;
+  company_name: string;
+  description: string;
+  location: string;
+  contact_phone: string | null;
+  contact_email: string | null;
+  published_at: string | null;
+  job_categories: Pick<JobCategory, 'name_en' | 'name_ta' | 'slug'>;
+}
+
 export interface CreateJobInput {
   category_id: string;
   posted_by: string;
@@ -36,6 +48,21 @@ export class JobService {
         throw new Error('Job categories are not configured yet. Apply migration 20261113100000_jobs.sql in Supabase, then refresh this page.');
       }
       throw new Error(`Unable to load job categories: ${error.message}`);
+    }
+    return data ?? [];
+  }
+
+  async publishedJobs(): Promise<PublishedJob[]> {
+    const { data, error } = await this.supabase.client.from('jobs')
+      .select('id,title,company_name,description,location,contact_phone,contact_email,published_at,job_categories!inner(name_en,name_ta,slug)')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .returns<PublishedJob[]>();
+    if (error) {
+      if (error.code === 'PGRST205' || error.code === '42P01') {
+        throw new Error('The jobs directory is not configured yet. Apply migration 20261113100000_jobs.sql, then refresh this page.');
+      }
+      throw new Error('Unable to load published jobs.');
     }
     return data ?? [];
   }

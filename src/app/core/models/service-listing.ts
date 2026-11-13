@@ -32,6 +32,8 @@ export interface ServiceListing {
   description: string;
   status: string;
   published_at?: string | null;
+  room_amenities?: readonly string[] | null;
+  indicative_room_price?: number | null;
   service_providers: {
     id: string;
     display_name: string;
@@ -43,6 +45,8 @@ export interface ServiceListing {
     postal_code?: string | null;
     latitude?: number | null;
     longitude?: number | null;
+    google_maps_url?: string | null;
+    location_source?: 'gps' | 'google_maps_link' | null;
   };
   service_categories?: {
     id: string;

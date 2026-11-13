@@ -1,7 +1,14 @@
-import { buildCategoryHierarchy, findCategoryPathById } from './service-category';
+import { buildCategoryHierarchy, findCategoryPathById, isEssentialCategorySlug } from './service-category';
 import { row } from './category-test-fixtures';
 
 describe('buildCategoryHierarchy', () => {
+  it('keeps general businesses out of Core Services while preserving them in the full directory', () => {
+    expect(isEssentialCategorySlug('restaurants')).toBe(false);
+    expect(isEssentialCategorySlug('two-wheeler-repair')).toBe(false);
+    expect(isEssentialCategorySlug('electrician')).toBe(false);
+    expect(isEssentialCategorySlug('ambulance-services')).toBe(true);
+  });
+
   it('nests children, orders siblings deterministically and removes duplicates', () => {
     const result = buildCategoryHierarchy([
       row('b'), row('a'), row('c', { parent_id: 'a', sort_order: 20 }),

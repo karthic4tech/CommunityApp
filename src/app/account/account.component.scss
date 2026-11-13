@@ -58,6 +58,15 @@ h1 { margin: 0; color: var(--account-navy); font-size: clamp(1.9rem, 3.5vw, 2.6r
 .status-indicator { width: .5rem; height: .5rem; border-radius: 50%; background: var(--account-saffron); }
 .is-verified .status-indicator { background: var(--account-green); }
 
+.account-section-nav { position: relative; display: block; margin-bottom: 1rem; }
+.account-menu-toggle { align-items: center; justify-content: center; gap: .55rem; min-height: 44px; padding: .55rem .8rem; border: 1px solid var(--account-line); border-radius: 9px; background: var(--account-surface); color: var(--account-navy); font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; }
+.account-menu-toggle:hover { border-color: var(--account-green); background: var(--cdm-page); }
+.account-menu-toggle i { font-size: 1.1rem; }
+.account-section-menu { position: absolute; z-index: 10; top: calc(100% + .4rem); left: 0; display: grid; min-width: 220px; gap: .2rem; padding: .45rem; border: 1px solid var(--account-line); border-radius: 12px; background: var(--account-surface); box-shadow: 0 10px 28px rgb(0 32 80 / .16); }
+.account-section-menu[hidden] { display: none; }
+.account-section-menu button { display: flex; align-items: center; width: 100%; min-height: 44px; padding: .65rem .75rem; border: 0; border-radius: 8px; background: transparent; color: var(--account-navy); font: inherit; font-size: .86rem; font-weight: 650; text-align: left; cursor: pointer; }
+.account-section-menu button:hover, .account-section-menu button:focus-visible, .account-section-menu button[aria-current="true"] { background: var(--cdm-page); color: var(--cdm-royal-blue); }
+
 .verification-notice {
   display: flex;
   align-items: center;

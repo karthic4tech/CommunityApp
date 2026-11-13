@@ -7,10 +7,11 @@ import { LanguageService } from '../../core/services/language.service';
 import { ServiceCategoryService } from '../../core/services/service-category.service';
 import { ServiceDirectoryService } from '../../core/services/service-directory.service';
 import { ListingSummaryComponent } from '../listing-summary/listing-summary.component';
+import { LodgeReviewsComponent } from '../lodge-reviews.component';
 
 @Component({
   selector: 'app-provider-detail',
-  imports: [RouterLink, ListingSummaryComponent],
+  imports: [RouterLink, ListingSummaryComponent, LodgeReviewsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section [attr.aria-busy]="loading()" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவை விவரங்கள்' : 'Service details'">
@@ -37,7 +38,8 @@ import { ListingSummaryComponent } from '../listing-summary/listing-summary.comp
             }
           }
         </nav>
-        <app-listing-summary [listing]="selected" [detail]="true" />
+        <app-listing-summary [listing]="selected" [detail]="true" [hidePhoneContacts]="isLodgeListing()" />
+        @if (isLodgeListing()) { <app-lodge-reviews [listingId]="selected.id" [signInReturnUrl]="lodgeReviewReturnUrl(selected)" [startWriting]="queryParams().get('review') === 'write'" /> }
         @if (related().length) {
           <section class="related" aria-labelledby="related-title">
             <h2 id="related-title">{{ i18n.language() === 'ta' ? 'இந்த வழங்குநரின் பிற சேவைகள்' : 'More services from this provider' }}</h2>
@@ -72,6 +74,7 @@ export class ServiceDetailComponent implements OnInit {
   private readonly categoryService = inject(ServiceCategoryService);
   private readonly route = inject(ActivatedRoute);
   private readonly params = toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
+  protected readonly queryParams = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
   private readonly attempts = signal(0);
   protected readonly listing = signal<ServiceListing | null>(null);
   protected readonly related = signal<readonly ServiceListing[]>([]);
@@ -81,6 +84,12 @@ export class ServiceDetailComponent implements OnInit {
     const current = this.listing();
     return current ? findCategoryPathById(this.categoryService.categories(), current.category_id) : undefined;
   });
+  protected readonly isLodgeListing = computed(() => this.categoryPath()?.some(category => ['hotels', 'lodge-stay'].includes(category.slug)) ?? false);
+
+  protected lodgeReviewReturnUrl(listing: ServiceListing): string {
+    const path = listing.slug ? `/services/${listing.slug}` : `/providers/${listing.id}`;
+    return `${path}?review=write#reviews`;
+  }
 
   constructor() {
     effect(onCleanup => {

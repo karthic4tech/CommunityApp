@@ -14,9 +14,9 @@ import { SupabaseService } from './supabase.service';
  * owner/admin session from hydrating private contacts or media in this public
  * browsing flow.
  */
-const LISTING_COLUMNS = `id,slug,category_id,title,description,status,published_at,
+const LISTING_COLUMNS = `id,slug,category_id,title,description,status,published_at,room_amenities,indicative_room_price,
   service_categories!inner(id,is_active,name_ta,name_en,slug),
-  service_providers!inner(id,display_name,description,verification_status,public_email,website_url,address,postal_code,latitude,longitude),
+  service_providers!inner(id,display_name,description,verification_status,public_email,website_url,address,postal_code,latitude,longitude,google_maps_url,location_source),
   listing_locations(coverage_type,locations!inner(id,parent_id,name_ta,name_en,location_type,is_active)),
   listing_contacts(contact_type,contact_value,is_public,sort_order),
   listing_media(sort_order,media_assets!inner(storage_path,media_type,visibility))`;

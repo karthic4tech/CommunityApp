@@ -132,9 +132,12 @@ function directCategoryIntent(query: string, catalog: Catalog): CategoryIntent |
   const text = query.normalize('NFC').toLocaleLowerCase();
   const aliases: Readonly<Record<string, readonly string[]>> = {
     restaurants: ['batter', 'idly', 'idli', 'dosa', 'dosai', 'food shop', 'சமையல்', 'இட்லி', 'தோசை', 'மாவு'],
+    'cab-services': ['cab', 'taxi', 'cab service', 'taxi service', 'transport', 'transport service', 'local transport', 'கேப்', 'டாக்ஸி', 'போக்குவரத்து'],
+    'auto-rickshaw-services': ['auto rickshaw', 'rickshaw', 'auto booking', 'ஆட்டோ', 'ஆட்டோ முன்பதிவு'],
     plumber: ['plumber', 'plumbing', 'pipe repair', 'பிளம்பர்', 'குழாய்'],
     electrician: ['electrician', 'electrical', 'எலக்ட்ரீஷியன்', 'மின்சார'],
     'ac-service': ['ac service', 'air conditioner', 'ஏசி சர்வீஸ்'],
+    hotels: ['stay', 'stays', 'place to stay', 'places to stay', 'hotel', 'hotels', 'lodging', 'accommodation', 'guest house', 'guesthouse', 'lodge', 'inn', 'resort', 'தங்கும் விடுதி', 'தங்கும் இடம்', 'விடுதி', 'ஹோட்டல்', 'லாட்ஜ்'],
   };
   const matches = catalog.categories.filter(row => row.parent_id !== null).flatMap(row => {
     const namedTerms = [row.slug, row.name_en ?? '', row.name_ta, ...(aliases[row.slug] ?? [])];

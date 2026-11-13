@@ -62,7 +62,7 @@ app-root input[type='checkbox'],
 app-root input[type='radio'] { width: 1.1rem; height: 1.1rem; accent-color:var(--cdm-royal-blue); }
 app-root input[type='file'] { min-height: auto; padding: .55rem; }
 
-app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):not(.hero-arrow):not(.slide-dot):not(.mp-page button):not(.cdm-step-button):not(.secondary-button):not(.clear-button):not(.filter-chip):not(.category-sidebar button):not(.mobile-category-options button):not(.toggle-select):not(.clear-selection):not(.suffix-button) {
+app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):not(.hero-arrow):not(.slide-dot):not(.mp-page button):not(.cdm-step-button):not(.secondary-button):not(.clear-button):not(.filter-chip):not(.category-sidebar button):not(.mobile-category-options button):not(.toggle-select):not(.clear-selection):not(.suffix-button):not(.backdrop):not(.nav):not(.close-button):not(.link-button):not(.header-sign-out) {
   min-height: 2.75rem;
   border: 1px solid var(--cdm-btn-primary);
   border-radius: 10px;
@@ -75,12 +75,12 @@ app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-sw
   transition: color .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
 
-app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):not(.hero-arrow):not(.slide-dot):not(.mp-page button):not(.cdm-step-button):not(.secondary-button):not(.clear-button):not(.filter-chip):not(.category-sidebar button):not(.mobile-category-options button):not(.toggle-select):not(.clear-selection):not(.suffix-button):hover:not(:disabled) {
+app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):not(.hero-arrow):not(.slide-dot):not(.mp-page button):not(.cdm-step-button):not(.secondary-button):not(.clear-button):not(.filter-chip):not(.category-sidebar button):not(.mobile-category-options button):not(.toggle-select):not(.clear-selection):not(.suffix-button):not(.backdrop):not(.nav):not(.close-button):not(.link-button):not(.header-sign-out):hover:not(:disabled) {
   border-color: var(--cdm-btn-primary-hover);
   background: var(--cdm-btn-primary-hover);
 }
 
-app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):not(.hero-arrow):not(.slide-dot):not(.mp-page button):not(.cdm-step-button):not(.secondary-button):not(.clear-button):not(.filter-chip):not(.category-sidebar button):not(.mobile-category-options button):not(.toggle-select):not(.clear-selection):not(.suffix-button):disabled {
+app-root button:not(.btn):not(.text-button):not(.search-submit):not(.language-switch button):not(.hero-search button):not(.hero-arrow):not(.slide-dot):not(.mp-page button):not(.cdm-step-button):not(.secondary-button):not(.clear-button):not(.filter-chip):not(.category-sidebar button):not(.mobile-category-options button):not(.toggle-select):not(.clear-selection):not(.suffix-button):not(.backdrop):not(.nav):not(.close-button):not(.link-button):not(.header-sign-out):disabled {
   cursor: not-allowed;
   opacity: .58;
 }

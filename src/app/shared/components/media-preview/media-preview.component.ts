@@ -41,9 +41,9 @@ import { MediaGalleryItem } from '../../../core/models/media.models';
   `,
   styles: `
     :host { position: fixed; inset: 0; z-index: 1050; display: contents; }
-    .backdrop { position: fixed; inset: 0; border: 0; padding: 0; background: rgb(0 0 0 / .72); cursor: zoom-out; }
-    .stage { position: fixed; inset: 4vh 4vw; display: grid; grid-template-rows: 1fr auto; gap: .5rem; margin: 0; pointer-events: none; }
-     .stage-image { max-width: 100%; max-height: 100%; place-self: center; pointer-events: auto; border-radius: 8px; box-shadow: 0 8px 40px rgb(0 0 0 / .5); object-fit: contain; transition: opacity .15s ease; } .stage-image.is-loading { opacity:0; } .viewer-status { place-self:center; margin:0; padding:.75rem 1rem; border-radius:10px; background:rgb(0 0 0 / .55); color:#fff; } .viewer-error { background:#6f1d1b; }
+    .backdrop { position: fixed; inset: 0; border: 0; padding: 0; background: #fff; cursor: zoom-out; }
+    .stage { position: fixed; inset: 4vh 4vw; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: .5rem; min-height: 0; margin: 0; pointer-events: none; }
+     .stage-image { width: 100%; height: 100%; min-width: 0; min-height: 0; place-self: center; pointer-events: auto; border-radius: 8px; box-shadow: 0 8px 40px rgb(0 0 0 / .5); object-fit: contain; transition: opacity .15s ease; } .stage-image.is-loading { opacity:0; } .viewer-status { place-self:center; margin:0; padding:.75rem 1rem; border-radius:10px; background:rgb(0 0 0 / .55); color:#fff; } .viewer-error { background:#6f1d1b; }
     .stage-caption { place-self: center; margin: 0; padding: .4rem .8rem; border-radius: 99px; background: rgb(0 0 0 / .55); color: #fff; font-size: .9rem; overflow-wrap: anywhere; }
     .close-button { position: fixed; top: 1rem; right: 1rem; }
     .nav, .close-button {

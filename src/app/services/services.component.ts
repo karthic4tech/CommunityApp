@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, s
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { DirectoryLocation, DirectoryPage, locationOptions, locationSearchOptions } from '../core/models/service-listing';
-import { ServiceCategory } from '../core/models/service-category';
+import { DirectoryLocation, DirectoryPage, locationOptions, locationSearchOptions, ServiceListing } from '../core/models/service-listing';
+import { NON_ESSENTIAL_CATEGORY_SLUGS, ServiceCategory } from '../core/models/service-category';
 import { LanguageService } from '../core/services/language.service';
 import { ServiceCategoryService } from '../core/services/service-category.service';
 import { ServiceDirectoryService } from '../core/services/service-directory.service';
@@ -11,6 +11,14 @@ import { CategoryCardComponent } from '../home/category-card.component';
 import { ListingSummaryComponent } from './listing-summary/listing-summary.component';
 import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select.component';
 import { SearchableSelectOption } from '../shared/components/searchable-select/searchable-select.models';
+
+interface FeaturedServiceGroup {
+  readonly categoryId: string;
+  readonly slug: string;
+  readonly titleEnglish: string;
+  readonly titleTamil: string;
+  readonly listings: readonly ServiceListing[];
+}
 
 @Component({
   selector: 'app-all-services',
@@ -85,6 +93,21 @@ export class AllServicesComponent implements OnInit {
   protected readonly listingsLoading = signal(false);
   protected readonly listingsError = signal(false);
   protected readonly isServiceDiscoveryExpanded = signal(false);
+  protected readonly isFilterPanelExpanded = signal(false);
+  protected readonly featuredServiceGroups = signal<readonly FeaturedServiceGroup[]>([]);
+  protected readonly featuredServicesLoading = signal(false);
+
+  private readonly featuredCategories = computed(() => {
+    const matches: ServiceCategory[] = [];
+    const visit = (categories: readonly ServiceCategory[]): void => {
+      for (const category of categories) {
+        if (NON_ESSENTIAL_CATEGORY_SLUGS.has(category.slug)) matches.push(category);
+        visit(category.subcategories);
+      }
+    };
+    visit(this.service.categories());
+    return matches;
+  });
 
   constructor() {
     effect(() => {
@@ -117,6 +140,36 @@ export class AllServicesComponent implements OnInit {
         .catch(() => { if (current) this.listingsError.set(true); })
         .finally(() => { if (current) this.listingsLoading.set(false); });
     });
+    effect((onCleanup) => {
+      const categories = this.featuredCategories();
+      const locationId = this.locationFilter();
+      const isLoading = this.service.loading() || this.locationsLoading();
+      if (this.hasDirectoryFilters() || isLoading || !categories.length) {
+        this.featuredServiceGroups.set([]);
+        this.featuredServicesLoading.set(false);
+        return;
+      }
+
+      let current = true;
+      onCleanup(() => { current = false; });
+      this.featuredServicesLoading.set(true);
+      void Promise.all(categories.map(async (category) => {
+        const result = await this.directory.search(category.id, locationId || null, '', 0);
+        return {
+          categoryId: category.id,
+          slug: category.slug,
+          titleEnglish: category.nameEnglish,
+          titleTamil: category.nameTamil,
+          listings: result.listings.slice(0, 3),
+        } satisfies FeaturedServiceGroup;
+      })).then((groups) => {
+        if (current) this.featuredServiceGroups.set(groups.filter(group => group.listings.length > 0));
+      }).catch(() => {
+        if (current) this.featuredServiceGroups.set([]);
+      }).finally(() => {
+        if (current) this.featuredServicesLoading.set(false);
+      });
+    });
   }
 
   ngOnInit(): void {
@@ -125,6 +178,7 @@ export class AllServicesComponent implements OnInit {
   }
 
   protected toggleServiceDiscovery(): void { this.isServiceDiscoveryExpanded.update((expanded) => !expanded); }
+  protected toggleFilterPanel(): void { this.isFilterPanelExpanded.update((expanded) => !expanded); }
 
   protected applyFilters(event: Event, keyword: string, categoryId: string, locationId: string): void {
     event.preventDefault();

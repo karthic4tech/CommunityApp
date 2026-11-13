@@ -90,6 +90,10 @@ describe('AccountComponent', () => {
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
+    element.querySelector<HTMLButtonElement>('.account-menu-toggle')!.click();
+    fixture.detectChanges();
+    element.querySelectorAll<HTMLButtonElement>('.account-section-menu button')[1].click();
+    fixture.detectChanges();
     const values = Array.from(element.querySelectorAll<HTMLElement>('.stat-value')).map((value) => value.textContent?.trim());
     expect(values).toEqual(['3', '1', '1']);
     expect(element.querySelectorAll('.mini-submission')).toHaveLength(3);
@@ -105,6 +109,10 @@ describe('AccountComponent', () => {
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
+    element.querySelector<HTMLButtonElement>('.account-menu-toggle')!.click();
+    fixture.detectChanges();
+    element.querySelectorAll<HTMLButtonElement>('.account-section-menu button')[0].click();
+    fixture.detectChanges();
     const name = element.querySelector<HTMLInputElement>('[formControlName="full_name"]')!;
     expect(name.readOnly).toBe(true);
     expect(element.querySelector('.save-button')).toBeNull();

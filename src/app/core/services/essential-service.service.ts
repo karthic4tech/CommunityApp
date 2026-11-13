@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { EssentialShortcut, EssentialShortcutMutation, EssentialShortcutRow } from '../models/essential-service';
-import { ServiceCategoryRow } from '../models/service-category';
+import { isEssentialCategorySlug, ServiceCategoryRow } from '../models/service-category';
 import { SupabaseService } from './supabase.service';
 
 const SHORTCUT_COLUMNS = 'id,category_id,subcategory_id,title,title_ta,icon,display_order,is_active,is_emergency';
@@ -25,7 +25,7 @@ export class EssentialServiceService {
     if (error && ['42P01', 'PGRST205'].includes(error.code ?? '')) throw new Error(ESSENTIAL_MIGRATION_MESSAGE);
     if (error || categoryResult.error) throw new Error('Unable to load essential service shortcuts.');
 
-    const categoryRows = categoryResult.data ?? [];
+    const categoryRows = (categoryResult.data ?? []).filter(row => isEssentialCategorySlug(row.slug));
     const categories = new Map(categoryRows.map(row => [row.id, row]));
     const configured = (data ?? []).flatMap((shortcut) => {
       const category = categories.get(shortcut.category_id);

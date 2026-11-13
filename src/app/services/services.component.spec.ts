@@ -8,6 +8,7 @@ import { DirectoryLocation } from '../core/models/service-listing';
 import { LanguageService } from '../core/services/language.service';
 import { ServiceCategoryService } from '../core/services/service-category.service';
 import { ServiceDirectoryService } from '../core/services/service-directory.service';
+import { listing as testListing } from '../core/models/listing-test-fixtures';
 import { ServicesComponent } from './services.component';
 
 describe('ServicesComponent advanced listing filters', () => {
@@ -65,6 +66,9 @@ describe('ServicesComponent advanced listing filters', () => {
 
     expect(directorySearch).toHaveBeenCalledWith(categoryId, locationId, 'plumber', 0);
     expect(harness.routeNativeElement?.querySelector('#listing-results-title')?.textContent).toContain('Matching services');
+    harness.routeNativeElement?.querySelector<HTMLButtonElement>('.filter-panel-toggle')?.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
     expect(harness.routeNativeElement?.querySelector<HTMLInputElement>('#service-category-filter')?.value).toContain('Home Services');
     expect(harness.routeNativeElement?.querySelector<HTMLInputElement>('#service-location-filter')?.value).toContain('Chidambaram');
   });
@@ -74,6 +78,9 @@ describe('ServicesComponent advanced listing filters', () => {
     await harness.fixture.whenStable();
     harness.detectChanges();
     const element = harness.routeNativeElement!;
+    element.querySelector<HTMLButtonElement>('.filter-panel-toggle')!.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
     const query = element.querySelector<HTMLInputElement>('#service-query')!;
     const category = element.querySelector<HTMLInputElement>('#service-category-filter')!;
     const location = element.querySelector<HTMLInputElement>('#service-location-filter')!;
@@ -106,6 +113,9 @@ describe('ServicesComponent advanced listing filters', () => {
     harness.detectChanges();
 
     const element = harness.routeNativeElement!;
+    element.querySelector<HTMLButtonElement>('.filter-panel-toggle')!.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
     const location = element.querySelector<HTMLInputElement>('#service-location-filter')!;
     expect(location.value).toContain('Chidambaram');
     expect(directorySearch).not.toHaveBeenCalled();
@@ -113,6 +123,49 @@ describe('ServicesComponent advanced listing filters', () => {
     element.querySelector<HTMLFormElement>('.service-search')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await harness.fixture.whenStable();
     expect(directorySearch).toHaveBeenCalledWith(null, locationId, '', 0);
+  });
+
+  it('lets visitors show and hide the search filters accessibly', async () => {
+    const harness = await RouterTestingHarness.create('/services');
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    const element = harness.routeNativeElement!;
+    const toggle = element.querySelector<HTMLButtonElement>('.filter-panel-toggle')!;
+    const panel = element.querySelector<HTMLElement>('#service-filter-panel')!;
+
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(panel.hidden).toBe(true);
+    expect(element.querySelector('.hero-actions a[href="/service-search"]')).toBeNull();
+    toggle.click();
+    harness.detectChanges();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(panel.hidden).toBe(false);
+    expect(element.querySelector('.hero-actions a[href="/service-search"]')).not.toBeNull();
+    toggle.click();
+    harness.detectChanges();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(panel.hidden).toBe(true);
+  });
+
+  it('shows compact local-business listing sections on the default Explore All Services page', async () => {
+    const restaurantId = '33333333-3333-4333-8333-333333333333';
+    const electricianId = '44444444-4444-4444-8444-444444444444';
+    categories.set([
+      ...categoryRows,
+      { ...categoryRows[0], id: restaurantId, nameEnglish: 'Restaurants', slug: 'restaurants', sortOrder: 2 },
+      { ...categoryRows[0], id: electricianId, nameEnglish: 'Electrician', slug: 'electrician', sortOrder: 3 },
+    ]);
+    directorySearch.mockResolvedValue({ listings: [testListing()], hasMore: false });
+
+    const harness = await RouterTestingHarness.create('/services');
+    await harness.fixture.whenStable();
+    await new Promise<void>(resolve => setTimeout(resolve, 0));
+    harness.detectChanges();
+
+    const element = harness.routeNativeElement!;
+    expect(element.querySelectorAll('.featured-service-group')).toHaveLength(2);
+    expect(element.querySelectorAll('article.horizontal-view')).toHaveLength(2);
+    expect(element.querySelector('.featured-service-group a[href^="/services?category="]')).not.toBeNull();
   });
 
   it('collapses the category discovery by default and expands it without changing search state', async () => {

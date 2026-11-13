@@ -37,6 +37,19 @@ export interface ServiceCategory {
   subcategories: ServiceCategory[];
 }
 
+/** General local businesses belong in the complete directory, not Core Services. */
+export const NON_ESSENTIAL_CATEGORY_SLUGS: ReadonlySet<string> = new Set([
+  'restaurants',
+  'vegetarian-restaurants',
+  'non-vegetarian-restaurants',
+  'two-wheeler-repair',
+  'electrician',
+]);
+
+export function isEssentialCategorySlug(slug: string | null | undefined): boolean {
+  return slug !== null && slug !== undefined && !NON_ESSENTIAL_CATEGORY_SLUGS.has(slug);
+}
+
 /**
  * Return the path from a root category to a category with the requested id.
  * The path is useful for breadcrumbs without coupling the UI to database rows.

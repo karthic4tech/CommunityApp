@@ -1,5 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { buildCategoryHierarchy, ServiceCategory, ServiceCategoryRow } from '../models/service-category';
+import { buildCategoryHierarchy, isEssentialCategorySlug, ServiceCategory, ServiceCategoryRow } from '../models/service-category';
 import { SupabaseService } from './supabase.service';
 
 @Injectable({ providedIn: 'root' })
@@ -88,6 +88,7 @@ export class ServiceCategoryService {
         }
         throw new Error('Category query failed');
       }
-      return buildCategoryHierarchy(data ?? [], essentialOnly);
+      const rows = data ?? [];
+      return buildCategoryHierarchy(essentialOnly ? rows.filter(row => isEssentialCategorySlug(row.slug)) : rows, essentialOnly);
   }
 }

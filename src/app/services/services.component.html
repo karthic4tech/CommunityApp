@@ -9,6 +9,12 @@
       <span class="hero-mark" aria-hidden="true"><i class="bi bi-compass"></i></span>
     </div>
 
+    <button type="button" class="filter-panel-toggle" [attr.aria-expanded]="isFilterPanelExpanded()" aria-controls="service-filter-panel" (click)="toggleFilterPanel()">
+      <span><i class="bi bi-sliders2" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'தேடல் மற்றும் வடிகட்டிகள்' : 'Search and filters' }} @if (activeFilterCount()) { <span class="filter-toggle-count">{{ activeFilterCount() }}</span> }</span>
+      <span class="filter-toggle-action">{{ isFilterPanelExpanded() ? (i18n.language() === 'ta' ? 'மறை' : 'Hide') : (i18n.language() === 'ta' ? 'காட்டு' : 'Show') }} <i class="bi" [class.bi-chevron-up]="isFilterPanelExpanded()" [class.bi-chevron-down]="!isFilterPanelExpanded()" aria-hidden="true"></i></span>
+    </button>
+    <div id="service-filter-panel" [hidden]="!isFilterPanelExpanded()">
+    @if (isFilterPanelExpanded()) {
     <form class="service-search cdm-form" (submit)="applyFilters($event, query.value, category.value, location.value)">
       <div class="search-row">
         <label class="keyword-field" for="service-query">
@@ -39,12 +45,11 @@
         </div>
       </details>
     </form>
-
     <nav class="hero-actions" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவை அடைவு இணைப்புகள்' : 'Service directory links'">
-       <a class="hero-action" routerLink="/essential-services"><i class="bi bi-lightning-charge" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகள்' : 'Explore Essential Services' }}</a>
        <a class="hero-action ai-hero-action" routerLink="/service-search"><i class="bi bi-stars" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'AI தமிழ் / ஆங்கில தேடல்' : 'AI Tamil / English Search' }}</a>
-       <a class="hero-action" routerLink="/services/submit"><i class="bi bi-plus-circle" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'உங்கள் சேவையைச் சேர்க்கவும்' : 'List your service' }}</a>
     </nav>
+    }
+    </div>
 
     @if (activeFilterCount()) {
       <div class="active-filters" [attr.aria-label]="i18n.language() === 'ta' ? 'செயலில் உள்ள வடிகட்டிகள்' : 'Active filters'">
@@ -56,18 +61,25 @@
     }
   </header>
 
-  <section class="service-discovery-toggle" aria-labelledby="service-discovery-title">
-    <div>
-      <p class="eyebrow">{{ i18n.language() === 'ta' ? 'சேவைகளை ஆராயுங்கள்' : 'DISCOVER LOCAL SERVICES' }}</p>
-      <h2 id="service-discovery-title">{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகளையும் ஆராயுங்கள்' : 'Explore All Services' }}</h2>
-      <p>{{ i18n.language() === 'ta' ? 'சிதம்பரத்தில் உள்ளூர் சேவைகள் மற்றும் வணிகங்களைப் பாருங்கள்.' : 'Browse local services and businesses in Chidambaram.' }}</p>
-    </div>
-    <button type="button" class="btn discovery-toggle" [attr.aria-expanded]="isServiceDiscoveryExpanded()" aria-controls="all-services-discovery" (click)="toggleServiceDiscovery()">
-      <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
-      <span>{{ isServiceDiscoveryExpanded() ? (i18n.language() === 'ta' ? 'அனைத்து சேவைகளையும் மறைக்க' : 'Hide All Services') : (i18n.language() === 'ta' ? 'அனைத்து சேவைகளையும் பார்க்க' : 'Browse All Services') }}</span>
-      <i class="bi" [class.bi-chevron-down]="!isServiceDiscoveryExpanded()" [class.bi-chevron-up]="isServiceDiscoveryExpanded()" aria-hidden="true"></i>
-    </button>
-  </section>
+  @if (!hasDirectoryFilters() && (featuredServicesLoading() || featuredServiceGroups().length)) {
+    <section class="featured-service-sections" aria-labelledby="featured-services-title" [attr.aria-busy]="featuredServicesLoading()">
+      <header class="section-heading">
+        <div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'உள்ளூர் வணிகங்கள் மற்றும் சேவைகள்' : 'LOCAL BUSINESSES & SERVICES' }}</p><h2 id="featured-services-title">{{ i18n.language() === 'ta' ? 'மேலும் உள்ளூர் சேவைகள்' : 'More local services' }}</h2></div>
+      </header>
+      @if (featuredServicesLoading()) {
+        <p class="state" role="status">{{ i18n.language() === 'ta' ? 'சேவைகள் ஏற்றப்படுகின்றன…' : 'Loading local services…' }}</p>
+      } @else {
+        @for (group of featuredServiceGroups(); track group.categoryId) {
+          <section class="featured-service-group" [attr.aria-labelledby]="'featured-' + group.slug">
+            <header><h3 [id]="'featured-' + group.slug">{{ i18n.language() === 'ta' ? group.titleTamil : group.titleEnglish }}</h3><a routerLink="/services" [queryParams]="{ category: group.categoryId }">{{ i18n.language() === 'ta' ? 'அனைத்தையும் பாருங்கள்' : 'View all' }}<i class="bi bi-arrow-right" aria-hidden="true"></i></a></header>
+            <div class="service-results-list">
+              @for (listing of group.listings; track listing.id) { <app-listing-summary [listing]="listing" [compact]="true" [horizontal]="true" /> }
+            </div>
+          </section>
+        }
+      }
+    </section>
+  }
 
   @if (hasDirectoryFilters()) {
     <section class="listing-results" aria-labelledby="listing-results-title" [attr.aria-busy]="listingsLoading()">
@@ -82,8 +94,8 @@
       } @else if (!listingResults().listings.length) {
         <div class="state empty-state"><span class="state-icon bi bi-search" aria-hidden="true"></span><p role="status">{{ i18n.language() === 'ta' ? 'பொருந்தும் சேவைகள் இல்லை. வேறு சேவை, வகை அல்லது இடத்தை முயற்சிக்கவும்.' : 'No matching services. Try another service, category, or location.' }}</p><button class="secondary-button" type="button" (click)="clearFilters()">{{ i18n.language() === 'ta' ? 'அனைத்து வடிகட்டிகளையும் நீக்கு' : 'Clear all filters' }}</button></div>
       } @else {
-        <div class="listings row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
-          @for (listing of listingResults().listings; track listing.id) { <app-listing-summary class="col" [listing]="listing" /> }
+        <div class="service-results-list">
+          @for (listing of listingResults().listings; track listing.id) { <app-listing-summary [listing]="listing" [compact]="true" [horizontal]="true" /> }
         </div>
         <nav class="pagination" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவை பக்கங்கள்' : 'Service pages'">
           <button class="secondary-button" type="button" [disabled]="listingPage() === 0 || listingsLoading()" (click)="changePage(listingPage() - 1)">{{ i18n.language() === 'ta' ? 'முந்தைய' : 'Previous' }}</button>
@@ -136,4 +148,17 @@
   </section>
   </div>
   }
+
+  <section class="service-discovery-toggle" aria-labelledby="service-discovery-title">
+    <div>
+      <p class="eyebrow">{{ i18n.language() === 'ta' ? 'சேவைகளை ஆராயுங்கள்' : 'DISCOVER LOCAL SERVICES' }}</p>
+      <h2 id="service-discovery-title">{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகளையும் ஆராயுங்கள்' : 'Explore All Services' }}</h2>
+      <p>{{ i18n.language() === 'ta' ? 'சிதம்பரத்தில் உள்ளூர் சேவைகள் மற்றும் வணிகங்களைப் பாருங்கள்.' : 'Browse local services and businesses in Chidambaram.' }}</p>
+    </div>
+    <button type="button" class="btn discovery-toggle" [attr.aria-expanded]="isServiceDiscoveryExpanded()" aria-controls="all-services-discovery" (click)="toggleServiceDiscovery()">
+      <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
+      <span>{{ isServiceDiscoveryExpanded() ? (i18n.language() === 'ta' ? 'அனைத்து சேவைகளையும் மறைக்க' : 'Hide All Services') : (i18n.language() === 'ta' ? 'அனைத்து சேவைகளையும் பார்க்க' : 'Browse All Services') }}</span>
+      <i class="bi" [class.bi-chevron-down]="!isServiceDiscoveryExpanded()" [class.bi-chevron-up]="isServiceDiscoveryExpanded()" aria-hidden="true"></i>
+    </button>
+  </section>
 </section>

@@ -3,7 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DirectoryLocation, DirectoryPage, locationOptions, locationSearchOptions } from '../core/models/service-listing';
-import { ServiceCategory } from '../core/models/service-category';
+import { isEssentialCategorySlug, ServiceCategory } from '../core/models/service-category';
 import { EssentialShortcut } from '../core/models/essential-service';
 import { EssentialServiceService } from '../core/services/essential-service.service';
 import { LanguageService } from '../core/services/language.service';
@@ -134,17 +134,17 @@ import { SearchableSelectOption } from '../shared/components/searchable-select/s
 
       <section class="listing-section" aria-labelledby="results-title" [attr.aria-busy]="listingsLoading()">
         <div class="section-heading"><div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'உள்ளூர் வழங்குநர்கள்' : 'LOCAL PROVIDERS' }}</p><h2 id="results-title">{{ searchMode() ? resultsHeading() : (i18n.language() === 'ta' ? 'அத்தியாவசிய சேவை வழங்குநர்கள்' : 'Essential service listings') }}</h2></div>
-          @if (!listingsLoading() && !listingsError()) { <span class="count" aria-live="polite">{{ listingResults().listings.length }} {{ i18n.language() === 'ta' ? 'இந்தப் பக்கத்தில்' : 'on this page' }}</span> }
+          @if (!listingsLoading() && !listingsError()) { <span class="count" aria-live="polite">{{ essentialListings().length }} {{ i18n.language() === 'ta' ? 'இந்தப் பக்கத்தில்' : 'on this page' }}</span> }
         </div>
         @if (listingsLoading()) {
           <div class="loading-grid" role="status" aria-label="Loading service listings"><span></span><span></span><span></span></div>
         } @else if (listingsError()) {
           <div class="state error-state"><p role="alert">{{ i18n.language() === 'ta' ? 'சேவைகளை ஏற்ற முடியவில்லை.' : 'Unable to load essential listings.' }}</p><button type="button" class="secondary-button" (click)="retrySearch()">{{ i18n.text().retry }}</button></div>
-        } @else if (!listingResults().listings.length) {
+        } @else if (!essentialListings().length) {
           <div class="state" role="status"><p>{{ searchMode() ? (i18n.language() === 'ta' ? 'உங்கள் தேடலுக்கு சேவைகள் கிடைக்கவில்லை.' : 'No services found for your search.') : (i18n.language() === 'ta' ? 'இந்த வடிகட்டிகளுக்கு சேவை பட்டியல்கள் இல்லை.' : 'No published listings match these essential service filters.') }}</p><button type="button" class="secondary-button" (click)="clearSearch()">{{ i18n.language() === 'ta' ? 'தேடலை மாற்றுங்கள்' : 'Change search' }}</button><a class="secondary-button" routerLink="/services">{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகளும்' : 'Explore all services' }}</a></div>
         } @else {
           <div class="listing-grid row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
-            @for (listing of listingResults().listings; track listing.id) { <app-listing-summary class="col" [listing]="listing" /> }
+            @for (listing of essentialListings(); track listing.id) { <app-listing-summary class="col" [listing]="listing" /> }
           </div>
           <nav class="pagination" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவை பக்கங்கள்' : 'Service listing pages'">
             <button type="button" class="secondary-button" [disabled]="listingPage() === 0 || listingsLoading()" (click)="changePage(listingPage() - 1)">{{ i18n.language() === 'ta' ? 'முந்தைய' : 'Previous' }}</button>
@@ -228,6 +228,7 @@ export class EssentialServicesComponent implements OnInit {
   protected readonly locationsError = signal(false);
   protected readonly defaultLocationId = signal('');
   protected readonly listingResults = signal<DirectoryPage>({ listings: [], hasMore: false });
+  protected readonly essentialListings = computed(() => this.listingResults().listings.filter(listing => isEssentialCategorySlug(listing.service_categories?.slug)));
   protected readonly listingsLoading = signal(true);
   protected readonly listingsError = signal(false);
   protected readonly discoveryExpanded = signal(false);

@@ -1,4 +1,4 @@
-import { NgOptimizedImage } from '@angular/common';
+import { CurrencyPipe, NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ElementRef, afterRenderEffect, computed, effect, inject, input, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ListingContact, ServiceListing, contactHref } from '../../core/models/service-listing';
@@ -6,14 +6,15 @@ import { LanguageService } from '../../core/services/language.service';
 import { ServiceDirectoryService } from '../../core/services/service-directory.service';
 import { MediaService } from '../../core/services/media.service';
 import { MediaGalleryItem } from '../../core/models/media.models';
+import { googleMapsDirectionsUrl, validateGoogleMapsLocationUrl } from '../../core/models/service-location';
 import { MediaPreviewComponent } from '../../shared/components/media-preview/media-preview.component';
 
 @Component({
   selector: 'app-listing-summary',
-  imports: [RouterLink, NgOptimizedImage, MediaPreviewComponent],
+  imports: [RouterLink, NgOptimizedImage, MediaPreviewComponent, CurrencyPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <article [class.detail-view]="detail()" [class.compact-view]="compact()">
+    <article [class.detail-view]="detail()" [class.compact-view]="compact()" [class.horizontal-view]="horizontal()">
       @if (detail()) {
         <h1 #heading tabindex="-1">{{ listing().service_providers.display_name }}</h1>
         <h2>{{ listing().title }}</h2>
@@ -28,7 +29,7 @@ import { MediaPreviewComponent } from '../../shared/components/media-preview/med
         <span class="verified" [attr.aria-label]="i18n.language() === 'ta' ? 'சரிபார்க்கப்பட்ட சேவை வழங்குநர்' : 'Verified provider'"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> {{ i18n.language() === 'ta' ? 'சரிபார்க்கப்பட்டது' : 'Verified' }}</span>
       }
       @if (visibleImages().length) {
-        <div [class.gallery]="detail()">
+        <div [class.gallery]="detail()" [class.horizontal-media]="horizontal()">
           @for (image of visibleImages(); track image) {
              <button type="button" class="image image-button" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவை படத்தைப் பார்க்கவும்' : 'View service image'" (click)="openPreview(image)"><img [ngSrc]="image" fill [alt]="listing().title" sizes="(max-width: 650px) 100vw, 33vw" (error)="hideImage(image)"></button>
           }
@@ -40,6 +41,8 @@ import { MediaPreviewComponent } from '../../shared/components/media-preview/med
         </div>
       }
       <p class="description">{{ listing().description }}</p>
+      @if (detail() && listing().room_amenities?.length) { <div class="lodge-amenities" aria-label="Room amenities"><strong>Room amenities</strong><ul>@for (amenity of listing().room_amenities; track amenity) { <li>{{ amenity }}</li> }</ul></div> }
+      @if (detail() && listing().indicative_room_price !== null && listing().indicative_room_price !== undefined) { <p class="lodge-price"><strong>Indicative room price:</strong> {{ listing().indicative_room_price | currency:'INR':'symbol':'1.0-0' }} / night <span>Confirm current rates with the lodge.</span></p> }
       @if (detail() && listing().service_providers.description; as description) {
         <p class="description">{{ description }}</p>
       }
@@ -65,7 +68,7 @@ import { MediaPreviewComponent } from '../../shared/components/media-preview/med
             </a>
           }
         }
-        @if (mapsHref(); as maps) { <a [href]="maps" target="_blank" rel="noopener noreferrer">{{ i18n.language() === 'ta' ? 'Google Maps வழிகள்' : 'Google Maps directions' }}</a> }
+        @if (detail() && mapsHref(); as maps) { <a [href]="maps" target="_blank" rel="noopener noreferrer">Get Directions / வழிகாட்டுதலைப் பெறுக</a> }
         @if (!detail()) {
           <a [routerLink]="listing().slug ? ['/services', listing().slug] : ['/providers', listing().id]">{{ i18n.language() === 'ta' ? 'விவரங்கள்' : 'View details' }}</a>
         }
@@ -101,9 +104,13 @@ import { MediaPreviewComponent } from '../../shared/components/media-preview/med
     .verified { display:inline-flex; align-items:center; justify-self:start; gap:.25rem; margin-bottom:.45rem; color:var(--cdm-royal-blue); font-size:.77rem; font-weight:700; }
     .description { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:3; white-space:pre-line; line-height:1.65; }
      p,.places { color:var(--cdm-muted); line-height:1.65; font-size:.86rem; } .address { white-space:pre-line; }
-     .places { padding-left:1.15rem; } .image { position:relative; aspect-ratio:16/10; margin-block:.7rem; overflow:hidden; border-radius:10px; background:var(--cdm-page); } .image-placeholder { display:flex; align-items:center; justify-content:center; gap:.5rem; min-height:54px; margin-block:.45rem; padding:.6rem; border:1px dashed var(--cdm-border); border-radius:10px; background:var(--cdm-page); color:var(--cdm-muted); font-size:.75rem; text-align:center; } .detail-view .image-placeholder { min-height:130px; margin-block:.7rem; }
+      .places { padding-left:1.15rem; } .image { position:relative; aspect-ratio:16/10; margin-block:.7rem; overflow:hidden; border-radius:10px; background:var(--cdm-page); } .image-placeholder { display:flex; align-items:center; justify-content:center; gap:.5rem; min-height:54px; margin-block:.45rem; padding:.6rem; border:1px dashed var(--cdm-border); border-radius:10px; background:var(--cdm-page); color:var(--cdm-muted); font-size:.75rem; text-align:center; } .detail-view .image-placeholder { min-height:130px; margin-block:.7rem; }
+      .lodge-amenities { margin:.6rem 0; color:var(--cdm-navy); font-size:.86rem; }.lodge-amenities ul { display:flex; flex-wrap:wrap; gap:.4rem; margin:.4rem 0 0; padding:0; list-style:none; }.lodge-amenities li { padding:.28rem .5rem; border:1px solid var(--cdm-border); border-radius:999px; background:var(--cdm-page); font-size:.75rem; }.lodge-price { display:flex; flex-wrap:wrap; gap:.35rem; color:var(--cdm-navy); font-size:.86rem; }.lodge-price span { width:100%; color:var(--cdm-muted); font-size:.76rem; }
      img { object-fit:cover; border-radius:10px; } .image-button { display:block; width:100%; padding:0; border:0; color:inherit; cursor:zoom-in; text-align:initial; } .image-button:focus-visible { outline:3px solid var(--cdm-royal-blue); outline-offset:3px; } .gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:1rem; }
-     .detail-view { padding:clamp(1.1rem,3vw,1.75rem); border-radius:16px; }
+      .horizontal-view { grid-template-columns:150px minmax(0,1fr); grid-template-areas:"image title" "image provider" "image category" "image verified" "image description" "image places" "image actions"; align-content:start; align-items:start; gap:.3rem .8rem; padding:.7rem; }
+      .horizontal-view h3 { grid-area:title; margin:0; }.horizontal-view .provider { grid-area:provider; margin:0; }.horizontal-view .category-label { grid-area:category; margin:0; }.horizontal-view .verified { grid-area:verified; margin:0; }.horizontal-view .horizontal-media,.horizontal-view .image-placeholder { grid-area:image; align-self:start; width:100%; min-width:0; margin:0; }.horizontal-view .image { width:100%; aspect-ratio:4/5; margin:0; }.horizontal-view .image-placeholder { min-height:150px; }.horizontal-view .description { grid-area:description; margin:.1rem 0; line-height:1.45; -webkit-line-clamp:3; }.horizontal-view .places,.horizontal-view>p:not(.provider):not(.description) { grid-area:places; margin:.1rem 0; font-size:.78rem; line-height:1.4; }.horizontal-view .places { padding-left:1rem; }.horizontal-view .actions { grid-area:actions; margin:0; }.horizontal-view .actions a,.horizontal-view .contact-trigger { min-height:38px; padding:.4rem .55rem; font-size:.74rem; }
+      @media(max-width:420px) { .horizontal-view { grid-template-columns:105px minmax(0,1fr); gap:.3rem .6rem; }.horizontal-view .image-placeholder { min-height:125px; }.horizontal-view .category-label { font-size:.66rem; } }
+      .detail-view { padding:clamp(1.1rem,3vw,1.75rem); border-radius:16px; }
      .detail-view h1 { color:var(--cdm-navy); font-weight:760; }
      .detail-view h2 { color:var(--cdm-navy); margin-bottom:.75rem; }
      .detail-view .gallery { width:min(100%,760px); }
@@ -130,6 +137,8 @@ export class ListingSummaryComponent {
   readonly listing = input.required<ServiceListing>();
   readonly detail = input(false);
   readonly compact = input(false);
+  readonly horizontal = input(false);
+  readonly hidePhoneContacts = input(false);
   protected readonly i18n = inject(LanguageService);
   private readonly directory = inject(ServiceDirectoryService);
   private readonly media = inject(MediaService);
@@ -158,8 +167,9 @@ export class ListingSummaryComponent {
   private readonly contactDialog = viewChild<ElementRef<HTMLDialogElement>>('contactDialog');
   protected readonly mapsHref = computed(() => {
     const { latitude, longitude } = this.listing().service_providers;
-    if (typeof latitude !== 'number' || typeof longitude !== 'number' || !Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
-    return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+    return googleMapsDirectionsUrl(latitude, longitude)
+      ?? validateGoogleMapsLocationUrl(this.listing().service_providers.google_maps_url ?? '')?.url
+      ?? null;
   });
   protected readonly places = computed(() => this.listing().listing_locations.flatMap(place => place.locations ? [{
     name: this.i18n.language() === 'ta' ? place.locations.name_ta : place.locations.name_en ?? place.locations.name_ta,
@@ -167,7 +177,9 @@ export class ListingSummaryComponent {
   }] : []));
   protected readonly contacts = computed(() => {
     const provider = this.listing().service_providers;
-    const rows = [...this.listing().listing_contacts].filter(contact => contact.is_public).sort((a, b) => a.sort_order - b.sort_order);
+    const rows = [...this.listing().listing_contacts]
+      .filter(contact => contact.is_public && !(this.hidePhoneContacts() && ['phone', 'whatsapp'].includes(contact.contact_type)))
+      .sort((a, b) => a.sort_order - b.sort_order);
     const hasPhone = rows.some(contact => contact.contact_type === 'phone' && contactHref('phone', contact.contact_value) !== null);
     if (provider.public_email) rows.push({ contact_type: 'email', contact_value: provider.public_email, is_public: true, sort_order: 0 });
     if (provider.website_url) rows.push({ contact_type: 'website', contact_value: provider.website_url, is_public: true, sort_order: 0 });

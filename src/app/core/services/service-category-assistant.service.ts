@@ -51,6 +51,9 @@ export class ServiceCategoryAssistantService {
       plumber: ['plumber', 'plumbing', 'pipe repair', 'பிளம்பர்', 'குழாய்'],
       electrician: ['electrician', 'electrical', 'எலக்ட்ரீஷியன்', 'மின்சார'],
       'ac-service': ['ac service', 'air conditioner', 'ஏசி சர்வீஸ்'],
+      hotels: ['stay', 'stays', 'place to stay', 'places to stay', 'hotel', 'hotels', 'lodging', 'accommodation', 'guest house', 'guesthouse', 'lodge', 'inn', 'resort', 'தங்கும் விடுதி', 'தங்கும் இடம்', 'விடுதி', 'ஹோட்டல்', 'லாட்ஜ்'],
+      'cab-services': ['cab', 'taxi', 'cab service', 'taxi service', 'transport', 'transport service', 'local transport', 'கேப்', 'டாக்ஸி', 'போக்குவரத்து'],
+      'auto-rickshaw-services': ['auto rickshaw', 'rickshaw', 'auto booking', 'ஆட்டோ', 'ஆட்டோ முன்பதிவு'],
     };
     const candidates: Array<{ parent: ServiceCategory; subcategory: ServiceCategory; score: number }> = [];
     for (const parent of this.categories.categories()) {

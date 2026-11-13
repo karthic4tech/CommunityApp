@@ -18,6 +18,7 @@ import { MobileVerificationComponent } from './mobile-verification.component';
 const ACCOUNT_COPY = {
   en: {
     eyebrow: 'ACCOUNT OVERVIEW', title: 'My account', intro: 'Your profile, listings and community activity in one place.',
+    sections: 'Account sections', openSections: 'Open account sections', closeSections: 'Close account sections',
     verified: 'Email verified', verifyNeeded: 'Email verification needed', verifyTitle: 'Verify your email to publish services',
     verifyBody: 'You can complete your profile now. Email verification is required before submitting a service for review.', verifyAction: 'Verify email',
     member: 'Community member', editProfile: 'Edit profile', profile: 'Profile information', profileHint: 'Keep your details up to date so the community can recognize you.',
@@ -39,6 +40,7 @@ const ACCOUNT_COPY = {
   },
   ta: {
     eyebrow: 'கணக்கு கண்ணோட்டம்', title: 'எனது கணக்கு', intro: 'உங்கள் சுயவிவரம், சேவைகள் மற்றும் சமூகச் செயல்பாடுகள் ஒரே இடத்தில்.',
+    sections: 'கணக்குப் பகுதிகள்', openSections: 'கணக்குப் பகுதிகளைத் திறக்கவும்', closeSections: 'கணக்குப் பகுதிகளை மூடவும்',
     verified: 'மின்னஞ்சல் சரிபார்க்கப்பட்டது', verifyNeeded: 'மின்னஞ்சலைச் சரிபார்க்கவும்', verifyTitle: 'சேவைகளை வெளியிட மின்னஞ்சலைச் சரிபார்க்கவும்',
     verifyBody: 'இப்போது உங்கள் சுயவிவரத்தைப் பூர்த்தி செய்யலாம். சேவையை மதிப்பாய்வுக்கு அனுப்ப மின்னஞ்சல் சரிபார்ப்பு அவசியம்.', verifyAction: 'மின்னஞ்சலைச் சரிபார்க்கவும்',
     member: 'சமூக உறுப்பினர்', editProfile: 'சுயவிவரத்தைத் திருத்து', profile: 'சுயவிவரத் தகவல்', profileHint: 'சமூகத்தினர் உங்களை அடையாளம் காண உங்கள் தகவல்களைப் புதுப்பித்த நிலையில் வைத்திருங்கள்.',
@@ -85,6 +87,7 @@ export class AccountComponent implements OnInit {
   private readonly formBuilder = inject(NonNullableFormBuilder);
   protected readonly i18n = inject(LanguageService);
   private readonly fullNameInput = viewChild<ElementRef<HTMLInputElement>>('fullNameInput');
+  private readonly accountMenuButton = viewChild<ElementRef<HTMLButtonElement>>('accountMenuButton');
 
   protected readonly form = this.formBuilder.group({
     full_name: ['', [Validators.required, Validators.maxLength(160)]],
@@ -99,6 +102,8 @@ export class AccountComponent implements OnInit {
   protected readonly activityError = signal<string | null>(null);
   protected readonly saving = signal(false);
   protected readonly editing = signal(false);
+  protected readonly accountMenuOpen = signal(false);
+  protected readonly activeAccountSection = signal<'profile' | 'submissions' | null>(null);
   protected readonly signingOut = signal(false);
   protected readonly message = signal<string | null>(null);
   protected readonly messageIsError = signal(false);
@@ -249,5 +254,15 @@ export class AccountComponent implements OnInit {
       this.signingOut.set(false);
       await this.router.navigateByUrl('/auth/sign-in', { replaceUrl: true });
     }
+  }
+
+  protected toggleAccountMenu(): void { this.accountMenuOpen.update(isOpen => !isOpen); }
+  protected showAccountSection(section: 'profile' | 'submissions'): void {
+    this.activeAccountSection.set(section);
+    this.closeAccountMenu();
+  }
+  protected closeAccountMenu(restoreFocus = true): void {
+    this.accountMenuOpen.set(false);
+    if (restoreFocus) this.accountMenuButton()?.nativeElement.focus();
   }
 }
