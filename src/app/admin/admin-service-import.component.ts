@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SupabaseService } from '../core/services/supabase.service';
 
@@ -82,21 +82,49 @@ function normalized(value: string): string { return value.normalize('NFKC').toLo
           <div class="summary-cards"><article><strong>{{ rowCounts().valid }}</strong><span>Valid</span></article><article><strong>{{ rowCounts().warning }}</strong><span>Warnings</span></article><article><strong>{{ rowCounts().error }}</strong><span>Errors / duplicates</span></article><article><strong>{{ checkedRows().length }}</strong><span>Total rows</span></article></div>
           <div class="table-wrap"><table class="table table-sm align-middle"><thead><tr><th scope="col">Row</th><th scope="col">Provider / service</th><th scope="col">Category / type</th><th scope="col">Location</th><th scope="col">Status</th><th scope="col">Details</th></tr></thead><tbody>@for (item of checkedRows().slice(0, 200); track item.index) { <tr><td>{{ item.index + 2 }}</td><td>{{ item.row.provider_name }}<small>{{ item.row.service_name }}</small></td><td>{{ item.row.category }}<small>{{ item.row.service_type }}</small></td><td>{{ item.row.location }}</td><td><span class="badge" [class.text-bg-success]="item.state === 'valid'" [class.text-bg-warning]="item.state === 'warning'" [class.text-bg-danger]="item.state === 'error'">{{ item.state }}</span></td><td>{{ item.message || 'Ready to import' }}</td></tr> }</tbody></table></div>
           @if (checkedRows().length > 200) { <p class="help">Showing the first 200 rows. The full error report is downloadable.</p> }
-          <div class="actions"><button type="button" class="btn btn-outline-secondary" (click)="step.set('mapping')">Back to mappings</button><button type="button" class="btn btn-primary" [disabled]="!rowCounts().valid && !rowCounts().warning || working()" (click)="confirmImport()">{{ working() ? 'Importing securely…' : 'Import ' + (rowCounts().valid + rowCounts().warning) + ' valid rows' }}</button></div>
+          <div class="actions"><button type="button" class="btn btn-outline-secondary" (click)="step.set('mapping')">Back to mappings</button><button type="button" class="btn btn-primary" [disabled]="!rowCounts().valid && !rowCounts().warning || working()" (click)="requestImportConfirmation()">Import {{ rowCounts().valid + rowCounts().warning }} valid rows</button></div>
         </section>
       }
 
       @if (step() === 'result') {
-        <section class="panel result" aria-labelledby="result-title" role="status"><i class="bi" [class.bi-check-circle-fill]="resultSummary().failed === 0" [class.bi-exclamation-triangle-fill]="resultSummary().failed > 0" aria-hidden="true"></i><h2 id="result-title">{{ resultSummary().failed ? 'Import completed with some errors' : 'Import complete' }}</h2><p>New listings were submitted as pending review. They will not appear publicly until approved.</p><div class="summary-cards"><article><strong>{{ resultSummary().inserted }}</strong><span>Imported</span></article><article><strong>{{ resultSummary().skipped }}</strong><span>Skipped</span></article><article><strong>{{ resultSummary().failed }}</strong><span>Failed</span></article></div><p>Import job: <code>{{ resultSummary().jobId }}</code></p>@if (importErrors().length) { <div class="import-errors" aria-label="Import row errors"><h3>Rows needing attention</h3>@for (item of importErrors().slice(0, 20); track item.row) { <p><strong>Row {{ item.row }} · {{ item.status }}:</strong> {{ item.message }}</p> }@if (importErrors().length > 20) { <p>More row details are available in the downloaded report.</p> }<button type="button" class="btn btn-outline-secondary" (click)="downloadErrorReport()">Download row report</button></div> }<div class="actions"><a class="btn btn-outline-primary" routerLink="/admin/listings/review">Open review queue</a>@if (resultSummary().failed) { <button type="button" class="btn btn-outline-primary" [disabled]="working()" (click)="confirmImport()">{{ working() ? 'Retrying…' : 'Retry failed rows' }}</button> }<button type="button" class="btn btn-primary" (click)="resetFile()">Import another file</button></div></section>
+        <section class="panel result" aria-labelledby="result-title" role="status"><i class="bi" [class.bi-check-circle-fill]="resultSummary().failed === 0" [class.bi-exclamation-triangle-fill]="resultSummary().failed > 0" aria-hidden="true"></i><h2 id="result-title">{{ resultSummary().failed ? 'Import completed with some errors' : 'Import complete' }}</h2><p>New listings were submitted as pending review. They will not appear publicly until approved.</p><div class="summary-cards"><article><strong>{{ resultSummary().inserted }}</strong><span>Imported</span></article><article><strong>{{ resultSummary().skipped }}</strong><span>Skipped</span></article><article><strong>{{ resultSummary().failed }}</strong><span>Failed</span></article></div><p>Import job: <code>{{ resultSummary().jobId }}</code></p>@if (importErrors().length) { <div class="import-errors" aria-label="Import row errors"><h3>Rows needing attention</h3>@for (item of importErrors().slice(0, 20); track item.row) { <p><strong>Row {{ item.row }} · {{ item.status }}:</strong> {{ item.message }}</p> }@if (importErrors().length > 20) { <p>More row details are available in the downloaded report.</p> }<button type="button" class="btn btn-outline-secondary" (click)="downloadErrorReport()">Download row report</button></div> }<div class="actions"><a class="btn btn-outline-primary" routerLink="/admin/listings/review">Open review queue</a>@if (resultSummary().failed) { <button type="button" class="btn btn-outline-primary" [disabled]="working()" (click)="requestImportConfirmation()">Retry failed rows</button> }<button type="button" class="btn btn-primary" (click)="resetFile()">Import another file</button></div></section>
       }
+      <dialog #importConfirmDialog class="import-confirm-dialog" aria-labelledby="import-confirm-title" aria-describedby="import-confirm-description" (click)="closeImportDialogFromBackdrop($event)">
+        <section class="import-confirm-card">
+          <div class="import-confirm-icon" aria-hidden="true"><i class="bi" [class.bi-arrow-repeat]="step() === 'result'" [class.bi-cloud-arrow-up]="step() !== 'result'"></i></div>
+          <p class="eyebrow">{{ step() === 'result' ? 'RETRY IMPORT' : 'CONFIRM IMPORT' }}</p>
+          <h2 id="import-confirm-title">{{ step() === 'result' ? 'Retry failed rows?' : 'Submit services for review?' }}</h2>
+          <p id="import-confirm-description">{{ step() === 'result' ? 'Retry the failed rows from this job. Rows already imported will not be duplicated.' : 'Import ' + (rowCounts().valid + rowCounts().warning) + ' valid rows for administrator review?' }}</p>
+          <div class="import-confirm-notice"><i class="bi bi-shield-check" aria-hidden="true"></i><span>Imported listings will be created as pending review. They will not be published automatically.</span></div>
+          <div class="import-confirm-actions"><button type="button" class="cancel-action" [disabled]="working()" (click)="closeImportDialog()">Cancel</button><button type="button" class="confirm-action" [disabled]="working()" (click)="executeImport()">{{ working() ? 'Importing…' : step() === 'result' ? 'Retry failed rows' : 'Import and submit' }}</button></div>
+        </section>
+      </dialog>
     </main>
   `,
-  styles: `
+  styles: [`
     :host{display:block;padding-block:1.5rem 3rem;color:var(--cdm-navy)}.import-page{max-width:var(--cdm-content-width)}.back-link{display:inline-flex;align-items:center;gap:.4rem;min-height:44px;color:var(--cdm-royal-blue);font-weight:700;text-decoration:none}.page-header{margin:.5rem 0 1rem;padding:clamp(1.25rem,3vw,2rem);border:1px solid var(--cdm-border);border-radius:16px;background:linear-gradient(120deg,var(--cdm-blue-soft),#fff)}.eyebrow{margin:0 0 .3rem;color:var(--cdm-royal-blue);font-size:.72rem;font-weight:800;letter-spacing:.12em}.page-header h1{margin:0;color:var(--cdm-navy);font-size:clamp(1.7rem,4vw,2.4rem)}.page-header p:last-child,.panel>p,.panel-heading p,.help{color:var(--cdm-muted);line-height:1.6}.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:.55rem;margin:1.1rem 0}.steps>div{display:flex;align-items:center;gap:.5rem;padding:.65rem;border:1px solid var(--cdm-border);border-radius:10px;background:#fff;color:var(--cdm-muted)}.steps span{display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;background:var(--cdm-page);font-weight:800}.steps .active{border-color:var(--cdm-royal-blue);color:var(--cdm-royal-blue)}.steps .complete span,.steps .active span{color:#fff;background:var(--cdm-royal-blue)}.steps small{font-weight:700}.panel{padding:clamp(1rem,2.5vw,1.5rem);border:1px solid var(--cdm-border);border-radius:16px;background:#fff}.panel h2{margin:0;color:var(--cdm-navy);font-size:1.25rem}.drop-zone{display:grid;justify-items:center;gap:.35rem;margin:1rem 0;padding:2rem 1rem;border:2px dashed var(--cdm-border);border-radius:14px;background:var(--cdm-page);cursor:pointer;text-align:center}.drop-zone:focus-within,.drop-zone:hover{border-color:var(--cdm-royal-blue)}.drop-zone>i{color:var(--cdm-royal-blue);font-size:2rem}.drop-zone span{color:var(--cdm-muted);font-size:.85rem}.drop-zone input{max-width:100%;margin-top:.6rem}.template-actions,.actions{display:flex;flex-wrap:wrap;gap:.55rem}.actions{justify-content:space-between;margin-top:1.25rem}.template-actions{margin:1rem 0}.mapping-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem 1rem;margin-top:1rem}.mapping-grid label{display:grid;gap:.35rem;color:var(--cdm-navy);font-size:.82rem;font-weight:700}.mapping-grid label>span{color:#b42318}.mapping-grid select{min-width:0;min-height:42px;padding:.5rem;border:1px solid var(--cdm-border);border-radius:8px;background:white;color:var(--cdm-navy);font:inherit}.help{font-size:.82rem}.panel-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}.summary-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.65rem;margin:1rem 0}.summary-cards article{display:grid;gap:.2rem;padding:.8rem;border:1px solid var(--cdm-border);border-radius:10px;background:var(--cdm-page)}.summary-cards strong{color:var(--cdm-navy);font-size:1.4rem}.summary-cards span{color:var(--cdm-muted);font-size:.78rem}.table-wrap{max-height:55vh;overflow:auto;border:1px solid var(--cdm-border);border-radius:10px}.table{margin:0}.table small{display:block;color:var(--cdm-muted)}.result{text-align:center}.result>i{color:var(--cdm-teal);font-size:2rem}.result .actions{justify-content:center}.result code{overflow-wrap:anywhere}.import-errors{max-width:720px;margin:1rem auto;padding:1rem;border:1px solid var(--cdm-border);border-radius:10px;text-align:left}.import-errors h3{font-size:1rem}.import-errors p{margin:.35rem 0;color:var(--cdm-muted);font-size:.82rem}.alert{margin-block:1rem}:is(a,button,input,select):focus-visible{outline:3px solid color-mix(in srgb,var(--cdm-royal-blue) 55%,transparent);outline-offset:2px}@media(max-width:640px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}.steps>div{padding:.45rem}.mapping-grid,.summary-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.panel-heading{flex-direction:column}.actions>*{flex:1}.drop-zone{padding:1.4rem .7rem}.table-wrap{max-height:60vh}}
-  `,
+  `, `
+    .import-confirm-dialog{width:min(92vw,480px);max-width:480px;padding:0;border:0;border-radius:20px;color:var(--cdm-navy);background:transparent;box-shadow:0 24px 70px rgba(0,24,60,.28)}
+    .import-confirm-dialog::backdrop{background:rgba(9,24,48,.58);backdrop-filter:blur(3px)}
+    .import-confirm-card{padding:clamp(1.25rem,4vw,2rem);border:1px solid rgba(255,255,255,.7);border-radius:20px;background:#fff}
+    .import-confirm-icon{display:grid;place-items:center;width:48px;height:48px;margin-bottom:1rem;border-radius:14px;color:#087f6b;background:#e5f7f1;font-size:1.35rem}
+    .import-confirm-card .eyebrow{margin:0 0 .35rem;color:#087f6b;font-size:.7rem;font-weight:800;letter-spacing:.12em}
+    .import-confirm-card h2{margin:0;color:var(--cdm-navy);font-size:clamp(1.25rem,4vw,1.55rem);line-height:1.25}
+    .import-confirm-card>p:not(.eyebrow){margin:.65rem 0 0;color:var(--cdm-muted);line-height:1.6}
+    .import-confirm-notice{display:flex;align-items:flex-start;gap:.65rem;margin-top:1rem;padding:.8rem .9rem;border:1px solid #d9e8f7;border-radius:11px;color:#274b70;background:#f2f7fc;font-size:.87rem;line-height:1.5}
+    .import-confirm-notice i{flex:none;margin-top:.1rem;color:#087f6b}
+    .import-confirm-actions{display:flex;justify-content:flex-end;gap:.65rem;margin-top:1.5rem}
+    .import-confirm-actions button{min-height:46px;padding:.65rem 1rem}
+    .import-confirm-actions .cancel-action{border-color:var(--cdm-border);color:var(--cdm-navy);background:#fff}
+    .import-confirm-actions .confirm-action{border-color:#087f6b;color:#fff;background:#087f6b}
+    .import-confirm-actions .confirm-action:hover:not(:disabled){border-color:#066b5b;background:#066b5b}
+    .import-confirm-actions button:focus-visible{outline:3px solid #4a90e2;outline-offset:3px}
+    @media(max-width:430px){.import-confirm-dialog{width:calc(100vw - 1.5rem)}.import-confirm-actions{flex-direction:column-reverse}.import-confirm-actions button{width:100%}}
+  `],
 })
 export class AdminServiceImportComponent {
   private readonly supabase = inject(SupabaseService);
+  private readonly importConfirmDialog = viewChild<ElementRef<HTMLDialogElement>>('importConfirmDialog');
   protected readonly fields = FIELDS;
   protected readonly requiredFields: readonly FieldKey[] = ['provider_name', 'service_name', 'category', 'service_type', 'location'];
   protected readonly stepItems: readonly { id: WizardStep; label: string }[] = [
@@ -173,10 +201,21 @@ export class AdminServiceImportComponent {
     finally { this.working.set(false); }
   }
 
-  protected async confirmImport(): Promise<void> {
-    const retry = this.step() === 'result';
-    const prompt = retry ? `Retry failed rows from import ${this.resultSummary().jobId}? Successfully imported rows will not be duplicated.` : `Import ${this.rowCounts().valid + this.rowCounts().warning} valid rows for administrator review?`;
-    if (!globalThis.confirm(prompt)) return;
+  protected requestImportConfirmation(): void {
+    this.importConfirmDialog()?.nativeElement.showModal();
+  }
+
+  protected closeImportDialog(): void {
+    const dialog = this.importConfirmDialog()?.nativeElement;
+    if (dialog?.open) dialog.close();
+  }
+
+  protected closeImportDialogFromBackdrop(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.closeImportDialog();
+  }
+
+  protected async executeImport(): Promise<void> {
+    this.closeImportDialog();
     this.working.set(true); this.error.set(null);
     try {
       const idempotencyKey = this.idempotencyKey() ?? globalThis.crypto.randomUUID();
