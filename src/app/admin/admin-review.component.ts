@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AdminReviewService, ReviewListingRow, ReviewRevisionRow } from '../core/services/admin-review.service';
 import { MediaGalleryItem } from '../core/models/media.models';
@@ -11,7 +11,7 @@ import { MediaService } from '../core/services/media.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="review-page cdm-form" [class.pending-tab]="activeTab() === 'pending'" [class.published-tab]="activeTab() === 'published'" aria-labelledby="review-title" [attr.aria-busy]="loading() || saving()">
-      <header class="page-header"><div><a class="back-link" routerLink="/admin"><i class="bi bi-arrow-left" aria-hidden="true"></i> Admin dashboard</a><p class="eyebrow">MODERATION</p><h1 id="review-title">Listing review</h1><p class="intro">Review submissions before they become public.</p>@if (pendingReviewCount() > 0) { <p class="review-alert" role="status"><i class="bi bi-bell-fill" aria-hidden="true"></i> {{ pendingReviewCount() }} {{ pendingReviewCount() === 1 ? 'listing' : 'listings' }} awaiting review</p> }</div><button type="button" class="secondary" (click)="load()"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Refresh</button></header>
+       <header class="page-header"><div><a class="back-link" routerLink="/admin"><i class="bi bi-arrow-left" aria-hidden="true"></i> Admin dashboard</a><p class="eyebrow">MODERATION</p><h1 id="review-title">Listing review</h1><p class="intro">Review submissions before they become public.</p>@if (pendingReviewCount() > 0) { <p class="review-alert" role="status"><i class="bi bi-bell-fill" aria-hidden="true"></i> {{ pendingReviewCount() }} {{ pendingReviewCount() === 1 ? 'listing' : 'listings' }} awaiting review</p> }</div><div class="header-actions"><a class="secondary" routerLink="/admin/services/import"><i class="bi bi-file-earmark-spreadsheet" aria-hidden="true"></i> Import Services</a><button type="button" class="secondary" (click)="load()"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Refresh</button></div></header>
       @if (loading()) { <p class="state" role="status">Loading review queue…</p> } @else if (errorMessage(); as message) { <div class="state"><p role="alert">{{ message }}</p><button type="button" (click)="load()">Try again</button></div> } @else {
          <nav class="review-tabs" role="tablist" aria-label="Listing review sections"><button type="button" role="tab" [class.active]="activeTab() === 'pending'" [attr.aria-selected]="activeTab() === 'pending'" (click)="setTab('pending')">Pending <span>{{ filteredPending().length }}</span></button><button type="button" role="tab" [class.active]="activeTab() === 'published'" [attr.aria-selected]="activeTab() === 'published'" (click)="setTab('published')">Published <span>{{ filteredPublished().length }}</span></button></nav>
          <section class="filters" aria-labelledby="filter-title">
@@ -21,17 +21,27 @@ import { MediaService } from '../core/services/media.service';
         </section>
          @if (revisions().length) { <section class="published pending-updates"><h2>Pending listing updates ({{ revisions().length }})</h2><p class="section-caption">Changes to existing published listings awaiting approval.</p><div class="published-list">@for (revision of revisions(); track revision.id) { <article class="revision"><strong>{{ revision.snapshot.listing.title }}</strong><span>{{ revision.service_listings.service_providers.display_name }} · Version {{ revision.version_number }}</span><p>{{ revision.snapshot.listing.description }}</p><textarea #revisionNotes rows="2" placeholder="Review feedback"></textarea><label class="check"><input #revisionVerify type="checkbox" /> Verify provider during approval</label><div class="actions"><button type="button" class="approve" [disabled]="saving()" (click)="decideRevision(revision,'approve',revisionNotes.value,revisionVerify.checked)">Approve update</button><button type="button" [disabled]="saving()" (click)="decideRevision(revision,'request_changes',revisionNotes.value,false)">Request changes</button><button type="button" class="danger" [disabled]="saving()" (click)="decideRevision(revision,'reject',revisionNotes.value,false)">Reject</button></div></article> }</div></section> }
           <section class="review-table-section"><div class="section-heading"><div><h2>Pending review ({{ filteredPending().length }})</h2><p class="section-caption">Review submissions before they become public.</p></div><span>{{ pendingPageCount() }} page{{ pendingPageCount() === 1 ? '' : 's' }}</span></div>
-            <div class="bulk-toolbar"><label><input type="checkbox" [checked]="allVisiblePendingSelected()" [disabled]="!pagedPending().length || saving()" (change)="toggleVisiblePending($event)" /> Select this page</label><span>{{ selectedPendingIds().size }} selected</span><button type="button" class="approve" [disabled]="!selectedPendingIds().size || saving()" (click)="approveSelected()">{{ saving() ? 'Approving…' : 'Approve selected' }}</button></div>
-            @if (bulkMessage(); as message) { <p class="bulk-message" [class.bulk-error]="bulkHadErrors()" role="status">{{ message }}</p> }
+             <div class="bulk-toolbar"><label><input type="checkbox" [checked]="allVisiblePendingSelected()" [disabled]="!pagedPending().length || saving()" (change)="toggleVisiblePending($event)" /> Select this page</label><span>{{ selectedPendingIds().size }} selected</span><label class="bulk-verify"><input type="checkbox" [checked]="verifyProvidersInBulk()" [disabled]="saving()" (change)="setBulkVerifyProviders($event)" /> Verify selected providers during approval</label><button type="button" class="approve" [disabled]="!selectedPendingIds().size || saving()" (click)="approveSelected()">{{ saving() ? 'Approving…' : 'Approve selected' }}</button></div>
+             @if (bulkMessage(); as message) { <p class="bulk-message" [class.bulk-error]="bulkHadErrors()" role="status">{{ message }}</p> }
             @if (!filteredPending().length) { <p class="state">{{ pending().length ? 'No submissions match your filter.' : 'No pending submissions.' }}</p> } @else { <div class="data-table"><div class="data-table-head pending-table-head"><span>Select</span><span>Listing</span><span>Provider</span><span>Category</span><span>Status</span><span>Action</span></div>@for (item of pagedPending(); track item.id) { <div class="data-row pending-data-row" [class.selected]="selected()?.id === item.id"><input type="checkbox" [checked]="selectedPendingIds().has(item.id)" [attr.aria-label]="'Select ' + item.title" [disabled]="saving()" (change)="togglePending(item.id,$event)" /><strong>{{ item.title }}</strong><span>{{ item.service_providers.display_name }}</span><span>{{ item.service_categories.name_en }}</span><span class="status-pill">Pending</span><button type="button" class="row-action" (click)="select(item)">Review <i class="bi bi-arrow-right" aria-hidden="true"></i></button></div> }</div><nav class="pagination" aria-label="Pending review pages"><button type="button" [disabled]="pendingPage() === 1" (click)="changePendingPage(-1)"><i class="bi bi-chevron-left" aria-hidden="true"></i><span class="visually-hidden">Previous page</span></button><span>Page {{ pendingPage() }} of {{ pendingPageCount() }}</span><button type="button" [disabled]="pendingPage() === pendingPageCount()" (click)="changePendingPage(1)"><i class="bi bi-chevron-right" aria-hidden="true"></i><span class="visually-hidden">Next page</span></button></nav> }</section>
           @if (selected(); as item) { <article class="detail"><h2>{{ item.title }}</h2><p class="provider">{{ item.service_providers.display_name }} · {{ item.service_categories.name_en }}</p><p>{{ item.description }}</p><p><strong>Provider status:</strong> {{ item.service_providers.verification_status }}</p>@if (item.service_providers.address) { <p><strong>Address:</strong> {{ item.service_providers.address }}</p> }@if (item.service_providers.postal_code) { <p><strong>Postal code:</strong> {{ item.service_providers.postal_code }}</p> }<h3>Service locations</h3>@if (item.listing_locations.length) { <ul>@for (location of item.listing_locations; track $index) { @let place = location.locations; <li><strong>{{ location.coverage_type === 'based_here' ? 'Based here' : 'Serves' }}:</strong> {{ place?.name_en ?? place?.name_ta ?? 'Location unavailable' }}@if (place; as details) { @if (details.name_en && details.name_ta && details.name_en !== details.name_ta) { <span> · {{ details.name_ta }}</span> } }</li> }</ul> } @else { <p>No locality or service areas were provided.</p> }<h3>Contacts</h3><ul>@for (contact of item.listing_contacts; track $index) { <li>{{ contact.contact_type }}: {{ contact.contact_value }} ({{ contact.is_public ? 'public' : 'private' }})</li> }</ul><h3>Review decision</h3><textarea #notes rows="4" placeholder="Reason or feedback for the provider"></textarea><label class="check"><input #verify type="checkbox" /> Verify provider during approval</label><div class="actions"><button type="button" class="approve" [disabled]="saving()" (click)="decide(item,'approve',notes.value,verify.checked)">Approve and publish</button><button type="button" [disabled]="saving()" (click)="decide(item,'request_changes',notes.value,false)">Request changes</button><button type="button" class="danger" [disabled]="saving()" (click)="decide(item,'reject',notes.value,false)">Reject</button></div></article> } @else { <p class="state">Select a submission to review.</p> }
          @if (selectedImagesLoading()) { <p class="state" role="status">Loading service images…</p> } @else if (selectedImages().length) { <section class="detail review-image-panel" aria-labelledby="service-images-title"><h2 id="service-images-title">Service images</h2><div class="review-images">@for (image of selectedImages(); track image.asset.id) { <img [src]="image.url" [alt]="image.alt" width="180" height="120" loading="lazy" /> }</div></section> }
-        <section class="published"><div class="section-heading"><div><h2>Published listings ({{ filteredPublished().length }})</h2><p class="section-caption">Manage listings currently visible in the directory.</p></div><span>{{ publishedPageCount() }} page{{ publishedPageCount() === 1 ? '' : 's' }}</span></div>@if (!filteredPublished().length) { <p class="state">{{ published().length ? 'No published listings match your filter.' : 'No published listings.' }}</p> } @else { <div class="data-table"><div class="data-table-head"><span>Listing</span><span>Provider</span><span>Category</span><span>Status</span><span>Action</span></div>@for (item of pagedPublished(); track item.id) { <div class="data-row"><strong>{{ item.title }}</strong><span>{{ item.service_providers.display_name }}</span><span>{{ item.service_categories.name_en }}</span><span class="status-pill published-status">Published</span><span><button type="button" class="danger row-button" [disabled]="saving()" (click)="unpublish(item)">Unpublish</button></span></div> }</div><nav class="pagination" aria-label="Published listing pages"><button type="button" [disabled]="publishedPage() === 1" (click)="changePublishedPage(-1)"><i class="bi bi-chevron-left" aria-hidden="true"></i><span class="visually-hidden">Previous page</span></button><span>Page {{ publishedPage() }} of {{ publishedPageCount() }}</span><button type="button" [disabled]="publishedPage() === publishedPageCount()" (click)="changePublishedPage(1)"><i class="bi bi-chevron-right" aria-hidden="true"></i><span class="visually-hidden">Next page</span></button></nav> }</section>
-       }
-     </section>
+         <section class="published"><div class="section-heading"><div><h2>Published listings ({{ filteredPublished().length }})</h2><p class="section-caption">Manage listings currently visible in the directory.</p></div><span>{{ publishedPageCount() }} page{{ publishedPageCount() === 1 ? '' : 's' }}</span></div>@if (!filteredPublished().length) { <p class="state">{{ published().length ? 'No published listings match your filter.' : 'No published listings.' }}</p> } @else { <div class="data-table"><div class="data-table-head"><span>Listing</span><span>Provider</span><span>Category</span><span>Status</span><span>Action</span></div>@for (item of pagedPublished(); track item.id) { <div class="data-row"><strong>{{ item.title }}</strong><span>{{ item.service_providers.display_name }}</span><span>{{ item.service_categories.name_en }}</span><span class="status-pill published-status">Published</span><span><button type="button" class="danger row-button" [disabled]="saving()" (click)="unpublish(item)">Unpublish</button></span></div> }</div><nav class="pagination" aria-label="Published listing pages"><button type="button" [disabled]="publishedPage() === 1" (click)="changePublishedPage(-1)"><i class="bi bi-chevron-left" aria-hidden="true"></i><span class="visually-hidden">Previous page</span></button><span>Page {{ publishedPage() }} of {{ publishedPageCount() }}</span><button type="button" [disabled]="publishedPage() === publishedPageCount()" (click)="changePublishedPage(1)"><i class="bi bi-chevron-right" aria-hidden="true"></i><span class="visually-hidden">Next page</span></button></nav> }</section>
+        }
+        <dialog #bulkApprovalDialog class="bulk-confirm-dialog" aria-labelledby="bulk-confirm-title" aria-describedby="bulk-confirm-description" (click)="closeBulkApprovalFromBackdrop($event)" (cancel)="onBulkApprovalCancel()">
+          <section class="bulk-confirm-card">
+            <div class="bulk-confirm-icon" aria-hidden="true"><i class="bi bi-shield-check"></i></div>
+            <p class="eyebrow">REVIEW ACTION</p>
+            <h2 id="bulk-confirm-title">Approve selected listings?</h2>
+            <p id="bulk-confirm-description">You’re about to publish <strong>{{ bulkApprovalCount() }} selected listing{{ bulkApprovalCount() === 1 ? '' : 's' }}</strong>. Published listings become visible in the directory.</p>
+            @if (verifyProvidersInBulk()) { <div class="verify-notice"><i class="bi bi-info-circle" aria-hidden="true"></i><span>Unverified providers in this selection will also be marked verified.</span></div> } @else { <div class="verify-notice"><i class="bi bi-info-circle" aria-hidden="true"></i><span>Listings whose providers are not verified will remain unpublished.</span></div> }
+            <div class="bulk-confirm-actions"><button type="button" class="cancel-action" (click)="closeBulkApproval()">Cancel</button><button type="button" class="confirm-action" [disabled]="saving()" (click)="confirmBulkApproval()">{{ saving() ? 'Approving…' : 'Approve and publish' }}</button></div>
+          </section>
+        </dialog>
+      </section>
    `,
    styles: `
-    .filters { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,1.3fr) 150px; align-items:end; gap:1rem; padding:1rem 1.25rem; border:1px solid var(--cdm-border); border-radius:16px; background:#fff; }.filters h2 { margin:0; color:var(--cdm-navy); }.filters p,.section-caption { margin:.3rem 0 0; color:var(--cdm-muted); font-size:.85rem; }.filters label { display:grid; gap:.35rem; color:var(--cdm-muted); font-size:.78rem; font-weight:700; }.filter-input { width:100%; min-height:44px; border:1px solid var(--cdm-border); border-radius:9px; padding:.55rem .7rem; background:#fff; color:var(--cdm-navy); font:inherit; }.section-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }.section-heading > span { flex:none; color:var(--cdm-muted); font-size:.8rem; }.card-grid,.published-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.7rem; }.card-title { display:flex; justify-content:space-between; gap:.5rem; }.card-title i { color:var(--cdm-teal); }.queue-item { min-height:125px; transition:border-color .15s ease,transform .15s ease,box-shadow .15s ease; }.queue-item:hover { border-color:var(--cdm-royal-blue); transform:translateY(-2px); box-shadow:0 6px 18px #00205014; }.published-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }.published-card { display:flex!important; align-items:flex-start; justify-content:space-between!important; gap:.75rem; min-height:110px; padding:.85rem; }.published-card div { display:grid; gap:.25rem; min-width:0; }.published-card strong { overflow-wrap:anywhere; }.published-card span,.published-card small { color:var(--cdm-muted); line-height:1.45; }.pagination { display:flex; align-items:center; justify-content:center; gap:.8rem; margin-top:.8rem; color:var(--cdm-muted); font-size:.82rem; }.pagination button { display:grid; place-items:center; min-width:40px; min-height:40px; padding:.4rem; }.pagination button:disabled { cursor:not-allowed; opacity:.45; }
+     .filters { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,1.3fr) 150px; align-items:end; gap:1rem; padding:1rem 1.25rem; border:1px solid var(--cdm-border); border-radius:16px; background:#fff; }.header-actions { display:flex; flex-wrap:wrap; gap:.5rem; }.header-actions a { display:inline-flex; align-items:center; gap:.4rem; text-decoration:none; }.filters h2 { margin:0; color:var(--cdm-navy); }.filters p,.section-caption { margin:.3rem 0 0; color:var(--cdm-muted); font-size:.85rem; }.filters label { display:grid; gap:.35rem; color:var(--cdm-muted); font-size:.78rem; font-weight:700; }.filter-input { width:100%; min-height:44px; border:1px solid var(--cdm-border); border-radius:9px; padding:.55rem .7rem; background:#fff; color:var(--cdm-navy); font:inherit; }.section-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }.section-heading > span { flex:none; color:var(--cdm-muted); font-size:.8rem; }.card-grid,.published-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.7rem; }.card-title { display:flex; justify-content:space-between; gap:.5rem; }.card-title i { color:var(--cdm-teal); }.queue-item { min-height:125px; transition:border-color .15s ease,transform .15s ease,box-shadow .15s ease; }.queue-item:hover { border-color:var(--cdm-royal-blue); transform:translateY(-2px); box-shadow:0 6px 18px #00205014; }.published-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }.published-card { display:flex!important; align-items:flex-start; justify-content:space-between!important; gap:.75rem; min-height:110px; padding:.85rem; }.published-card div { display:grid; gap:.25rem; min-width:0; }.published-card strong { overflow-wrap:anywhere; }.published-card span,.published-card small { color:var(--cdm-muted); line-height:1.45; }.pagination { display:flex; align-items:center; justify-content:center; gap:.8rem; margin-top:.8rem; color:var(--cdm-muted); font-size:.82rem; }.pagination button { display:grid; place-items:center; min-width:40px; min-height:40px; padding:.4rem; }.pagination button:disabled { cursor:not-allowed; opacity:.45; }
     @media(max-width:1000px) { .published-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media(max-width:800px) { .filters { grid-template-columns:1fr 1fr; }.filters > div { grid-column:1/-1; } }
      @media(max-width:600px) { .filters,.card-grid,.published-grid { grid-template-columns:1fr; }.filters > div { grid-column:auto; }.published-card { min-height:0; } }
@@ -75,6 +85,23 @@ import { MediaService } from '../core/services/media.service';
         .review-images img { width:100%; height:auto; aspect-ratio:3/2; object-fit:cover; }
         .published-list .revision { min-width:0; }
       }
+      .bulk-confirm-dialog { width:min(92vw, 480px); max-width:480px; padding:0; border:0; border-radius:20px; color:var(--cdm-navy); background:transparent; box-shadow:0 24px 70px rgba(0,24,60,.28); }
+      .bulk-confirm-dialog::backdrop { background:rgba(9,24,48,.58); backdrop-filter:blur(3px); }
+      .bulk-confirm-card { padding:clamp(1.25rem,4vw,2rem); border:1px solid rgba(255,255,255,.7); border-radius:20px; background:#fff; }
+      .bulk-confirm-icon { display:grid; place-items:center; width:48px; height:48px; margin-bottom:1rem; border-radius:14px; color:#087f6b; background:#e5f7f1; font-size:1.35rem; }
+      .bulk-confirm-card .eyebrow { margin:0 0 .35rem; color:#087f6b; font-size:.7rem; font-weight:800; letter-spacing:.12em; }
+      .bulk-confirm-card h2 { margin:0; color:var(--cdm-navy); font-size:clamp(1.25rem,4vw,1.55rem); line-height:1.25; }
+      .bulk-confirm-card>p:not(.eyebrow) { margin:.65rem 0 0; color:var(--cdm-muted); line-height:1.6; }
+      .bulk-confirm-card>p strong { color:var(--cdm-navy); }
+      .verify-notice { display:flex; align-items:flex-start; gap:.65rem; margin-top:1rem; padding:.8rem .9rem; border:1px solid #d9e8f7; border-radius:11px; color:#274b70; background:#f2f7fc; font-size:.87rem; line-height:1.5; }
+      .verify-notice i { flex:none; margin-top:.1rem; color:#1769aa; }
+      .bulk-confirm-actions { display:flex; justify-content:flex-end; gap:.65rem; margin-top:1.5rem; }
+      .bulk-confirm-actions button { min-height:46px; padding:.65rem 1rem; }
+      .bulk-confirm-actions .cancel-action { border-color:var(--cdm-border); color:var(--cdm-navy); background:#fff; }
+      .bulk-confirm-actions .confirm-action { border-color:#087f6b; color:#fff; background:#087f6b; }
+      .bulk-confirm-actions .confirm-action:hover:not(:disabled) { border-color:#066b5b; background:#066b5b; }
+      .bulk-confirm-actions button:focus-visible { outline:3px solid #4a90e2; outline-offset:3px; }
+      @media(max-width:430px) { .bulk-confirm-dialog { width:calc(100vw - 1.5rem); }.bulk-confirm-actions { flex-direction:column-reverse; }.bulk-confirm-actions button { width:100%; } }
       @media(max-width:430px) {
         :host { padding-block: .75rem 1.5rem; }
         .review-page { gap:.75rem; }
@@ -89,7 +116,8 @@ import { MediaService } from '../core/services/media.service';
 export class AdminReviewComponent implements OnInit {
   private readonly service = inject(AdminReviewService);
   private readonly media = inject(MediaService);
-  private readonly document = inject(DOCUMENT);
+   private readonly document = inject(DOCUMENT);
+   private readonly bulkApprovalDialog = viewChild<ElementRef<HTMLDialogElement>>('bulkApprovalDialog');
   protected readonly pending = signal<ReviewListingRow[]>([]);
   protected readonly published = signal<ReviewListingRow[]>([]);
   protected readonly revisions = signal<ReviewRevisionRow[]>([]);
@@ -102,7 +130,9 @@ export class AdminReviewComponent implements OnInit {
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly selectedPendingIds = signal<ReadonlySet<string>>(new Set());
   protected readonly bulkMessage = signal<string | null>(null);
-  protected readonly bulkHadErrors = signal(false);
+   protected readonly bulkHadErrors = signal(false);
+  protected readonly verifyProvidersInBulk = signal(false);
+  protected readonly bulkApprovalCount = computed(() => this.pending().filter(item => this.selectedPendingIds().has(item.id)).length);
   protected readonly filter = signal('');
   protected readonly pageSize = signal(6);
   protected readonly pendingPage = signal(1);
@@ -142,27 +172,47 @@ export class AdminReviewComponent implements OnInit {
     });
     this.bulkMessage.set(null);
   }
+  protected setBulkVerifyProviders(event: Event): void {
+    this.verifyProvidersInBulk.set((event.target as HTMLInputElement).checked);
+    this.bulkMessage.set(null);
+  }
   protected async approveSelected(): Promise<void> {
     const selected = this.pending().filter(item => this.selectedPendingIds().has(item.id));
-    if (!selected.length || !this.confirm(`Approve and publish ${selected.length} selected listing${selected.length === 1 ? '' : 's'}?`)) return;
+    if (!selected.length) return;
+    this.bulkApprovalDialog()?.nativeElement.showModal();
+  }
+  protected closeBulkApproval(): void {
+    const dialog = this.bulkApprovalDialog()?.nativeElement;
+    if (dialog?.open) dialog.close();
+  }
+  protected closeBulkApprovalFromBackdrop(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.closeBulkApproval();
+  }
+  protected onBulkApprovalCancel(): void {
+    // Native dialog Escape handling already restores focus to its opener.
+  }
+  protected async confirmBulkApproval(): Promise<void> {
+    this.closeBulkApproval();
+    const selected = this.pending().filter(item => this.selectedPendingIds().has(item.id));
+    if (!selected.length) return;
     this.saving.set(true);
     this.bulkMessage.set(null);
     const approved: string[] = [];
-    const failed: ReviewListingRow[] = [];
+    const failed: { item: ReviewListingRow; reason: string }[] = [];
     try {
       for (const item of selected) {
         try {
-          await this.service.review(item.id, 'approve', '', false);
+          await this.service.review(item.id, 'approve', '', this.verifyProvidersInBulk());
           approved.push(item.id);
-        } catch {
-          failed.push(item);
+        } catch (error) {
+          failed.push({ item, reason: error instanceof Error ? error.message.replace(/^Unable to complete this review decision\.\s*/, '') : 'Unknown review error.' });
         }
       }
-      this.selectedPendingIds.set(new Set(failed.map(item => item.id)));
+      this.selectedPendingIds.set(new Set(failed.map(({ item }) => item.id)));
       await this.load();
       this.bulkHadErrors.set(failed.length > 0);
       this.bulkMessage.set(failed.length
-        ? `Approved ${approved.length}. Could not approve: ${failed.map(item => item.title).join(', ')}. Check provider verification and try again.`
+        ? `Approved ${approved.length}. Could not approve: ${failed.map(({ item, reason }) => `${item.title} (${reason})`).join('; ')}.`
         : `Approved and published ${approved.length} listing${approved.length === 1 ? '' : 's'}.`);
     } finally {
       this.saving.set(false);

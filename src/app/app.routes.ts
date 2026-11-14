@@ -20,6 +20,7 @@ export const routes: Routes = [
       { path: 'admin/categories', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-category-management.component').then((m) => m.AdminCategoryManagementComponent) },
       { path: 'admin/local-brands', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-local-brands.component').then((m) => m.AdminLocalBrandsComponent) },
       { path: 'admin/listings/review', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-review.component').then((m) => m.AdminReviewComponent) },
+      { path: 'admin/services/import', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-service-import.component').then((m) => m.AdminServiceImportComponent) },
       { path: 'admin/lodge-reviews', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-lodge-reviews.component').then((m) => m.AdminLodgeReviewsComponent) },
       { path: 'admin/media', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-media.component').then((m) => m.AdminMediaComponent) },
       { path: 'admin/help', canActivate: [adminGuard], loadComponent: () => import('./admin/admin-help.component').then((m) => m.AdminHelpComponent) },

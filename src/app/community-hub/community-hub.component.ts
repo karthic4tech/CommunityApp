@@ -36,6 +36,7 @@ const CATEGORY_IMAGE_MAP: Readonly<Record<string, string>> = {
   'ac-refrigeration': 'ac-repair.jpg',
   'ro-water-purifier': 'water-purifier.jpg',
   carpenter: 'carpenter.jpg',
+  '60th-wedding-anniversary': '60th-wedding.jpg',
   'marriage-halls': 'marriage-hall.jpg',
   'matrimony-services': 'matrimony.jpg',
   'wedding-catering': 'wedding-catering.jpg',
@@ -113,7 +114,7 @@ interface HubSlide { readonly image: string; readonly alt: string; readonly eyeb
           </ol>
         </section>
 
-        <section class="section providers-section" aria-labelledby="providers-title"><div class="section-heading"><div><p class="eyebrow">REAL PEOPLE, LOCAL EXPERTISE</p><h2 id="providers-title">Meet Local Providers</h2><p class="section-intro">Discover published services from people and businesses in Chidambaram.</p></div><a routerLink="/services">Browse all <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a></div>@if (providersLoading()) { <p class="state" role="status">Loading local providers…</p> } @else if (providersError()) { <p class="state" role="alert">Providers are unavailable right now.</p> } @else if (providers().length) { <div class="provider-grid">@for (listing of providers(); track listing.id) { <app-listing-summary [listing]="listing" [compact]="true" /> }</div> } @else { <p class="state">No published providers are available yet.</p> }</section>
+        <section class="section providers-section" aria-labelledby="providers-title"><div class="section-heading"><div><p class="eyebrow">REAL PEOPLE, LOCAL EXPERTISE</p><h2 id="providers-title">Meet Local Providers</h2><p class="section-intro">Discover published services from people and businesses in Chidambaram.</p></div><a routerLink="/services">Browse all <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a></div>@if (providersLoading()) { <p class="state" role="status">Loading local providers…</p> } @else if (providersError()) { <p class="state" role="alert">Providers are unavailable right now.</p> } @else if (providers().length) { <div class="provider-grid">@for (listing of providers(); track listing.id) { <app-listing-summary [listing]="listing" [compact]="true" [horizontal]="true" /> }</div> } @else { <p class="state">No published providers are available yet.</p> }</section>
 
         <section class="business-cta" aria-labelledby="business-title"><div><p class="eyebrow">FOR LOCAL BUSINESS OWNERS</p><h2 id="business-title">Your Business Belongs Here.</h2><p>Help people across Chidambaram discover your services.</p></div><a routerLink="/services/submit" class="cta-button">Add Your Service <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a></section>
         <app-hub-homepage-additions />

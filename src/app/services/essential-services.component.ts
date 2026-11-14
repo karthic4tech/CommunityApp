@@ -78,7 +78,7 @@ import { SearchableSelectOption } from '../shared/components/searchable-select/s
           <div class="emergency-intro"><span class="emergency-icon"><i class="bi bi-telephone-forward" aria-hidden="true"></i></span><div><p class="eyebrow">{{ i18n.language() === 'ta' ? 'விரைவான அணுகல்' : 'QUICK ACCESS' }}</p><h2 id="emergency-title">{{ i18n.language() === 'ta' ? 'அவசர உதவி தொடர்புகள்' : 'Emergency contacts' }}</h2><p>{{ i18n.language() === 'ta' ? 'பட்டியலிடப்பட்ட சேவைகளைப் பார்த்து நேரடியாக தொடர்பு கொள்ளுங்கள்.' : 'Open an available listing to view its published contact options.' }}</p></div></div>
           <div class="emergency-links">
             @for (shortcut of emergencyShortcuts(); track shortcut.id) {
-              <a [routerLink]="shortcut.destination"><i class="bi" [class]="shortcut.icon || 'bi bi-telephone'" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? (shortcut.title_ta || shortcut.title) : shortcut.title }}</span><i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+              <a [routerLink]="shortcut.destination"><i class="bi" [class]="shortcut.icon || 'bi bi-telephone'" aria-hidden="true"></i><span>{{ emergencyShortcutTitle(shortcut.title, shortcut.title_ta) }}</span><i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
             }
           </div>
           <small>{{ i18n.language() === 'ta' ? 'சிடிஎம் 360 ஒரு சேவை அடைவு; அவசர மீட்பு சேவை அல்ல.' : 'CDM 360 is a directory, not an emergency response service. Contact providers directly.' }}</small>
@@ -143,8 +143,8 @@ import { SearchableSelectOption } from '../shared/components/searchable-select/s
         } @else if (!essentialListings().length) {
           <div class="state" role="status"><p>{{ searchMode() ? (i18n.language() === 'ta' ? 'உங்கள் தேடலுக்கு சேவைகள் கிடைக்கவில்லை.' : 'No services found for your search.') : (i18n.language() === 'ta' ? 'இந்த வடிகட்டிகளுக்கு சேவை பட்டியல்கள் இல்லை.' : 'No published listings match these essential service filters.') }}</p><button type="button" class="secondary-button" (click)="clearSearch()">{{ i18n.language() === 'ta' ? 'தேடலை மாற்றுங்கள்' : 'Change search' }}</button><a class="secondary-button" routerLink="/services">{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகளும்' : 'Explore all services' }}</a></div>
         } @else {
-          <div class="listing-grid row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
-            @for (listing of essentialListings(); track listing.id) { <app-listing-summary class="col" [listing]="listing" /> }
+          <div class="listing-grid">
+            @for (listing of essentialListings(); track listing.id) { <app-listing-summary [listing]="listing" [compact]="true" [horizontal]="true" /> }
           </div>
           <nav class="pagination" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவை பக்கங்கள்' : 'Service listing pages'">
             <button type="button" class="secondary-button" [disabled]="listingPage() === 0 || listingsLoading()" (click)="changePage(listingPage() - 1)">{{ i18n.language() === 'ta' ? 'முந்தைய' : 'Previous' }}</button>
@@ -252,6 +252,12 @@ export class EssentialServicesComponent implements OnInit {
   protected readonly places = computed(() => locationOptions(this.locations(), this.i18n.language()));
   protected readonly searchablePlaces = computed(() => locationSearchOptions(this.locations(), this.i18n.language()));
   protected readonly emergencyShortcuts = computed(() => this.shortcuts().filter(item => item.is_emergency));
+  protected emergencyShortcutTitle(title: string, titleTamil: string | null): string {
+    if (this.i18n.language() === 'ta') return titleTamil || title;
+    return title === 'Funeral Services' || title === 'Funeral & Death-Related Services'
+      ? 'Hearse / Dead Body Transport'
+      : title;
+  }
   protected readonly categoryOptions = computed<readonly SearchableSelectOption[]>(() => {
     const options: SearchableSelectOption[] = [];
     const visit = (categories: readonly ServiceCategory[], prefix = ''): void => {

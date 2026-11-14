@@ -39,7 +39,9 @@ export class EssentialServiceService {
         subcategorySlug: subcategory?.slug ?? null,
         subcategoryName: subcategory?.name_en ?? null,
         subcategoryNameTamil: subcategory?.name_ta ?? null,
-        destination: subcategory
+        destination: category.slug === 'funeral-death-related-services'
+          ? '/services/funeral-death-related-services/hearse-transport'
+          : subcategory
           ? `/services/${category.slug}/${subcategory.slug}`
           : `/services/category/${category.slug}`,
       }];
@@ -62,7 +64,9 @@ export class EssentialServiceService {
         categorySlug: category.slug, categoryName: category.name_en, categoryNameTamil: category.name_ta,
         subcategorySlug: subcategory?.slug ?? null, subcategoryName: subcategory?.name_en ?? null,
         subcategoryNameTamil: subcategory?.name_ta ?? null,
-        destination: subcategory ? `/services/${category.slug}/${subcategory.slug}` : `/services/category/${category.slug}`,
+        destination: category.slug === 'funeral-death-related-services'
+          ? '/services/funeral-death-related-services/hearse-transport'
+          : subcategory ? `/services/${category.slug}/${subcategory.slug}` : `/services/category/${category.slug}`,
       }];
     });
     return [...configured, ...categoryShortcuts].sort((a, b) => a.display_order - b.display_order || a.id.localeCompare(b.id));

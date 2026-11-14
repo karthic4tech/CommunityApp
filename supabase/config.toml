@@ -4,3 +4,7 @@ project_id = "nam-chidambaram"
 # Public discovery supports publishable keys. index.ts verifies any supplied
 # user JWT with Auth before constructing the caller-scoped database client.
 verify_jwt = false
+
+[functions.service-bulk-import]
+# The handler verifies the JWT and admin role before accessing service-role data.
+verify_jwt = false

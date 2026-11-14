@@ -30,6 +30,11 @@ import { AdminReviewService } from '../core/services/admin-review.service';
           <p>{{ i18n.language() === 'ta' ? 'சமூக சேவை சமர்ப்பிப்புகளை சரிபார்த்து வெளியிடவும்.' : 'Review, request changes, reject and publish community service submissions.' }}</p>
           <a routerLink="/admin/listings/review">{{ i18n.language() === 'ta' ? 'மதிப்பாய்வு வரிசையைத் திறக்கவும்' : 'Open review queue' }}</a>
         </article>
+        <article class="card col-12 col-md-6 import-card">
+          <h2>{{ i18n.language() === 'ta' ? 'சேவைகளை மொத்தமாக இறக்குமதி செய்க' : 'Bulk service import' }}</h2>
+          <p>{{ i18n.language() === 'ta' ? 'CSV அல்லது Excel கோப்பிலிருந்து சேவைகளைச் சேர்த்து மதிப்பாய்வுக்கு அனுப்பவும்.' : 'Add multiple services from a CSV or Excel file and submit them for review.' }}</p>
+          <a routerLink="/admin/services/import"><i class="bi bi-file-earmark-spreadsheet" aria-hidden="true"></i> {{ i18n.language() === 'ta' ? 'சேவைகளை இறக்குமதி செய்க' : 'Import Services' }}</a>
+        </article>
         <article class="card col-12 col-md-6"><h2>User Management</h2><p>Review registered members, providers and mobile verification status.</p><a routerLink="/admin/users">Manage users</a></article>
         <article class="card col-12 col-md-6">
           <h2>{{ i18n.language() === 'ta' ? 'உங்கள் அணுகல்' : 'Your access' }}</h2>

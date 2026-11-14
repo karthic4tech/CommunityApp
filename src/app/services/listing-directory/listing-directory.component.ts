@@ -46,7 +46,7 @@ import { SearchableSelectComponent } from '../../shared/components/searchable-se
       } @else {
         <p class="page-status" aria-live="polite">{{ i18n.language() === 'ta' ? 'பக்கம்' : 'Page' }} {{ page() + 1 }} · {{ result().listings.length }} {{ i18n.language() === 'ta' ? 'வெளியிடப்பட்ட சேவைகள்' : 'published services' }}</p>
         <div class="listings">
-          @for (listing of result().listings; track listing.id) { <app-listing-summary [listing]="listing" /> }
+          @for (listing of result().listings; track listing.id) { <app-listing-summary [listing]="listing" [compact]="true" [horizontal]="true" /> }
         </div>
       }
       @if (!loading() && !error() && (page() > 0 || result().hasMore)) {
