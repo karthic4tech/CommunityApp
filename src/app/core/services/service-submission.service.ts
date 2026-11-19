@@ -12,7 +12,7 @@ const SUBMISSION_COLUMNS = `id,provider_id,category_id,title,description,status,
   listing_locations(coverage_type,locations(id,name_ta,name_en)),
   listing_verification_history(id,decision,notes,created_at,reviewer_user_id),
   listing_media(sort_order,media_assets(id)),
-  service_listing_revisions(id,version_number,status,review_notes,updated_at)`;
+  service_listing_revisions(id,version_number,status,review_notes,updated_at,submitted_at,submitted_by,snapshot)`;
 
 @Injectable({ providedIn: 'root' })
 export class ServiceSubmissionService {
@@ -36,7 +36,7 @@ export class ServiceSubmissionService {
       });
       throw new Error(['Unable to load your submissions.', error.message, error.details, error.hint].filter(Boolean).join(' '));
     }
-    return data ?? [];
+    return this.attachRevisionSubmitterNames(data ?? []);
   }
 
   async getMine(id: string): Promise<SubmissionRow | null> {
@@ -56,7 +56,17 @@ export class ServiceSubmissionService {
       });
       throw new Error(['Unable to load this submission.', error.message, error.details, error.hint].filter(Boolean).join(' '));
     }
-    return data;
+    if (!data) return null;
+    const [enriched] = await this.attachRevisionSubmitterNames([data]);
+    return enriched ?? data;
+  }
+
+  private async attachRevisionSubmitterNames(rows: SubmissionRow[]): Promise<SubmissionRow[]> {
+    const submitterIds = [...new Set(rows.flatMap(row => row.service_listing_revisions ?? []).map(revision => revision.submitted_by).filter((id): id is string => Boolean(id)))];
+    if (!submitterIds.length) return rows;
+    const { data } = await this.supabase.client.from('profiles').select('id,full_name').in('id', submitterIds).returns<{ id: string; full_name: string | null }[]>();
+    const names = new Map((data ?? []).map(profile => [profile.id, profile.full_name]));
+    return rows.map(row => ({ ...row, service_listing_revisions: row.service_listing_revisions?.map(revision => ({ ...revision, profiles: revision.submitted_by ? { full_name: names.get(revision.submitted_by) ?? null } : null })) }));
   }
 
   async history(id: string): Promise<SubmissionHistoryRow[]> {

@@ -21,14 +21,20 @@ export interface ReviewRevisionRow {
   version_number: number;
   status: string;
   snapshot: {
-    provider: { display_name: string; description: string | null; provider_type: string; address: string | null; postal_code: string | null; latitude: number | null; longitude: number | null };
-    listing: { category_id: string; title: string; description: string };
+    provider: { display_name: string; description: string | null; provider_type: string; address: string | null; postal_code: string | null; latitude: number | null; longitude: number | null; public_email?: string | null; website_url?: string | null; google_maps_url?: string | null };
+    listing: { category_id: string; title: string; description: string; room_amenities?: string[]; indicative_room_price?: number | null };
     contacts: { contact_type: string; contact_value: string; is_public: boolean }[];
     locations: { location_id: string; coverage_type: string }[];
   };
   review_notes: string | null;
   submitted_at: string | null;
-  service_listings: { title: string; status: string; service_providers: { display_name: string; verification_status: string } };
+  service_listings: {
+    id: string; title: string; description: string | null; category_id: string; room_amenities: string[]; indicative_room_price: number | null;
+    service_providers: { display_name: string; provider_type: string; description: string | null; address: string | null; postal_code: string | null; public_email: string | null; website_url: string | null; latitude: number | null; longitude: number | null; google_maps_url: string | null; verification_status: string };
+    service_categories: { name_en: string; name_ta: string };
+    listing_contacts: { contact_type: string; contact_value: string; is_public: boolean; sort_order: number }[];
+    listing_locations: { coverage_type: string; locations: { id: string; name_en: string | null; name_ta: string } | null }[];
+  };
 }
 
 const REVIEW_COLUMNS = `id,provider_id,category_id,title,description,status,submitted_at,
@@ -73,7 +79,7 @@ export class AdminReviewService {
 
   async pendingRevisions(): Promise<ReviewRevisionRow[]> {
     const { data, error } = await this.supabase.client.from('service_listing_revisions')
-      .select('id,listing_id,version_number,status,snapshot,review_notes,submitted_at,service_listings!inner(title,status,service_providers!inner(display_name,verification_status))')
+      .select('id,listing_id,version_number,status,snapshot,review_notes,submitted_at,service_listings!inner(id,title,description,category_id,room_amenities,indicative_room_price,status,service_providers!inner(display_name,provider_type,description,address,postal_code,public_email,website_url,latitude,longitude,google_maps_url,verification_status),service_categories!inner(name_en,name_ta),listing_contacts(contact_type,contact_value,is_public,sort_order),listing_locations(coverage_type,locations(id,name_en,name_ta)))')
       .eq('status', 'pending_review')
       .order('submitted_at', { ascending: true })
       .returns<ReviewRevisionRow[]>();

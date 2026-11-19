@@ -94,6 +94,11 @@ import { AdminReviewService } from '../core/services/admin-review.service';
           <p>{{ i18n.language() === 'ta' ? 'விருந்தினர் மதிப்பீடுகளையும் புகார்களையும் பரிசீலிக்கவும்.' : 'Review guest ratings and reported lodge reviews.' }}</p>
           <a routerLink="/admin/lodge-reviews">{{ i18n.language() === 'ta' ? 'மதிப்பீடுகளை நிர்வகிக்கவும்' : 'Manage lodge reviews' }}</a>
         </article>
+        <article class="card col-12 col-md-6">
+          <h2>Hotel &amp; homestay enquiries</h2>
+          <p>View guest questions about room availability and booking, and track responses.</p>
+          <a routerLink="/admin/lodging-inquiries">View lodging enquiries</a>
+        </article>
       </div>
     </section>
   `,

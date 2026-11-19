@@ -81,7 +81,14 @@ export interface SubmissionRow {
   listing_locations?: { coverage_type: 'based_here' | 'serves_here'; locations: { id: string; name_ta: string; name_en: string | null } | null }[];
   listing_verification_history?: SubmissionHistoryRow[];
   listing_media?: { sort_order: number; media_assets: { id: string } | null }[];
-  service_listing_revisions?: { id: string; version_number: number; status: string; review_notes: string | null; updated_at: string }[];
+  service_listing_revisions?: { id: string; version_number: number; status: string; review_notes: string | null; updated_at: string; submitted_at?: string | null; submitted_by?: string; profiles?: { full_name: string | null } | null; snapshot?: SubmissionRevisionSnapshot }[];
+}
+
+export interface SubmissionRevisionSnapshot {
+  provider?: { provider_type?: string; display_name?: string; description?: string | null; public_email?: string | null; website_url?: string | null; address?: string | null; postal_code?: string | null; latitude?: number | null; longitude?: number | null; google_maps_url?: string | null };
+  listing?: { category_id?: string; title?: string; description?: string | null; room_amenities?: string[]; indicative_room_price?: number | null };
+  contacts?: { contact_type: string; contact_value: string; is_public?: boolean }[];
+  locations?: { location_id: string; coverage_type: string }[];
 }
 
 export interface SubmissionHistoryRow {

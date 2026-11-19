@@ -8,10 +8,11 @@ import { ServiceCategoryService } from '../../core/services/service-category.ser
 import { ServiceDirectoryService } from '../../core/services/service-directory.service';
 import { ListingSummaryComponent } from '../listing-summary/listing-summary.component';
 import { LodgeReviewsComponent } from '../lodge-reviews.component';
+import { LodgeInquiryComponent } from '../lodge-inquiry.component';
 
 @Component({
   selector: 'app-provider-detail',
-  imports: [RouterLink, ListingSummaryComponent, LodgeReviewsComponent],
+  imports: [RouterLink, ListingSummaryComponent, LodgeReviewsComponent, LodgeInquiryComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section [attr.aria-busy]="loading()" [attr.aria-label]="i18n.language() === 'ta' ? 'சேவை விவரங்கள்' : 'Service details'">
@@ -39,6 +40,7 @@ import { LodgeReviewsComponent } from '../lodge-reviews.component';
           }
         </nav>
         <app-listing-summary [listing]="selected" [detail]="true" [hidePhoneContacts]="isLodgeListing()" />
+        @if (isLodgeListing()) { <app-lodge-inquiry [listing]="selected" /> }
         @if (isLodgeListing()) { <app-lodge-reviews [listingId]="selected.id" [signInReturnUrl]="lodgeReviewReturnUrl(selected)" [startWriting]="queryParams().get('review') === 'write'" /> }
         @if (related().length) {
           <section class="related" aria-labelledby="related-title">

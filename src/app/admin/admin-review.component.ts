@@ -5,6 +5,8 @@ import { AdminReviewService, ReviewListingRow, ReviewRevisionRow } from '../core
 import { MediaGalleryItem } from '../core/models/media.models';
 import { MediaService } from '../core/services/media.service';
 
+interface RevisionFieldChange { field: string; previous: string; current: string }
+
 @Component({
   selector: 'app-admin-review',
   imports: [RouterLink],
@@ -19,7 +21,7 @@ import { MediaService } from '../core/services/media.service';
           <label>Search listings<input class="filter-input" type="search" [value]="filter()" (input)="setFilter($event)" placeholder="Title, provider or category" /></label>
           <label>Items per page<select class="filter-input" [value]="pageSize()" (change)="setPageSize($event)"><option value="6">6</option><option value="12">12</option><option value="24">24</option></select></label>
         </section>
-         @if (revisions().length) { <section class="published pending-updates"><h2>Pending listing updates ({{ revisions().length }})</h2><p class="section-caption">Changes to existing published listings awaiting approval.</p><div class="published-list">@for (revision of revisions(); track revision.id) { <article class="revision"><strong>{{ revision.snapshot.listing.title }}</strong><span>{{ revision.service_listings.service_providers.display_name }} · Version {{ revision.version_number }}</span><p>{{ revision.snapshot.listing.description }}</p><textarea #revisionNotes rows="2" placeholder="Review feedback"></textarea><label class="check"><input #revisionVerify type="checkbox" /> Verify provider during approval</label><div class="actions"><button type="button" class="approve" [disabled]="saving()" (click)="decideRevision(revision,'approve',revisionNotes.value,revisionVerify.checked)">Approve update</button><button type="button" [disabled]="saving()" (click)="decideRevision(revision,'request_changes',revisionNotes.value,false)">Request changes</button><button type="button" class="danger" [disabled]="saving()" (click)="decideRevision(revision,'reject',revisionNotes.value,false)">Reject</button></div></article> }</div></section> }
+          @if (revisions().length) { <section class="published pending-updates"><h2>Pending listing updates ({{ revisions().length }})</h2><p class="section-caption">Review every proposed change before it replaces the public listing.</p><div class="published-list">@for (revision of revisions(); track revision.id) { <article class="revision"><div class="revision-title"><strong>{{ revision.snapshot.listing.title }}</strong><span>{{ revision.snapshot.provider.display_name }} · Version {{ revision.version_number }}</span></div><div class="revision-diff" aria-label="Previous and proposed values">@for (change of revisionChanges(revision); track change.field) { <section class="revision-change"><h3>{{ change.field }}</h3><div class="revision-values"><div class="previous-value"><span>Previous</span><p>{{ change.previous }}</p></div><div class="proposed-value"><span>Proposed</span><p>{{ change.current }}</p></div></div></section> }@if (!revisionChanges(revision).length) { <p class="no-changes">No field differences were found against the current published version.</p> }</div><textarea #revisionNotes rows="2" placeholder="Review feedback"></textarea><label class="check"><input #revisionVerify type="checkbox" /> Verify provider during approval</label><div class="actions"><button type="button" class="approve" [disabled]="saving()" (click)="decideRevision(revision,'approve',revisionNotes.value,revisionVerify.checked)">Approve update</button><button type="button" [disabled]="saving()" (click)="decideRevision(revision,'request_changes',revisionNotes.value,false)">Request changes</button><button type="button" class="danger" [disabled]="saving()" (click)="decideRevision(revision,'reject',revisionNotes.value,false)">Reject</button></div></article> }</div></section> }
           <section class="review-table-section"><div class="section-heading"><div><h2>Pending review ({{ filteredPending().length }})</h2><p class="section-caption">Review submissions before they become public.</p></div><span>{{ pendingPageCount() }} page{{ pendingPageCount() === 1 ? '' : 's' }}</span></div>
              <div class="bulk-toolbar"><label><input type="checkbox" [checked]="allVisiblePendingSelected()" [disabled]="!pagedPending().length || saving()" (change)="toggleVisiblePending($event)" /> Select this page</label><span>{{ selectedPendingIds().size }} selected</span><label class="bulk-verify"><input type="checkbox" [checked]="verifyProvidersInBulk()" [disabled]="saving()" (change)="setBulkVerifyProviders($event)" /> Verify selected providers during approval</label><button type="button" class="approve" [disabled]="!selectedPendingIds().size || saving()" (click)="approveSelected()">{{ saving() ? 'Approving…' : 'Approve selected' }}</button></div>
              @if (bulkMessage(); as message) { <p class="bulk-message" [class.bulk-error]="bulkHadErrors()" role="status">{{ message }}</p> }
@@ -52,7 +54,7 @@ import { MediaService } from '../core/services/media.service';
         .review-tabs button { flex:1; min-height:44px; padding:.55rem .65rem; border:0; border-radius:9px; background:transparent; color:var(--cdm-muted); font-size:.88rem; }
         .review-tabs button.active { background:#fff; color:var(--cdm-navy); box-shadow:0 1px 5px rgba(0,32,80,.12); }
         .review-tabs span { display:inline-flex; align-items:center; justify-content:center; min-width:1.35rem; margin-left:.2rem; padding:.1rem .3rem; border-radius:999px; background:var(--cdm-btn-primary-light); color:var(--cdm-royal-blue); font-size:.75rem; }
-        .pending-tab > .published { display:none; }
+         .pending-tab > .published:not(.pending-updates) { display:none; }
         .published-tab > .review-table-section { display:none; }
         .published-tab > .detail { display:none; }
         .published-tab > .review-image-panel { display:none; }
@@ -83,8 +85,10 @@ import { MediaService } from '../core/services/media.service';
         .detail .actions button { width:100%; min-height:48px; }
         .review-images { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.5rem; }
         .review-images img { width:100%; height:auto; aspect-ratio:3/2; object-fit:cover; }
-        .published-list .revision { min-width:0; }
+         .published-list .revision { min-width:0; }
+         .pending-updates h2 { overflow-wrap:anywhere; }.revision-values { grid-template-columns:1fr; }.revision .actions { display:flex; flex-wrap:wrap; }.revision .actions button { flex:1 1 140px; min-height:46px; }.revision textarea { box-sizing:border-box; width:100%; max-width:100%; }.revision-contact { display:block; overflow-wrap:anywhere; }
       }
+      .revision-title { display:grid; gap:.25rem; min-width:0; }.revision-title strong { overflow-wrap:anywhere; color:var(--cdm-navy); font-size:1.05rem; }.revision-title span { overflow-wrap:anywhere; color:var(--cdm-muted); font-size:.84rem; }.revision-diff { display:grid; gap:.7rem; margin:.25rem 0; }.revision-change { min-width:0; padding:.8rem; border:1px solid #d8e2ef; border-radius:10px; background:#f7faff; }.revision-change h3 { margin:0 0 .55rem; color:var(--cdm-navy); font-size:.9rem; }.revision-values { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem; }.previous-value,.proposed-value { min-width:0; padding:.65rem .75rem; border-radius:8px; }.previous-value { border-left:3px solid #64748b; background:#eef1f5; }.proposed-value { border-left:3px solid #0b8068; background:#e8f7f1; }.previous-value span,.proposed-value span { display:block; margin-bottom:.25rem; font-size:.72rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }.previous-value span { color:#475569; }.proposed-value span { color:#08634f; }.previous-value p,.proposed-value p { margin:0; color:var(--cdm-navy); font-size:.86rem; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }.no-changes { margin:0; padding:.8rem; border-radius:8px; color:#475569; background:#eef1f5; }
       .bulk-confirm-dialog { width:min(92vw, 480px); max-width:480px; padding:0; border:0; border-radius:20px; color:var(--cdm-navy); background:transparent; box-shadow:0 24px 70px rgba(0,24,60,.28); }
       .bulk-confirm-dialog::backdrop { background:rgba(9,24,48,.58); backdrop-filter:blur(3px); }
       .bulk-confirm-card { padding:clamp(1.25rem,4vw,2rem); border:1px solid rgba(255,255,255,.7); border-radius:20px; background:#fff; }
@@ -149,7 +153,37 @@ export class AdminReviewComponent implements OnInit {
 
   ngOnInit(): void { void this.load(); }
   protected async select(item: ReviewListingRow): Promise<void> { this.selected.set(item); this.selectedImages.set([]); this.selectedImagesLoading.set(true); try { this.selectedImages.set(await this.media.getMediaGallery('listing', item.id)); } catch { this.selectedImages.set([]); } finally { this.selectedImagesLoading.set(false); } }
-  protected setTab(tab: 'pending' | 'published'): void { this.activeTab.set(tab); }
+   protected setTab(tab: 'pending' | 'published'): void { this.activeTab.set(tab); }
+   protected categoryLabel(id: string): string { const match = [...this.pending(), ...this.published()].find(item => item.category_id === id); return match?.service_categories.name_en ?? 'Category updated'; }
+   protected revisionChanges(revision: ReviewRevisionRow): RevisionFieldChange[] {
+     const current = revision.service_listings;
+     const proposed = revision.snapshot;
+     const format = (value: unknown): string => value === null || value === undefined || value === '' ? 'Not set' : String(value);
+     const contacts = (items: readonly { contact_type: string; contact_value: string; is_public: boolean; sort_order?: number }[]): string => items.length ? [...items].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map(item => `${item.contact_type}: ${item.contact_value}${item.is_public ? '' : ' (private)'}`).join('\n') : 'None';
+     const areas = (items: readonly { coverage_type: string; locations?: { id: string; name_en: string | null; name_ta: string } | null }[]): string => items.length ? items.map(item => `${item.coverage_type}:${item.locations?.id ?? 'unknown'}`).sort().join(', ') : 'None';
+     const proposedAreas = (items: readonly { location_id: string; coverage_type: string }[]): string => items.length ? items.map(item => `${item.coverage_type}:${item.location_id}`).sort().join(', ') : 'None';
+     const oldAmenities = current.room_amenities?.length ? current.room_amenities.join(', ') : 'None';
+     const newAmenities = proposed.listing.room_amenities?.length ? proposed.listing.room_amenities.join(', ') : 'None';
+     const rows: RevisionFieldChange[] = [
+       { field: 'Service name', previous: format(current.title), current: format(proposed.listing.title) },
+       { field: 'Category', previous: `${current.service_categories.name_en} / ${current.service_categories.name_ta}`, current: proposed.listing.category_id === current.category_id ? `${current.service_categories.name_en} / ${current.service_categories.name_ta}` : this.categoryLabel(proposed.listing.category_id), },
+       { field: 'Service description', previous: format(current.description), current: format(proposed.listing.description) },
+       { field: 'Provider name', previous: format(current.service_providers.display_name), current: format(proposed.provider.display_name) },
+       { field: 'Provider type', previous: format(current.service_providers.provider_type), current: format(proposed.provider.provider_type) },
+       { field: 'Provider bio', previous: format(current.service_providers.description), current: format(proposed.provider.description) },
+       { field: 'Address', previous: format(current.service_providers.address), current: format(proposed.provider.address) },
+       { field: 'Postal code', previous: format(current.service_providers.postal_code), current: format(proposed.provider.postal_code) },
+       { field: 'Email', previous: format(current.service_providers.public_email), current: format(proposed.provider.public_email) },
+       { field: 'Website', previous: format(current.service_providers.website_url), current: format(proposed.provider.website_url) },
+       { field: 'Google Maps link', previous: format(current.service_providers.google_maps_url), current: format(proposed.provider.google_maps_url) },
+       { field: 'Coordinates', previous: `${format(current.service_providers.latitude)}, ${format(current.service_providers.longitude)}`, current: `${format(proposed.provider.latitude)}, ${format(proposed.provider.longitude)}` },
+       { field: 'Contact details', previous: contacts(current.listing_contacts), current: contacts(proposed.contacts) },
+       { field: 'Service areas', previous: areas(current.listing_locations), current: proposedAreas(proposed.locations) },
+       { field: 'Amenities', previous: oldAmenities, current: newAmenities },
+       { field: 'Indicative room price', previous: current.indicative_room_price == null ? 'Not set' : `₹${current.indicative_room_price} / night`, current: proposed.listing.indicative_room_price == null ? 'Not set' : `₹${proposed.listing.indicative_room_price} / night` },
+     ];
+     return rows.filter(row => row.previous !== row.current);
+   }
   protected closeReview(): void { this.selected.set(null); this.selectedImages.set([]); }
   protected setFilter(event: Event): void { this.filter.set((event.target as HTMLInputElement).value); this.pendingPage.set(1); this.publishedPage.set(1); }
   protected togglePending(id: string, event: Event): void {
