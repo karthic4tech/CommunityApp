@@ -11,6 +11,7 @@ import { CategoryCardComponent } from '../home/category-card.component';
 import { ListingSummaryComponent } from './listing-summary/listing-summary.component';
 import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select.component';
 import { SearchableSelectOption } from '../shared/components/searchable-select/searchable-select.models';
+import { SeoService } from '../core/services/seo.service';
 
 interface FeaturedServiceGroup {
   readonly categoryId: string;
@@ -30,6 +31,7 @@ interface FeaturedServiceGroup {
 export class AllServicesComponent implements OnInit {
   protected readonly service = inject(ServiceCategoryService);
   protected readonly i18n = inject(LanguageService);
+  private readonly seo = inject(SeoService);
   private readonly directory = inject(ServiceDirectoryService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -173,6 +175,12 @@ export class AllServicesComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.seo.update({
+      title: 'Local Services in Chidambaram | CDM 360',
+      description: 'Browse published local services and verified providers in Chidambaram, Tamil Nadu.',
+      path: '/services',
+      language: this.i18n.language(),
+    });
     void this.service.load();
     void this.ensureLocations().catch(() => this.locationsError.set(true));
   }

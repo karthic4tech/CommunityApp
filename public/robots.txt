@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Disallow: /account
+Disallow: /admin
+Disallow: /auth
+Disallow: /my-submissions
+Disallow: /my-lodging-inquiries
+Disallow: /services/submit
+Disallow: /marketplace/sell
+Disallow: /marketplace/edit
+Disallow: /marketplace/my-listings
+Disallow: /marketplace/favourites
+Disallow: /marketplace/my-enquiries
+Disallow: /jobs/submit
+
+Sitemap: https://cdm360.in/sitemap.xml

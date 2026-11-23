@@ -51,7 +51,5 @@ export class LanguageService {
 
   private updateDocument(): void {
     this.document.documentElement.lang = this.language();
-    this.document.title = this.language() === 'ta'
-      ? 'CDM360 | நம் சிதம்பரம்' : 'CDM360 | நம் சிதம்பரம்';
   }
 }

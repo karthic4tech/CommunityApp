@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnInit, afterRenderEffect, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnInit, afterRenderEffect, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ServiceCategory } from '../core/models/service-category';
@@ -6,6 +6,7 @@ import { ServiceCategoryService } from '../core/services/service-category.servic
 import { LanguageService } from '../core/services/language.service';
 import { CategoryCardComponent } from '../home/category-card.component';
 import { findCategory } from '../core/models/service-listing';
+import { SeoService } from '../core/services/seo.service';
 
 @Component({
   selector: 'app-service-category-page',
@@ -95,6 +96,7 @@ import { findCategory } from '../core/models/service-listing';
 export class ServiceCategoryPageComponent implements OnInit {
   protected readonly service = inject(ServiceCategoryService);
   protected readonly i18n = inject(LanguageService);
+  private readonly seo = inject(SeoService);
   private readonly route = inject(ActivatedRoute);
   private readonly params = toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
   protected readonly category = computed(() => findCategory(this.service.categories(), this.params().get('slug') ?? this.params().get('categorySlug') ?? ''));
@@ -107,6 +109,30 @@ export class ServiceCategoryPageComponent implements OnInit {
   private readonly heading = viewChild<ElementRef<HTMLHeadingElement>>('heading');
 
   constructor() {
+    effect(() => {
+      const selected = this.category();
+      if (!selected) {
+        if (!this.service.loading()) {
+          const slug = this.params().get('slug') ?? this.params().get('categorySlug') ?? '';
+          this.seo.update({
+            title: 'Service Category Not Found | CDM 360',
+            description: 'This service category is not currently available.',
+            path: `/services/category/${slug}`,
+            robots: 'noindex,nofollow',
+            language: this.i18n.language(),
+          });
+        }
+        return;
+      }
+      const language = this.i18n.language();
+      this.seo.update({
+        title: `${selected.nameEnglish} in Chidambaram | CDM 360`,
+        description: selected.description?.trim()
+          || `Browse active ${selected.nameEnglish} categories and local services in Chidambaram.`,
+        path: `/services/category/${selected.slug}`,
+        language,
+      });
+    });
     afterRenderEffect(() => {
       this.params();
       this.heading()?.nativeElement.focus({ preventScroll: true });

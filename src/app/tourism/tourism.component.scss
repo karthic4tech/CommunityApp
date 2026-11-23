@@ -44,6 +44,10 @@
 .inline-listing-results > header { display:flex; align-items:center; justify-content:space-between; gap:.75rem; }
 .inline-listing-results > header .tourism-eyebrow { margin:0 0 .25rem; }
 .inline-listing-results h3 { margin:0; color:var(--cdm-navy); font-size:1.15rem; }
+.inline-listing-actions { display:flex; align-items:center; justify-content:flex-end; gap:.5rem; flex:none; }
+.browse-all-stays { display:inline-flex; align-items:center; justify-content:center; gap:.35rem; min-height:44px; padding:.5rem .65rem; border-radius:8px; color:var(--cdm-royal-blue); font-size:.82rem; font-weight:750; text-decoration:underline; text-underline-offset:.16em; }
+.browse-all-stays:hover { color:var(--cdm-navy); background:#eef4fb; }
+.browse-all-stays:focus-visible { outline:3px solid var(--cdm-royal-blue); outline-offset:2px; }
 .inline-listing-close { display:grid; place-items:center; flex:none; width:42px; height:42px; border:1px solid #dbe3e9; border-radius:9px; color:#123654; background:#fff; cursor:pointer; }
 .inline-provider-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:.7rem; }
 .lodge-result-card { display:grid; grid-template-columns:150px minmax(0,1fr); align-items:start; gap:.9rem; min-width:0; padding:.7rem; border:1px solid #e0e5e9; border-radius:12px; background:#fff; }
@@ -226,3 +230,24 @@
 @media(prefers-reduced-motion:reduce) {
   *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; }
 }
+.tourism-directory-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  margin-top: 1rem;
+}
+.tourism-directory-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  min-height: 44px;
+  padding: .6rem .85rem;
+  border: 1px solid var(--cdm-border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--cdm-royal-blue);
+  font-weight: 700;
+  text-decoration: none;
+}
+.tourism-directory-links a:hover { border-color: var(--cdm-royal-blue); }
+.tourism-directory-links a:focus-visible { outline: 3px solid var(--cdm-royal-blue); outline-offset: 3px; }

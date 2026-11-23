@@ -9,6 +9,7 @@ import { ServiceDirectoryService } from '../../core/services/service-directory.s
 import { ListingSummaryComponent } from '../listing-summary/listing-summary.component';
 import { LodgeReviewsComponent } from '../lodge-reviews.component';
 import { LodgeInquiryComponent } from '../lodge-inquiry.component';
+import { SeoService } from '../../core/services/seo.service';
 
 @Component({
   selector: 'app-provider-detail',
@@ -75,6 +76,7 @@ export class ServiceDetailComponent implements OnInit {
   private readonly directory = inject(ServiceDirectoryService);
   private readonly categoryService = inject(ServiceCategoryService);
   private readonly route = inject(ActivatedRoute);
+  private readonly seo = inject(SeoService);
   private readonly params = toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
   protected readonly queryParams = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
   private readonly attempts = signal(0);
@@ -102,16 +104,25 @@ export class ServiceDetailComponent implements OnInit {
       this.error.set(false);
       this.listing.set(null);
       this.related.set([]);
+      this.seo.setNoIndex(slug ? `/services/${slug}` : `/providers/${id}`);
       let current = true;
       onCleanup(() => { current = false; });
       void (slug ? this.directory.detailBySlug(slug) : this.directory.detail(id)).then(listing => {
         if (!current) return;
         this.listing.set(listing);
         if (listing) {
+          const category = listing.service_categories?.name_en?.trim() || 'Local Service';
+          this.seo.update({
+            title: `${listing.title} – ${category} in Chidambaram | CDM 360`,
+            description: listing.description?.trim()
+              || `Public ${category.toLocaleLowerCase()} listing for ${listing.title} in Chidambaram. Contact the provider to confirm current details.`,
+            path: listing.slug ? `/services/${listing.slug}` : `/providers/${listing.id}`,
+            language: this.i18n.language(),
+          });
           void this.directory.related(listing.service_providers.id, listing.id)
             .then(related => { if (current) this.related.set(related); })
             .catch(() => { /* Related services are optional; keep the detail usable. */ });
-        }
+        } else this.seo.setNoIndex(slug ? `/services/${slug}` : `/providers/${id}`);
       }).catch(() => { if (current) this.error.set(true); })
         .finally(() => { if (current) this.loading.set(false); });
     });

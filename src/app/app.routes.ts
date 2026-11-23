@@ -63,6 +63,7 @@ export const routes: Routes = [
       { path: 'services/:slug', canMatch: [serviceListingSlugGuard], loadComponent: () => import('./services/provider-detail/provider-detail.component').then((m) => m.ServiceDetailComponent) },
       { path: 'services/:categorySlug', loadComponent: () => import('./services/service-category-page.component').then((m) => m.ServiceCategoryComponent) },
       { path: 'providers/:id', loadComponent: () => import('./services/provider-detail/provider-detail.component').then((m) => m.ServiceDetailComponent) },
+      { path: '**', loadComponent: () => import('./not-found/not-found.component').then((m) => m.NotFoundComponent) },
     ],
   },
 ];

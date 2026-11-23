@@ -8,6 +8,7 @@ import { ServiceCategoryService } from '../core/services/service-category.servic
 import { ServiceDirectoryService } from '../core/services/service-directory.service';
 import { ListingSummaryComponent } from '../services/listing-summary/listing-summary.component';
 import { HubHomepageAdditionsComponent } from './hub-homepage-additions.component';
+import { SeoService } from '../core/services/seo.service';
 
 interface SpeechRecognitionLike {
   lang: string;
@@ -177,6 +178,7 @@ interface HubSlide { readonly image: string; readonly alt: string; readonly eyeb
 })
 export class CommunityHubComponent implements OnInit, OnDestroy {
   protected readonly i18n = inject(LanguageService);
+  private readonly seo = inject(SeoService);
   private readonly router = inject(Router);
   private readonly categoryService = inject(ServiceCategoryService);
   private readonly directory = inject(ServiceDirectoryService);
@@ -215,7 +217,16 @@ export class CommunityHubComponent implements OnInit, OnDestroy {
   private swipeStart: { x: number; y: number } | null = null;
   private recognition: SpeechRecognitionLike | null = null;
 
-  ngOnInit(): void { void this.load(); this.resumeCarousel(); }
+  ngOnInit(): void {
+    this.seo.update({
+      title: 'Local Services & Businesses in Chidambaram | CDM 360',
+      description: 'Discover local services, businesses and community information in Chidambaram, Tamil Nadu.',
+      path: '/',
+      language: this.i18n.language(),
+    });
+    void this.load();
+    this.resumeCarousel();
+  }
   private async load(): Promise<void> { await Promise.all([this.categoryService.load(), this.loadProviders(), this.loadLocations()]); }
   private async loadProviders(): Promise<void> { try { this.providers.set((await this.directory.search(null, null, '', 0)).listings.slice(0, 6)); } catch { this.providersError.set(true); } finally { this.providersLoading.set(false); } }
   private async loadLocations(): Promise<void> { try { this.locations.set(await this.directory.locations()); } catch { this.locations.set([]); } }
