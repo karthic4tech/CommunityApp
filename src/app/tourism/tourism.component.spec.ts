@@ -49,7 +49,7 @@ describe('TourismComponent', () => {
 
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('h1')?.textContent).toContain('Temple-town heritage');
-    expect(element.querySelector('a[href="/services/food-restaurant-services/hotels"]')?.textContent).toContain('Find a Stay');
+    expect(element.querySelector('a[href="/services/transport-tourism-services/lodge-stay"]')?.textContent).toContain('Find a Stay');
     expect(element.querySelector('a[href="#itinerary"]')?.textContent).toContain('Plan My Visit');
     expect(element.querySelector('#temple-guide')).not.toBeNull();
     expect(element.querySelector('#attractions')).not.toBeNull();
@@ -70,7 +70,7 @@ describe('TourismComponent', () => {
     expect(element.querySelectorAll('#tourism-menu a')).toHaveLength(5);
     expect((element.querySelector('#tourism-menu') as HTMLElement).hidden).toBe(false);
     expect(element.querySelector('.inline-listing-results h3')?.textContent).toContain('Hotels & stays');
-    expect(element.querySelector('.browse-all-stays')?.getAttribute('href')).toBe('/services/food-restaurant-services/hotels');
+    expect(element.querySelector('.browse-all-stays')?.getAttribute('href')).toBe('/services/transport-tourism-services/lodge-stay');
     expect(element.querySelector('.browse-all-stays')?.textContent).toContain('Browse all hotel listings');
     expect(element.querySelector('.dining-inline h3')?.textContent).toContain('Food & dining');
     expect(element.querySelector('.local-listings-layout')?.children).toHaveLength(2);

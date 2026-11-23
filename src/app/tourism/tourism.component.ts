@@ -45,7 +45,7 @@ interface TourismServiceAction {
             <p id="tourism-intro" class="tourism-lede">{{ i18n.language() === 'ta' ? 'சிதம்பரத்தையும் அதைச் சுற்றிய இடங்களையும் உள்ளூர் சேவைகளுடன் திட்டமிடுங்கள்.' : 'Plan a thoughtful Chidambaram visit with local stays, transport and places worth exploring.' }}</p>
             <p class="tourism-hero-tamil" lang="ta">சிதம்பரம் · நம் ஊர் · நம் பயணம்</p>
             <div class="tourism-primary-actions" aria-label="Plan your visit">
-              <a class="journey-action journey-action--primary" routerLink="/services/food-restaurant-services/hotels"><i class="bi bi-building" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'தங்குமிடம் தேட' : 'Find a Stay' }}<i class="bi bi-arrow-down-right" aria-hidden="true"></i></a>
+              <a class="journey-action journey-action--primary" routerLink="/services/transport-tourism-services/lodge-stay"><i class="bi bi-building" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'தங்குமிடம் தேட' : 'Find a Stay' }}<i class="bi bi-arrow-down-right" aria-hidden="true"></i></a>
               <a class="journey-action" href="#itinerary" (click)="goToSection($event, 'itinerary')"><i class="bi bi-map" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'என் பயணத்தைத் திட்டமிடு' : 'Plan My Visit' }}<i class="bi bi-arrow-down-right" aria-hidden="true"></i></a>
             </div>
             <p class="tourism-hero-note"><i class="bi bi-info-circle" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'படம் விளக்கத்திற்கான காட்சி. நேரம், கட்டணம் மற்றும் கிடைப்பை நேரடியாக உறுதிப்படுத்தவும்.' : 'Illustrative destination artwork. Confirm current timings, fees and availability directly.' }}</p>
@@ -67,14 +67,14 @@ interface TourismServiceAction {
             }
           </nav>
           <nav class="tourism-directory-links" [attr.aria-label]="i18n.language() === 'ta' ? 'உள்ளூர் சேவை வகைகள்' : 'Related local service categories'">
-            <a routerLink="/services/food-restaurant-services/hotels">{{ i18n.language() === 'ta' ? 'சிதம்பரம் ஹோட்டல்கள்' : 'Hotels in Chidambaram' }}<i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+            <a routerLink="/services/transport-tourism-services/lodge-stay">{{ i18n.language() === 'ta' ? 'சிதம்பரம் ஹோட்டல்கள்' : 'Hotels in Chidambaram' }}<i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
             <a routerLink="/services/transport-tourism-services/cab-services">{{ i18n.language() === 'ta' ? 'கேப் மற்றும் டாக்ஸி' : 'Cab & taxi services' }}<i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
             <a routerLink="/services/food-restaurant-services/restaurants">{{ i18n.language() === 'ta' ? 'உள்ளூர் உணவகங்கள்' : 'Local restaurants' }}<i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
           </nav>
           @if (selectedListingSection(); as selected) {
             <div class="local-listings-layout">
             <section class="inline-listing-results" [id]="selected" aria-labelledby="inline-listing-title" aria-live="polite">
-              <header><div><p class="tourism-eyebrow">{{ selected === 'stays' ? (i18n.language() === 'ta' ? 'உள்ளூர் தங்குமிடங்கள்' : 'LOCAL STAYS') : (i18n.language() === 'ta' ? 'உள்ளூர் உணவகங்கள்' : 'LOCAL DINING') }}</p><h3 id="inline-listing-title">{{ selected === 'stays' ? (i18n.language() === 'ta' ? 'தங்குவதற்கான இடங்கள்' : 'Hotels & stays') : (i18n.language() === 'ta' ? 'உணவகங்கள்' : 'Food & dining') }}</h3></div><div class="inline-listing-actions">@if (selected === 'stays') { <a class="browse-all-stays" routerLink="/services/food-restaurant-services/hotels">{{ i18n.language() === 'ta' ? 'அனைத்து ஹோட்டல்களையும் பார்க்க' : 'Browse all hotel listings' }}<i class="bi bi-arrow-up-right" aria-hidden="true"></i></a> }<button type="button" class="inline-listing-close" [attr.aria-label]="i18n.language() === 'ta' ? 'பட்டியல்களை மூடு' : 'Close listings'" (click)="closeInlineListings()"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div></header>
+              <header><div><p class="tourism-eyebrow">{{ selected === 'stays' ? (i18n.language() === 'ta' ? 'உள்ளூர் தங்குமிடங்கள்' : 'LOCAL STAYS') : (i18n.language() === 'ta' ? 'உள்ளூர் உணவகங்கள்' : 'LOCAL DINING') }}</p><h3 id="inline-listing-title">{{ selected === 'stays' ? (i18n.language() === 'ta' ? 'தங்குவதற்கான இடங்கள்' : 'Hotels & stays') : (i18n.language() === 'ta' ? 'உணவகங்கள்' : 'Food & dining') }}</h3></div><div class="inline-listing-actions">@if (selected === 'stays') { <a class="browse-all-stays" routerLink="/services/transport-tourism-services/lodge-stay">{{ i18n.language() === 'ta' ? 'அனைத்து ஹோட்டல்களையும் பார்க்க' : 'Browse all hotel listings' }}<i class="bi bi-arrow-up-right" aria-hidden="true"></i></a> }<button type="button" class="inline-listing-close" [attr.aria-label]="i18n.language() === 'ta' ? 'பட்டியல்களை மூடு' : 'Close listings'" (click)="closeInlineListings()"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div></header>
               @if (listingsLoading()) { <p class="tourism-state" role="status">{{ i18n.language() === 'ta' ? 'பட்டியல்கள் ஏற்றப்படுகின்றன…' : 'Loading listings…' }}</p> }
               @else if (listingsError()) { <p class="inline-listing-message" role="alert">{{ i18n.language() === 'ta' ? 'பட்டியல்களை ஏற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்.' : 'Listings could not be loaded. Please try again.' }}</p> }
               @else if (selected === 'stays' && stayListingsPreview().length) {
@@ -239,7 +239,7 @@ export class TourismComponent implements OnInit {
 
   protected readonly stayListingsPreview = computed(() => this.stayListings().slice(0, 3));
   protected readonly diningListingsPreview = computed(() => this.diningListings().slice(0, 3));
-  protected readonly stayCategoryId = computed(() => this.categoryBySlug('hotels')?.id ?? null);
+  protected readonly stayCategoryId = computed(() => this.categoryBySlug('lodge-stay')?.id ?? this.categoryBySlug('hotels')?.id ?? null);
   protected readonly diningCategoryId = computed(() => this.categoryBySlug('restaurants')?.id ?? null);
   protected readonly stayQueryParams = computed(() => this.queryParams(this.stayCategoryId(), 'hotel'));
   protected readonly diningQueryParams = computed(() => this.queryParams(this.diningCategoryId(), 'restaurant'));
