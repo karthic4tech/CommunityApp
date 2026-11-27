@@ -1,10 +1,16 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, PLATFORM_ID, PendingTasks, TransferState, inject, makeStateKey, signal } from '@angular/core';
+import { isPlatformBrowser, isPlatformServer } from '@angular/common';
 import { buildCategoryHierarchy, isEssentialCategorySlug, ServiceCategory, ServiceCategoryRow } from '../models/service-category';
 import { SupabaseService } from './supabase.service';
 
 @Injectable({ providedIn: 'root' })
 export class ServiceCategoryService {
   private readonly supabase = inject(SupabaseService);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly pendingTasks = inject(PendingTasks);
+  private readonly transferState = inject(TransferState);
+  private readonly publicCategoriesKey = makeStateKey<readonly ServiceCategory[]>('cdm360.public-categories.v1');
+  private readonly essentialCategoriesKey = makeStateKey<readonly ServiceCategory[]>('cdm360.public-essential-categories.v1');
   private readonly categoryState = signal<readonly ServiceCategory[]>([]);
   private readonly essentialCategoryState = signal<readonly ServiceCategory[]>([]);
   private readonly essentialLoadedState = signal(false);
@@ -22,9 +28,21 @@ export class ServiceCategoryService {
   load(): Promise<void> {
     if (this.pending) return this.pending;
     if (this.loaded) return Promise.resolve();
+    if (isPlatformBrowser(this.platformId) && this.transferState.hasKey(this.publicCategoriesKey)) {
+      this.categoryState.set(this.transferState.get(this.publicCategoriesKey, []));
+      this.transferState.remove(this.publicCategoriesKey);
+      this.loaded = true;
+      return Promise.resolve();
+    }
     this.loadingState.set(true);
     this.errorState.set(null);
-    this.pending = this.fetchPublicCategories().finally(() => {
+    const finishTask = isPlatformServer(this.platformId) ? this.pendingTasks.add() : () => undefined;
+    this.pending = this.fetchPublicCategories().then(() => {
+      if (isPlatformServer(this.platformId) && this.loaded) {
+        this.transferState.set(this.publicCategoriesKey, this.categoryState());
+      }
+    }).finally(() => {
+      finishTask();
       this.loadingState.set(false);
       this.pending = undefined;
     });
@@ -45,11 +63,20 @@ export class ServiceCategoryService {
   getEssentialCategories(forceRefresh = false): Promise<readonly ServiceCategory[]> {
     if (this.essentialPending) return this.essentialPending;
     if (this.essentialLoadedState() && !forceRefresh) return Promise.resolve(this.essentialCategoryState());
+    if (!forceRefresh && isPlatformBrowser(this.platformId) && this.transferState.hasKey(this.essentialCategoriesKey)) {
+      const categories = this.transferState.get(this.essentialCategoriesKey, []);
+      this.transferState.remove(this.essentialCategoriesKey);
+      this.essentialCategoryState.set(categories);
+      this.essentialLoadedState.set(true);
+      return Promise.resolve(categories);
+    }
+    const finishTask = isPlatformServer(this.platformId) ? this.pendingTasks.add() : () => undefined;
     this.essentialPending = this.fetchCategoryRows(true).then((categories) => {
       this.essentialCategoryState.set(categories);
       this.essentialLoadedState.set(true);
+      if (isPlatformServer(this.platformId)) this.transferState.set(this.essentialCategoriesKey, categories);
       return categories;
-    }).finally(() => { this.essentialPending = undefined; });
+    }).finally(() => { finishTask(); this.essentialPending = undefined; });
     return this.essentialPending;
   }
 

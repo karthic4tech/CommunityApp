@@ -1,41 +1,65 @@
 # SEO implementation and deployment notes
 
-## Implemented
+## Rendering and hosting
 
-- `SeoService` updates title, description, robots, canonical, Open Graph, Twitter card and document language without duplicating tags. Canonicals use `https://cdm360.in`, drop query/fragment values and use a no-trailing-slash path convention (except `/`).
-- The same service inserts one global JSON-LD graph containing Organization and WebSite entities, with only the verified project brand, canonical origin, existing logo asset and English/Tamil languages. It does not assert local business address, phone, reviews, rating, opening hours or price.
-- Home, tourism, service directory, category, subcategory, verified service detail and not-found routes use actual application/category/listing values for metadata. Listing descriptions use stored public descriptions when available; otherwise they use a short factual directory description.
-- Detail lookup/loading and missing-listing states are noindex until a published, verified result is returned.
-- Private application route families are noindex after Angular navigation. Existing authentication guards and database RLS remain the access controls.
-- `public/robots.txt` references the sitemap and excludes non-search route families. Robots exclusions are not security controls.
-- `public/sitemap.xml` contains only current stable public routes that exist in the router. It intentionally has no `lastmod` because a trusted modification timestamp was not verified.
-- A keyboard-accessible Angular wildcard 404 view was added. It is noindex.
-- No Supabase schema or migration was changed.
+- Angular prerendering is used to generate static HTML for public, crawlable routes. The build still deploys to `dist/community-app/browser` through the existing Cloudflare static-assets configuration; no Node/SSR server is required at runtime.
+- `npm run build` runs `seo:images`, then `seo:generate`, then `ng build`. The artifact generator uses the app's **public Supabase URL and publishable key** with anonymous/RLS-protected reads; it never reads or requires a service-role key.
+- `src/prerender-routes.txt` is generated from the stable public URLs plus active categories with published/verified listing descendants and routable published/verified details. Admin, auth, account, submission and private booking routes are never put in this list.
+- `provideClientHydration(withEventReplay())` and Angular `TransferState` carry only public category/listing/location/business/job/review-summary projections into the browser. Server Supabase auth persistence, session restoration and role requests are disabled; browser auth remains unchanged.
+- The language service prerenders a deterministic Tamil tree, transfers that choice into hydration, and restores a saved English preference only after the first browser render. This avoids a local-storage-induced server/client text mismatch.
+- The prerendered listing/detail HTML is built from existing public Supabase access patterns and public fields. Private inquiries and customer data are not selected for public HTML.
+- The hosting fallback remains SPA mode so non-prerendered protected workflows still load. Consequently, an unknown URL still needs a hosting-level 404 solution; Angular's not-found component alone does not set the HTTP status.
 
-## Important limitations
+## SEO service and metadata
 
-Production Cloudflare config uses static assets with `not_found_handling: "single-page-application"`. `SeoService` runs only after JavaScript executes. It cannot add route titles, content, canonical tags or a true HTTP status to the initial server response. The live response audit confirms this is still a critical search-rendering blocker.
+`SeoService` now uses Angular `Title` and `Meta` plus the injected `DOCUMENT`. It updates/removes duplicates for title, description, robots, canonical, Open Graph, Twitter/X card, `og:locale`, global Organization/WebSite JSON-LD and optional per-page JSON-LD. It also removes obsolete `meta keywords` tags.
 
-The safe next architecture decision is a Cloudflare-supported Angular SSR worker or controlled prerender pipeline:
+Public page components use existing records for dynamic category/service title, description and canonical values. Category and service-detail pages include BreadcrumbList JSON-LD. A published provider detail uses `Service` and only selects `Hotel`/`Restaurant` where the actual category supports it; it does not assert ratings, availability, opening hours, invented prices or unsupported addresses. CDM 360 remains the directory/platform, distinct from the actual provider.
 
-1. Prerender stable public editorial pages (home and tourism) without user/session data.
-2. Decide whether categories/listings are generated from a public, RLS-enforced export at build/revalidation time or served by edge SSR using only anonymous public projections.
-3. Do not prerender every UUID/slug or every Supabase row by default. Bound output and paginate sitemap indexes if they grow.
-4. Exclude account/admin/auth/submission pages from prerender and apply noindex. Keep Supabase auth browser-only; no service-role key may enter browser or prerender output.
-5. Configure edge route fallback so supported Angular deep routes still work while unknown paths return HTTP 404.
-6. Compare initial HTML, auth, duplicate Supabase requests, cold/warm latency and Cloudflare usage before promoting.
+Filtered `/services` and `/essential-services` result URLs are `noindex,follow` with clean base canonicals. `/service-search`, authentication and private route families are noindex at runtime. Search terms, query strings and fragments are not included in canonicals or analytics page URLs. No hreflang pairs are emitted because English and Tamil do not have separate URLs.
 
-No SSR adapter, worker, schema change or deployment configuration was introduced without confirming owner approval and a test deployment target.
+## Sitemap and robots
 
-## Sitemap maintenance
+- `scripts/generate-seo-artifacts.mjs` reads active category and published listing slugs, IDs and real `updated_at` values through the public Supabase API. It writes `public/sitemap.xml`, `src/prerender-routes.txt`, and `src/app/core/services/seo-directory-links.generated.ts`.
+- Sitemap output is deduplicated and contains stable public routes, categories with published/verified inventory (including their active ancestors), and routable published/verified service details. Query/filter URLs and private routes are excluded. `lastmod` is emitted only from a valid database `updated_at`.
+- The current local snapshot produced 86 URLs and 60 `lastmod` values. The sitemap remains under the 50,000-URL protocol limit.
+- Newly published/approved items appear after the next build and deployment. There is no production data mutation or publish webhook in this change; invoke the normal deployment build after approved listing changes.
+- `public/robots.txt` references the production sitemap and excludes private route families. Robots rules are not authorization; Supabase RLS and existing route guards remain the security controls.
 
-The current sitemap is deliberately small and static. Add a generated URL only after its route and public content exist. A dynamic sitemap generator must filter `service_listings.status = published`, verified providers, active categories and public availability using the existing public access policy; use only real `updated_at`/published timestamps if present. Do not export contact details or private data.
+## Tourism content and internal links
+
+Existing `/tourism` was retained rather than creating near-duplicate pages. It already contains editorial destination descriptions, source links, one-/two-day itinerary ideas, public stay/dining listings and enquiry CTAs. Operational details are explicitly directed to official sources for confirmation. Separate temple/Pichavaram/cab itinerary URLs were not created without independently reviewed, original material and verified cab inventory.
+
+The generated service index adds crawlable links to active categories that currently have published/verified listings. Leaf category pages render their public listing directory; parent category pages keep their crawlable subcategory cards. Breadcrumbs and listing-detail/related links remain in place.
+
+## Mobile asset optimization and bundle baseline
+
+Nine referenced large PNG assets were converted to WebP at quality 82 and the app references updated. The selected source image set decreased from **23.13 MiB to 2.64 MiB (89% smaller)**. Original PNGs remain in `public/assets/images` to avoid destructive asset removal and for compatibility with any un-audited references. `scripts/optimize-public-images.mjs` regenerates the WebP files when their source changes.
+
+The final production build's initial bundle is **965.37 kB raw / 194.22 kB estimated transfer**, compared with the **922.38 kB / 180.97 kB** baseline. The extra SSR/hydration/SEO code increased the initial bundle; it remains over the 550 kB configured warning budget. The image byte reduction is measured, but LCP/INP/CLS and CrUX field data were not measured in this environment.
+
+## Analytics and conversions
+
+`AnalyticsService` is optional and disabled by default (`googleAnalyticsMeasurementId: ''`). It loads `gtag.js` only after a real ID is supplied and a consent UI explicitly calls `setConsent(true)`. Angular navigation produces sanitized, non-duplicated SPA page views with GA auto-pageview disabled. Hotel listing/enquiry and service contact events are wired; the hotel enquiry event fires only after the Supabase insert succeeds.
+
+No cab enquiry UI, advertisement click handler or partner-confirmed booking workflow was found. Those event names are available for future workflows, but are intentionally not emitted. `bookingConfirmed()` is an opt-in API requiring an authorized caller after customer and partner confirmation; it hashes its idempotency key locally, never sends the key to GA4, and is not wired to a nonexistent confirmation flow.
+
+## Modified files
+
+- Angular SSR/prerender: `angular.json`, `package.json`, `package-lock.json`, `src/main.server.ts`, `src/app/app.config.server.ts`, `src/app/app.routes.server.ts`, `src/app/app.config.ts`, `tsconfig.app.json`, `src/prerender-routes.txt`.
+- SEO services and pages: `src/app/core/services/seo.service.ts`, `service-category.service.ts`, `service-directory.service.ts`, `essential-service.service.ts`, `local-brand.service.ts`, `job.service.ts`, `lodge-reviews.service.ts`, `supabase.service.ts`, `src/app/core/auth/auth.service.ts`, `src/app/app.ts`, public category/service/tourism/jobs/business components and SEO specs.
+- Analytics: `src/app/core/services/analytics.service.ts`, its spec, `src/environments/environment.ts`, contact and successful hotel-enquiry components.
+- Generated assets/artifacts: `scripts/generate-seo-artifacts.mjs`, `scripts/optimize-public-images.mjs`, `public/sitemap.xml`, `public/assets/images/*.webp`, and generated service links.
+- Default HTML metadata: `src/index.html`.
 
 ## Deployment checklist
 
-1. Install dependencies and run `npm test -- --watch=false` and `npm run build`.
-2. Preview the exact Cloudflare asset deployment; confirm `/robots.txt` is plain text and `/sitemap.xml` is XML, not SPA HTML.
-3. Confirm Angular deep links continue to load, and inspect the response status for an unknown URL.
-4. Check raw (not browser-rendered) HTML for titles, descriptions, canonical URL and main headings on homepage, tourism, category and a public listing.
-5. Check private routes retain guards and noindex.
-6. Deploy only through the project owner’s normal release procedure. No production deployment was performed.
+1. Run `npm ci`, then `npm run build`; the build needs outbound read access to the configured public Supabase endpoint.
+2. Deploy only the normal static asset output at `dist/community-app/browser`; do not deploy or start a Node server.
+3. Confirm the platform serves a prerendered deep route, `/robots.txt` as `text/plain`, `/sitemap.xml` as XML, and preserves authentication/admin route behavior.
+4. Inspect rendered HTML for a current service, category and tourism route. Confirm RLS/public projections, canonical, robots and JSON-LD before release.
+5. Verify unknown-path HTTP status separately; current SPA fallback returns an HTML shell with 200.
+6. Re-run the generation/build/deployment after service publication or verification changes so the static sitemap and page snapshot refresh.
+7. Do not claim Search Console verification, GA4 activation, indexing or rankings until verified in the corresponding Google property.
+
+No production deployment was performed.

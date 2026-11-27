@@ -7,10 +7,11 @@ import { LanguageService } from '../core/services/language.service';
 import { CategoryCardComponent } from '../home/category-card.component';
 import { findCategory } from '../core/models/service-listing';
 import { SeoService } from '../core/services/seo.service';
+import { ListingDirectoryComponent } from './listing-directory/listing-directory.component';
 
 @Component({
   selector: 'app-service-category-page',
-  imports: [RouterLink, CategoryCardComponent],
+  imports: [RouterLink, CategoryCardComponent, ListingDirectoryComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="category-page container-xl">
@@ -53,13 +54,16 @@ import { SeoService } from '../core/services/seo.service';
           </div>
         } @else if (selected.subcategories.length) {
           <div class="state empty-state"><i class="bi bi-search" aria-hidden="true"></i><p role="status">{{ i18n.language() === 'ta' ? 'பொருந்தும் துணைவகைகள் இல்லை.' : 'No matching subcategories.' }}</p><button class="secondary-button" type="button" (click)="subcategorySearch.set('')">{{ i18n.language() === 'ta' ? 'தேடலை நீக்கு' : 'Clear search' }}</button></div>
-        } @else {
-          <p class="state empty-state" role="status">{{ i18n.text().noChildren }}</p>
         }
       } @else {
         <h1 #heading tabindex="-1" id="category-title">{{ i18n.language() === 'ta' ? 'சேவை வகை கிடைக்கவில்லை' : 'Service category not found' }}</h1>
         <p class="state" role="status">{{ i18n.language() === 'ta' ? 'இந்த சேவை வகை தற்போது கிடைக்கவில்லை. அனைத்து சேவைகளையும் பார்க்கவும்.' : 'This service category is currently unavailable. Browse all services instead.' }}</p>
         <a class="state-link" routerLink="/services">{{ i18n.language() === 'ta' ? 'அனைத்து சேவைகளையும் பார்க்க' : 'Browse all services' }}</a>
+      }
+      @if (!service.loading() && !service.error() && category(); as selected) {
+        @if (!selected.subcategories.length) {
+          <app-listing-directory [category]="selected" />
+        }
       }
       </section>
     </div>
@@ -131,6 +135,11 @@ export class ServiceCategoryPageComponent implements OnInit {
           || `Browse active ${selected.nameEnglish} categories and local services in Chidambaram.`,
         path: `/services/category/${selected.slug}`,
         language,
+        structuredData: this.seo.breadcrumbSchema([
+          { name: 'Home', path: '/' },
+          { name: 'Services', path: '/services' },
+          { name: selected.nameEnglish, path: `/services/category/${selected.slug}` },
+        ]),
       });
     });
     afterRenderEffect(() => {

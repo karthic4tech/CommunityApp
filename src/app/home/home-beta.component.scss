@@ -380,7 +380,7 @@ main { display: block; }
   border-radius: 50%; 
   border: 6px solid var(--charcoal); 
   background-color: var(--cdm-border);
-  background: url('/assets/images/pichavaram-image-1.png') center/cover; 
+  background: url('/assets/images/pichavaram-image-1.webp') center/cover;
 }
 .stats-list { display: flex; flex-direction: column; gap: 19px; }
 .stat-item { display: flex; align-items: center; gap: 16px; }
@@ -423,13 +423,13 @@ main { display: block; }
 .event-image { height: 190px; background-size: cover; background-position: center; }
 .event-one { 
   background: var(--home-saffron-light);
-  background-image: url('/assets/images/pichavaram-image-1.png');
+  background-image: url('/assets/images/pichavaram-image-1.webp');
   background-size: cover;
   background-position: center;
 }
 .event-two { 
   background: var(--cdm-saffron-soft);
-  background-image: url('/assets/images/hotel-image-lakshmi-villas.png');
+  background-image: url('/assets/images/hotel-image-lakshmi-villas.webp');
   background-size: cover;
   background-position: center;
 }

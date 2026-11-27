@@ -1,5 +1,5 @@
-import { DOCUMENT } from '@angular/common';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { DOCUMENT, isPlatformBrowser, isPlatformServer } from '@angular/common';
+import { Injectable, PLATFORM_ID, TransferState, afterNextRender, computed, inject, makeStateKey, signal } from '@angular/core';
 
 export type Language = 'ta' | 'en';
 const TEXT = {
@@ -24,13 +24,26 @@ const TEXT = {
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
   private readonly document = inject(DOCUMENT);
-  private readonly selected = signal<Language>(this.savedLanguage());
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly transferState = inject(TransferState);
+  private readonly prerenderLanguageKey = makeStateKey<Language>('cdm360.prerender-language.v1');
+  private resumeSavedPreferenceAfterHydration = false;
+  private readonly selected = signal<Language>(this.initialLanguage());
   readonly language = this.selected.asReadonly();
   readonly secondaryLanguage = computed(() => this.language() === 'ta' ? 'en' : 'ta');
   readonly text = computed(() => TEXT[this.language()]);
 
   constructor() {
     this.updateDocument();
+    if (isPlatformBrowser(this.platformId) && this.resumeSavedPreferenceAfterHydration) {
+      afterNextRender(() => {
+        const preferred = this.savedLanguage();
+        if (preferred !== this.language()) {
+          this.selected.set(preferred);
+          this.updateDocument();
+        }
+      });
+    }
   }
 
   setLanguage(language: Language): void {
@@ -51,5 +64,21 @@ export class LanguageService {
 
   private updateDocument(): void {
     this.document.documentElement.lang = this.language();
+  }
+
+  private initialLanguage(): Language {
+    if (isPlatformServer(this.platformId)) {
+      // Prerender one deterministic language to keep the initial browser
+      // hydration tree identical; restore a saved browser choice afterwards.
+      this.transferState.set(this.prerenderLanguageKey, 'ta');
+      return 'ta';
+    }
+    if (isPlatformBrowser(this.platformId) && this.transferState.hasKey(this.prerenderLanguageKey)) {
+      this.resumeSavedPreferenceAfterHydration = true;
+      const language = this.transferState.get(this.prerenderLanguageKey, 'ta');
+      this.transferState.remove(this.prerenderLanguageKey);
+      return language;
+    }
+    return this.savedLanguage();
   }
 }

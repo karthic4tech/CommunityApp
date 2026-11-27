@@ -34,7 +34,15 @@
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "node_modules/bootstrap-icons/font/bootstrap-icons.min.css",
               "src/styles.scss"
-            ]
+            ],
+            "server": "src/main.server.ts",
+            "security": {
+              "allowedHosts": []
+            },
+            "prerender": {
+              "discoverRoutes": false,
+              "routesFile": "src/prerender-routes.txt"
+            }
           },
           "configurations": {
             "production": {

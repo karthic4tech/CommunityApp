@@ -331,9 +331,9 @@ export class LandingComponent implements OnInit, OnDestroy {
     { day: '28', month: 'OCT', title: 'Local Business Meet', titleTa: 'உள்ளூர் வணிகர் சந்திப்பு', place: 'Community Hall', placeTa: 'சமூகக் கூடம்', icon: 'bi-shop', tone: 'event-blue' },
   ] as const;
   protected readonly heroSlides = [
-    { id: 'town', image: 'assets/images/chidambaram-hero.png', alt: 'Chidambaram temple and local community', kickerEn: 'OUR TOWN · OUR PEOPLE', kickerTa: 'நம் ஊர் · நம் மக்கள்', titleEn: 'A closer connection to Chidambaram', titleTa: 'சிதம்பரத்துடன் இன்னும் நெருக்கமான இணைப்பு' },
-    { id: 'community', image: 'assets/images/chidambaram-hero1.png', alt: 'Local services and community life in Chidambaram', kickerEn: 'LOCAL LIFE, MADE EASIER', kickerTa: 'உள்ளூர் வாழ்க்கை எளிதாக', titleEn: 'Discover the people behind local services', titleTa: 'உள்ளூர் சேவைகளின் பின்னால் உள்ள மக்களைக் கண்டறியுங்கள்' },
-    { id: 'services', image: 'assets/images/chidambaram-hero.png', alt: 'Explore services across Chidambaram', kickerEn: 'FIND WHAT YOU NEED', kickerTa: 'உங்களுக்குத் தேவையானதைத் தேடுங்கள்', titleEn: 'Your local directory starts here', titleTa: 'உங்கள் உள்ளூர் சேவைத் தேடல் இங்கே தொடங்குகிறது' },
+    { id: 'town', image: 'assets/images/chidambaram-hero.webp', alt: 'Chidambaram temple and local community', kickerEn: 'OUR TOWN · OUR PEOPLE', kickerTa: 'நம் ஊர் · நம் மக்கள்', titleEn: 'A closer connection to Chidambaram', titleTa: 'சிதம்பரத்துடன் இன்னும் நெருக்கமான இணைப்பு' },
+    { id: 'community', image: 'assets/images/chidambaram-hero1.webp', alt: 'Local services and community life in Chidambaram', kickerEn: 'LOCAL LIFE, MADE EASIER', kickerTa: 'உள்ளூர் வாழ்க்கை எளிதாக', titleEn: 'Discover the people behind local services', titleTa: 'உள்ளூர் சேவைகளின் பின்னால் உள்ள மக்களைக் கண்டறியுங்கள்' },
+    { id: 'services', image: 'assets/images/chidambaram-hero.webp', alt: 'Explore services across Chidambaram', kickerEn: 'FIND WHAT YOU NEED', kickerTa: 'உங்களுக்குத் தேவையானதைத் தேடுங்கள்', titleEn: 'Your local directory starts here', titleTa: 'உங்கள் உள்ளூர் சேவைத் தேடல் இங்கே தொடங்குகிறது' },
   ] as const;
   protected activeSlide = 0;
   protected featuredListings: ServiceListing[] = [];

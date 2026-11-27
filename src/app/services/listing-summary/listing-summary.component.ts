@@ -1,5 +1,5 @@
-import { CurrencyPipe, NgOptimizedImage } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, afterRenderEffect, computed, effect, inject, input, signal, viewChild } from '@angular/core';
+import { CurrencyPipe, NgOptimizedImage, isPlatformBrowser } from '@angular/common';
+import { ChangeDetectionStrategy, Component, ElementRef, PLATFORM_ID, afterRenderEffect, computed, effect, inject, input, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ListingContact, ServiceListing, contactHref } from '../../core/models/service-listing';
 import { LanguageService } from '../../core/services/language.service';
@@ -8,6 +8,7 @@ import { MediaService } from '../../core/services/media.service';
 import { MediaGalleryItem } from '../../core/models/media.models';
 import { googleMapsDirectionsUrl, validateGoogleMapsLocationUrl } from '../../core/models/service-location';
 import { MediaPreviewComponent } from '../../shared/components/media-preview/media-preview.component';
+import { AnalyticsService } from '../../core/services/analytics.service';
 
 @Component({
   selector: 'app-listing-summary',
@@ -63,7 +64,7 @@ import { MediaPreviewComponent } from '../../shared/components/media-preview/med
               {{ contact.label }}<span class="contact-value">{{ contact.value }}</span>
             </button>
           } @else {
-            <a [href]="contact.href">
+            <a [href]="contact.href" (click)="analytics.track('service_contact_click')">
               {{ contact.label }}<span class="contact-value">{{ contact.value }}</span>
             </a>
           }
@@ -78,9 +79,9 @@ import { MediaPreviewComponent } from '../../shared/components/media-preview/med
           <h2 [id]="'contact-options-title-' + listing().id">{{ i18n.language() === 'ta' ? 'தொடர்பு கொள்ளுங்கள்' : 'Contact this service' }}</h2>
           <p [id]="'contact-options-description-' + listing().id">{{ i18n.language() === 'ta' ? 'அழைக்கவா அல்லது WhatsApp மூலம் செய்தி அனுப்பவா?' : 'Would you like to call or message on WhatsApp?' }}</p>
           <div class="contact-dialog__actions">
-            <a class="contact-dialog__action" [href]="options.callHref" (click)="closeContactOptions()"><i class="bi bi-telephone" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'அழைக்க' : 'Call' }}</span><span class="contact-value">{{ options.phone }}</span></a>
+            <a class="contact-dialog__action" [href]="options.callHref" (click)="analytics.track('service_contact_click'); closeContactOptions()"><i class="bi bi-telephone" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'அழைக்க' : 'Call' }}</span><span class="contact-value">{{ options.phone }}</span></a>
             @if (options.whatsappHref) {
-              <a class="contact-dialog__action whatsapp-action" [href]="options.whatsappHref" target="_blank" rel="noopener noreferrer" (click)="closeContactOptions()"><i class="bi bi-whatsapp" aria-hidden="true"></i><span>WhatsApp</span><span class="contact-value">{{ options.whatsappPhone }}</span></a>
+              <a class="contact-dialog__action whatsapp-action" [href]="options.whatsappHref" target="_blank" rel="noopener noreferrer" (click)="analytics.track('service_contact_click'); closeContactOptions()"><i class="bi bi-whatsapp" aria-hidden="true"></i><span>WhatsApp</span><span class="contact-value">{{ options.whatsappPhone }}</span></a>
             }
           </div>
           <button type="button" class="contact-dialog__cancel" (click)="closeContactOptions()">{{ i18n.language() === 'ta' ? 'ரத்து' : 'Cancel' }}</button>
@@ -140,6 +141,8 @@ export class ListingSummaryComponent {
   readonly horizontal = input(false);
   readonly hidePhoneContacts = input(false);
   protected readonly i18n = inject(LanguageService);
+  protected readonly analytics = inject(AnalyticsService);
+  private readonly platformId = inject(PLATFORM_ID);
   private readonly directory = inject(ServiceDirectoryService);
   private readonly media = inject(MediaService);
   private readonly heading = viewChild<ElementRef<HTMLHeadingElement>>('heading');
@@ -204,7 +207,7 @@ export class ListingSummaryComponent {
     effect(() => {
       const listing = this.listing();
       const hasEmbeddedImage = listing.listing_media.some((media) => media.media_assets?.visibility === 'public' && media.media_assets.media_type === 'image');
-      if (hasEmbeddedImage) { this.fallbackImages.set([]); return; }
+      if (hasEmbeddedImage || !isPlatformBrowser(this.platformId)) { this.fallbackImages.set([]); return; }
       void this.loadFallbackImages(listing.id);
     });
   }

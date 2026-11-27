@@ -1,4 +1,5 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, PLATFORM_ID, PendingTasks, TransferState, inject, makeStateKey } from '@angular/core';
+import { isPlatformBrowser, isPlatformServer } from '@angular/common';
 import {
   DirectoryListingRow,
   DirectoryLocation,
@@ -27,6 +28,10 @@ export const DIRECTORY_PAGE_SIZE = 12;
 @Injectable({ providedIn: 'root' })
 export class ServiceDirectoryService {
   private readonly supabase = inject(SupabaseService);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly pendingTasks = inject(PendingTasks);
+  private readonly transferState = inject(TransferState);
+  private readonly publicRequests = new Map<string, Promise<unknown>>();
 
   /**
    * Option A from the directory design: the existing RPC supplies the
@@ -34,11 +39,25 @@ export class ServiceDirectoryService {
    * projection hydrates those ids. The RPC order is restored explicitly after
    * the enrichment query because an `in` query has no guaranteed order.
    */
-  async search(
+  search(
     categoryId: string | null,
     locationId: string | null,
     keyword: string,
     page = 0,
+  ): Promise<DirectoryPage> {
+    const cleanKeyword = keyword.trim();
+    if (cleanKeyword) return this.loadSearch(categoryId, locationId, cleanKeyword, page);
+    return this.withPublicTransfer(
+      `directory-search:${categoryId ?? 'all'}:${locationId ?? 'all'}:${page}`,
+      () => this.loadSearch(categoryId, locationId, cleanKeyword, page),
+    );
+  }
+
+  private async loadSearch(
+    categoryId: string | null,
+    locationId: string | null,
+    keyword: string,
+    page: number,
   ): Promise<DirectoryPage> {
     const start = page * DIRECTORY_PAGE_SIZE;
     const { data, error } = await this.supabase.client.rpc(
@@ -46,7 +65,7 @@ export class ServiceDirectoryService {
       {
         category: categoryId,
         location: locationId,
-        keyword: keyword.trim(),
+        keyword,
       },
     )
       .order('published_at', { ascending: false, nullsFirst: false })
@@ -66,17 +85,31 @@ export class ServiceDirectoryService {
     return this.hydratePage(data ?? []);
   }
 
-  async searchEssential(
+  searchEssential(
     categoryId: string | null,
     locationId: string | null,
     keyword: string,
     page = 0,
   ): Promise<DirectoryPage> {
+    const cleanKeyword = keyword.trim();
+    if (cleanKeyword) return this.loadEssentialSearch(categoryId, locationId, cleanKeyword, page);
+    return this.withPublicTransfer(
+      `essential-search:${categoryId ?? 'all'}:${locationId ?? 'all'}:${page}`,
+      () => this.loadEssentialSearch(categoryId, locationId, cleanKeyword, page),
+    );
+  }
+
+  private async loadEssentialSearch(
+    categoryId: string | null,
+    locationId: string | null,
+    keyword: string,
+    page: number,
+  ): Promise<DirectoryPage> {
     const start = page * DIRECTORY_PAGE_SIZE;
     const { data, error } = await this.supabase.client.rpc('essential_directory_listings', {
       category: categoryId,
       location: locationId,
-      keyword: keyword.trim(),
+      keyword,
     })
       .order('published_at', { ascending: false, nullsFirst: false })
       .order('id', { ascending: true })
@@ -127,8 +160,12 @@ export class ServiceDirectoryService {
     };
   }
 
-  async detail(id: string): Promise<ServiceListing | null> {
-    if (!UUID_PATTERN.test(id)) return null;
+  detail(id: string): Promise<ServiceListing | null> {
+    if (!UUID_PATTERN.test(id)) return Promise.resolve(null);
+    return this.withPublicTransfer(`listing-id:${id}`, () => this.loadDetail(id));
+  }
+
+  private async loadDetail(id: string): Promise<ServiceListing | null> {
     const { data, error } = await this.publicListingQuery()
       .eq('id', id)
       .eq('status', 'published')
@@ -143,8 +180,12 @@ export class ServiceDirectoryService {
     return data && publicListing(data) ? data : null;
   }
 
-  async detailBySlug(slug: string): Promise<ServiceListing | null> {
-    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 200) return null;
+  detailBySlug(slug: string): Promise<ServiceListing | null> {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 200) return Promise.resolve(null);
+    return this.withPublicTransfer(`listing-slug:${slug}`, () => this.loadDetailBySlug(slug));
+  }
+
+  private async loadDetailBySlug(slug: string): Promise<ServiceListing | null> {
     const { data, error } = await this.publicListingQuery()
       .eq('slug', slug)
       .eq('status', 'published')
@@ -159,8 +200,15 @@ export class ServiceDirectoryService {
     return data && publicListing(data) ? data : null;
   }
 
-  async related(providerId: string, excludedListingId: string): Promise<ServiceListing[]> {
-    if (!UUID_PATTERN.test(providerId) || !UUID_PATTERN.test(excludedListingId)) return [];
+  related(providerId: string, excludedListingId: string): Promise<ServiceListing[]> {
+    if (!UUID_PATTERN.test(providerId) || !UUID_PATTERN.test(excludedListingId)) return Promise.resolve([]);
+    return this.withPublicTransfer(
+      `related:${providerId}:${excludedListingId}`,
+      () => this.loadRelated(providerId, excludedListingId),
+    );
+  }
+
+  private async loadRelated(providerId: string, excludedListingId: string): Promise<ServiceListing[]> {
     const { data, error } = await this.publicListingQuery()
       .eq('provider_id', providerId)
       .neq('id', excludedListingId)
@@ -179,7 +227,11 @@ export class ServiceDirectoryService {
     return (data ?? []).filter(publicListing);
   }
 
-  async locations(): Promise<DirectoryLocation[]> {
+  locations(): Promise<DirectoryLocation[]> {
+    return this.withPublicTransfer('active-locations', () => this.loadLocations());
+  }
+
+  private async loadLocations(): Promise<DirectoryLocation[]> {
     const locations: DirectoryLocation[] = [];
     // Do not silently truncate a growing hierarchy at PostgREST's default row limit.
     for (let start = 0; ; start += 500) {
@@ -208,5 +260,36 @@ export class ServiceDirectoryService {
 
   private publicListingQuery() {
     return this.supabase.client.from('service_listings').select(LISTING_COLUMNS);
+  }
+
+  private withPublicTransfer<T>(key: string, load: () => Promise<T>): Promise<T> {
+    const cacheKey = `cdm360.public:${key}`;
+    const cached = this.publicRequests.get(cacheKey);
+    if (cached) return cached as Promise<T>;
+
+    const stateKey = makeStateKey<T>(cacheKey);
+    if (isPlatformBrowser(this.platformId) && this.transferState.hasKey(stateKey)) {
+      const transferred = this.transferState.get(stateKey, null as T);
+      this.transferState.remove(stateKey);
+      const request = Promise.resolve(transferred).finally(() => {
+        if (isPlatformBrowser(this.platformId)) this.publicRequests.delete(cacheKey);
+      });
+      this.publicRequests.set(cacheKey, request);
+      return request;
+    }
+
+    const finishTask = isPlatformServer(this.platformId) ? this.pendingTasks.add() : () => undefined;
+    const request = load().then(value => {
+      if (isPlatformServer(this.platformId)) this.transferState.set(stateKey, value);
+      return value;
+    }).catch((error: unknown) => {
+      this.publicRequests.delete(cacheKey);
+      throw error;
+    }).finally(() => {
+      finishTask();
+      if (isPlatformBrowser(this.platformId)) this.publicRequests.delete(cacheKey);
+    });
+    this.publicRequests.set(cacheKey, request);
+    return request;
   }
 }

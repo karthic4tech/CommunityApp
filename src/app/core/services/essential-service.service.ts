@@ -1,4 +1,5 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, PLATFORM_ID, PendingTasks, TransferState, inject, makeStateKey } from '@angular/core';
+import { isPlatformBrowser, isPlatformServer } from '@angular/common';
 import { EssentialShortcut, EssentialShortcutMutation, EssentialShortcutRow } from '../models/essential-service';
 import { isEssentialCategorySlug, ServiceCategoryRow } from '../models/service-category';
 import { SupabaseService } from './supabase.service';
@@ -9,8 +10,28 @@ const ESSENTIAL_MIGRATION_MESSAGE = 'Essential Services database setup is incomp
 @Injectable({ providedIn: 'root' })
 export class EssentialServiceService {
   private readonly supabase = inject(SupabaseService);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly pendingTasks = inject(PendingTasks);
+  private readonly transferState = inject(TransferState);
+  private readonly shortcutsKey = makeStateKey<EssentialShortcut[]>('cdm360.public-essential-shortcuts.v1');
+  private shortcutsRequest?: Promise<EssentialShortcut[]>;
 
   async getEssentialShortcuts(): Promise<EssentialShortcut[]> {
+    if (this.shortcutsRequest) return this.shortcutsRequest;
+    if (isPlatformBrowser(this.platformId) && this.transferState.hasKey(this.shortcutsKey)) {
+      const transferred = this.transferState.get(this.shortcutsKey, []);
+      this.transferState.remove(this.shortcutsKey);
+      return transferred;
+    }
+    const finishTask = isPlatformServer(this.platformId) ? this.pendingTasks.add() : () => undefined;
+    this.shortcutsRequest = this.loadEssentialShortcuts().then((shortcuts) => {
+      if (isPlatformServer(this.platformId)) this.transferState.set(this.shortcutsKey, shortcuts);
+      return shortcuts;
+    }).finally(() => { finishTask(); this.shortcutsRequest = undefined; });
+    return this.shortcutsRequest;
+  }
+
+  private async loadEssentialShortcuts(): Promise<EssentialShortcut[]> {
     const [{ data, error }, categoryResult] = await Promise.all([
       this.supabase.client.from('essential_service_shortcuts').select(SHORTCUT_COLUMNS)
         .eq('is_active', true).order('display_order').order('id')

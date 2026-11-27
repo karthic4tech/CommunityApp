@@ -1,4 +1,5 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, PLATFORM_ID, PendingTasks, TransferState, inject, makeStateKey } from '@angular/core';
+import { isPlatformBrowser, isPlatformServer } from '@angular/common';
 import { SupabaseService } from './supabase.service';
 
 export interface JobCategory {
@@ -35,6 +36,11 @@ export interface CreateJobInput {
 @Injectable({ providedIn: 'root' })
 export class JobService {
   private readonly supabase = inject(SupabaseService);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly pendingTasks = inject(PendingTasks);
+  private readonly transferState = inject(TransferState);
+  private readonly publishedJobsKey = makeStateKey<PublishedJob[]>('cdm360.public-published-jobs.v1');
+  private publishedJobsRequest?: Promise<PublishedJob[]>;
 
   async categories(): Promise<JobCategory[]> {
     const { data, error } = await this.supabase.client
@@ -52,7 +58,22 @@ export class JobService {
     return data ?? [];
   }
 
-  async publishedJobs(): Promise<PublishedJob[]> {
+  publishedJobs(): Promise<PublishedJob[]> {
+    if (this.publishedJobsRequest) return this.publishedJobsRequest;
+    if (isPlatformBrowser(this.platformId) && this.transferState.hasKey(this.publishedJobsKey)) {
+      const transferred = this.transferState.get(this.publishedJobsKey, []);
+      this.transferState.remove(this.publishedJobsKey);
+      return Promise.resolve(transferred);
+    }
+    const finishTask = isPlatformServer(this.platformId) ? this.pendingTasks.add() : () => undefined;
+    this.publishedJobsRequest = this.loadPublishedJobs().then((jobs) => {
+      if (isPlatformServer(this.platformId)) this.transferState.set(this.publishedJobsKey, jobs);
+      return jobs;
+    }).finally(() => { finishTask(); this.publishedJobsRequest = undefined; });
+    return this.publishedJobsRequest;
+  }
+
+  private async loadPublishedJobs(): Promise<PublishedJob[]> {
     const { data, error } = await this.supabase.client.from('jobs')
       .select('id,title,company_name,description,location,contact_phone,contact_email,published_at,job_categories!inner(name_en,name_ta,slug)')
       .eq('status', 'published')

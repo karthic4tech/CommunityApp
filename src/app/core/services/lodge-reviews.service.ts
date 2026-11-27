@@ -1,4 +1,5 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, PLATFORM_ID, PendingTasks, TransferState, inject, makeStateKey } from '@angular/core';
+import { isPlatformBrowser, isPlatformServer } from '@angular/common';
 import { AuthService } from '../auth/auth.service';
 import { SupabaseService } from './supabase.service';
 
@@ -47,8 +48,41 @@ export interface LodgeReviewReportRow {
 export class LodgeReviewsService {
   private readonly auth = inject(AuthService);
   private readonly supabase = inject(SupabaseService);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly pendingTasks = inject(PendingTasks);
+  private readonly transferState = inject(TransferState);
+  private readonly summaries = new Map<string, Promise<LodgeReviewSummary | null>>();
+  private readonly reviewPages = new Map<string, Promise<LodgeReviewPage>>();
 
-  async summary(listingId: string): Promise<LodgeReviewSummary | null> {
+  summary(listingId: string): Promise<LodgeReviewSummary | null> {
+    const existing = this.summaries.get(listingId);
+    if (existing) return existing;
+    const key = makeStateKey<LodgeReviewSummary | null>(`cdm360.public-lodge-review-summary:${listingId}`);
+    if (isPlatformBrowser(this.platformId) && this.transferState.hasKey(key)) {
+      const result = Promise.resolve(this.transferState.get(key, null));
+      this.transferState.remove(key);
+      const hydrated = result.finally(() => {
+        if (isPlatformBrowser(this.platformId)) this.summaries.delete(listingId);
+      });
+      this.summaries.set(listingId, hydrated);
+      return hydrated;
+    }
+    const finishTask = isPlatformServer(this.platformId) ? this.pendingTasks.add() : () => undefined;
+    const request = this.loadSummary(listingId).then(summary => {
+      if (isPlatformServer(this.platformId)) this.transferState.set(key, summary);
+      return summary;
+    }).catch((error: unknown) => {
+      this.summaries.delete(listingId);
+      throw error;
+    }).finally(() => {
+      finishTask();
+      if (isPlatformBrowser(this.platformId)) this.summaries.delete(listingId);
+    });
+    this.summaries.set(listingId, request);
+    return request;
+  }
+
+  private async loadSummary(listingId: string): Promise<LodgeReviewSummary | null> {
     const { data, error } = await this.supabase.client.from('lodge_review_summaries')
       .select('listing_id,average_rating,review_count').eq('listing_id', listingId)
       .maybeSingle<LodgeReviewSummary>();
@@ -56,7 +90,36 @@ export class LodgeReviewsService {
     return data;
   }
 
-  async reviews(listingId: string, sort: LodgeReviewSort, page: number, pageSize = 5): Promise<LodgeReviewPage> {
+  reviews(listingId: string, sort: LodgeReviewSort, page: number, pageSize = 5): Promise<LodgeReviewPage> {
+    const requestId = `${listingId}:${sort}:${page}:${pageSize}`;
+    const existing = this.reviewPages.get(requestId);
+    if (existing) return existing;
+    const key = makeStateKey<LodgeReviewPage>(`cdm360.public-lodge-reviews:${requestId}`);
+    if (isPlatformBrowser(this.platformId) && this.transferState.hasKey(key)) {
+      const result = Promise.resolve(this.transferState.get(key, { reviews: [], total: 0 }));
+      this.transferState.remove(key);
+      const hydrated = result.finally(() => {
+        if (isPlatformBrowser(this.platformId)) this.reviewPages.delete(requestId);
+      });
+      this.reviewPages.set(requestId, hydrated);
+      return hydrated;
+    }
+    const finishTask = isPlatformServer(this.platformId) ? this.pendingTasks.add() : () => undefined;
+    const request = this.loadReviews(listingId, sort, page, pageSize).then((result) => {
+      if (isPlatformServer(this.platformId)) this.transferState.set(key, result);
+      return result;
+    }).catch((error: unknown) => {
+      this.reviewPages.delete(requestId);
+      throw error;
+    }).finally(() => {
+      finishTask();
+      if (isPlatformBrowser(this.platformId)) this.reviewPages.delete(requestId);
+    });
+    this.reviewPages.set(requestId, request);
+    return request;
+  }
+
+  private async loadReviews(listingId: string, sort: LodgeReviewSort, page: number, pageSize: number): Promise<LodgeReviewPage> {
     let query = this.supabase.client.from('lodge_reviews')
       .select('id,listing_id,rating,title,review_text,status,created_at,lodge_review_owner_responses(response_text,updated_at)', { count: 'exact' })
       .eq('listing_id', listingId).eq('status', 'published');

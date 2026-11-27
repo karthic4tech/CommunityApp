@@ -1,47 +1,47 @@
-# SEO test results
+# SEO implementation test results
 
-**Run date:** 2026-11-23  
+**Run date:** 2026-11-27
 **Repository:** `C:\projects\CommunityApp`  
 **Production deployment:** Not performed
 
-## Automated checks
+## Automated build and test results
 
-| Check | Result | Evidence / notes |
+| Check | Result | Evidence / caveat |
 |---|---|---|
-| Angular production build | **PASS with existing budget warnings** | `npm run build` completed. Initial bundle is 922.38 kB raw (180.98 kB estimated transfer), above the 550 kB warning budget. Existing component-style budget warnings also remain. No production error budget was exceeded. |
-| Angular unit tests | **PASS** | `npm test -- --watch=false`: 25 test files, 134 tests passed. Node emitted localStorage/canvas environment warnings; no test failed. |
-| SEO service tests | **PASS** | Checks unique description/canonical handling, query/fragment removal, canonical origin, language, noindex and Organization/WebSite JSON-LD output. |
-| Whitespace/diff check | **PASS** | `git diff --check` returned no whitespace errors. Git printed only Windows LF-to-CRLF informational warnings. |
-| Robots/sitemap included in production build output | **PASS** | Both files appear at `dist/community-app/browser/robots.txt` and `dist/community-app/browser/sitemap.xml`, matching the existing Wrangler assets directory. |
-| Sitemap XML syntax | **PASS** | The generated document is a single XML `urlset` with six absolute HTTPS URLs and no fabricated `lastmod`. |
-| Sitemap URL eligibility | **PASS for the six static URLs** | Each route exists in `src/app/app.routes.ts`; no account/admin/auth/submission URL is listed. Dynamic category/service URLs are intentionally omitted until a database-backed generator exists. |
-| Production dependency audit | **PASS** | `npm audit --omit=dev` reported zero vulnerabilities. `npm ci` reported 23 vulnerabilities in the full dependency tree (18 moderate, 5 high); review/update development-tool dependencies separately without using automatic breaking upgrades. |
+| `npm run build` | **PASS** | Builds 86 static routes. Uses public Supabase reads at build time. Angular emits `DEP0205` Node deprecation warnings and existing CSS/bundle budget warnings. |
+| Production initial bundle | **Warning** | 965.37 kB raw / 194.22 kB estimated transfer, up from 922.38 kB / 180.97 kB baseline. Initial budget remains 550 kB; service CSS is 12.54 kB against 12 kB. |
+| `npm test -- --watch=false` | **PASS** | 26 test files, 137 tests passed on the final test run. |
+| SEO service tests | **PASS** | Title/meta/canonical/JSON-LD/noindex and stale metadata/keywords behavior. |
+| GA4 tests | **PASS** | Disabled without an ID; explicit consent required; route pageview deduplication and query sanitization tested. |
+| Sitemap parse / dedupe | **PASS** | `public/sitemap.xml` parses as XML; 86 unique URLs, 60 data-backed `lastmod` values. |
+| Sitemap ↔ prerender consistency | **PASS** | Every sitemap URL in the generated snapshot has a corresponding static `index.html`; no duplicate paths. |
+| Private/draft exclusion | **PASS for generated snapshot** | Route list contains only stable public pages, active public categories with published/verified inventory and published/verified detail URLs. It contains no `/admin`, `/auth`, `/account`, submission, private booking or query/filter routes. |
+| Rendered HTML metadata | **PASS locally** | Home, tourism, services, category, service detail, businesses and essential services have distinct titles, descriptions, canonical URLs, H1s and JSON-LD in their generated files. |
+| Image conversion | **PASS** | Nine selected PNGs total 23.13 MiB; generated WebP set totals 2.64 MiB, an 89% byte reduction. Original PNGs were retained. |
+| `git diff --check` | **PASS after whitespace cleanup** | Windows may print CRLF informational notices; no patch whitespace errors remain. |
 
-## Live production observations (pre-deployment)
+## Production HTTP checks (pre-deployment)
 
-Checked with HTTP GET on 2026-11-23:
+| URL | HTTP / type | Result |
+|---|---|---|
+| `/` | `200 text/html` | Old production HTML remains an empty Angular root shell. |
+| `/robots.txt` | `200 text/plain` | Current production robots file is readable and references the sitemap. |
+| `/sitemap.xml` | `200 application/xml` | Current production sitemap is valid but contains only six stable URLs. |
+| `/services/category/hotels` | `200 text/html` | Old production route response is the SPA shell, not prerendered HTML. |
+| `/no-such-seo-route-987654` | `200 text/html` | SPA fallback does not provide a real HTTP 404. |
 
-| URL | HTTP | Content-Type | Initial HTML result |
-|---|---:|---|---|
-| `/` | 200 | `text/html` | Generic Tamil title; empty Angular root; no H1 |
-| `/tourism` | 200 | `text/html` | Same generic shell and title |
-| `/services` | 200 | `text/html` | Same generic shell and title |
-| `/services/category/hotels` | 200 | `text/html` | Same generic shell and title |
-| `/robots.txt` | 200 | `text/html` | Served SPA HTML, not robots directives |
-| `/sitemap.xml` | 200 | `text/html` | Served SPA HTML, not XML |
-| `/invalid-seo-check-404` | 200 | `text/html` | Served SPA shell; not an HTTP 404 |
+The status probes used `curl.exe`; the body was separately inspected with HTTP fetch. Local build artifacts do not change these live results until the owner deploys.
 
-These are current production results and are expected to remain until a release is deployed. This change does not claim that production is already updated.
+## Not performed / release validation still required
 
-## Not performed / manual release validation required
-
-- No Lighthouse/PageSpeed run, mobile device lab, CrUX/Core Web Vitals data, AXE scan or browser-level hydration check was available/performed.
-- No post-deployment test of the new static files, route metadata or 404 behavior was performed.
-- No live Supabase listing/categories query was run; do not infer actual published inventory.
-- No structured-data result was tested against Rich Results Test or Schema Markup Validator. The Organization/WebSite values contain only the site name, URL, logo and languages; no local-business facts, ratings or address are invented.
-- No authentication/admin/service-registration/import/advertisement regression was manually performed. Existing automated tests passed, but that is not a full production workflow validation.
-- Search Console ownership, sitemap submission and GA4 are not configured.
+- No production deploy, Cloudflare preview deployment, redirect/status configuration or post-deploy raw-HTML test.
+- No real browser hydration test, Angular navigation/auth/admin workflow test, AXE scan, Lighthouse run, PageSpeed report or device-lab run.
+- No Core Web Vitals LCP/INP/CLS or CrUX field measurements. The image byte comparison is not a CWV result.
+- No manual Supabase RLS/auth/admin, service submission, booking enquiry, advertisement, or partner-confirmation regression was performed. Existing unit tests pass, but are not substitutes for these flows.
+- JSON-LD was inspected in generated HTML and unit-tested, but no Google Rich Results Test or Schema Markup Validator submission was run.
+- No Search Console property, DNS verification, GA4 property, real Measurement ID, consent signal or live analytics event was configured.
+- Unknown routes still return HTTP 200 from the existing SPA fallback. Fixing this without breaking direct navigation to protected routes requires a host/edge routing decision.
 
 ## Release gate
 
-Do not call SEO rendering fixed until a staging/production-like Cloudflare deployment confirms raw HTML contains route-specific content and metadata, `/robots.txt` returns `text/plain`, `/sitemap.xml` returns valid XML, known deep routes still render, and unknown paths return the intended HTTP 404 without breaking authentication.
+After deployment, verify raw source HTML on home, tourism, one category and one published service; `/robots.txt` is `text/plain`; `/sitemap.xml` is valid XML and fetchable; routes hydrate without duplicate public Supabase calls; existing auth/admin/booking workflows still work; and unknown routes have an explicitly accepted status behavior.

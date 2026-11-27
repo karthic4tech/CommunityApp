@@ -1,4 +1,5 @@
 import { DOCUMENT } from '@angular/common';
+import { TransferState } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { LanguageService } from './language.service';
@@ -10,7 +11,23 @@ describe('LanguageService', () => {
       setItem: vi.fn(() => { if (blocked) throw new Error('Blocked'); }),
     };
     const document = { documentElement: { lang: '' }, title: '', defaultView: { localStorage: storage } };
-    TestBed.configureTestingModule({ providers: [{ provide: DOCUMENT, useValue: document }] });
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: DOCUMENT, useValue: document },
+        {
+          provide: TransferState,
+          useValue: {
+            get: (_key: unknown, fallback: unknown) => fallback,
+            hasKey: () => false,
+            remove: vi.fn(),
+            set: vi.fn(),
+            onSerialize: vi.fn(),
+            toJson: () => '{}',
+            isEmpty: true,
+          },
+        },
+      ],
+    });
     return { service: TestBed.inject(LanguageService), document, storage };
   }
 

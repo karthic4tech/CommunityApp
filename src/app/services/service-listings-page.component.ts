@@ -117,6 +117,12 @@ export class ServiceListingsPageComponent implements OnInit {
           || `Browse published, verified ${selected.subcategory.nameEnglish} listings in Chidambaram. Contact providers to confirm details.`,
         path: `/services/${selected.parent.slug}/${selected.subcategory.slug}`,
         language,
+        structuredData: this.seo.breadcrumbSchema([
+          { name: 'Home', path: '/' },
+          { name: 'Services', path: '/services' },
+          { name: selected.parent.nameEnglish, path: `/services/category/${selected.parent.slug}` },
+          { name: selected.subcategory.nameEnglish, path: `/services/${selected.parent.slug}/${selected.subcategory.slug}` },
+        ]),
       });
     });
     afterRenderEffect(() => {

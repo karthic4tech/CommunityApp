@@ -1,0 +1,148 @@
+import { readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { createClient } from '@supabase/supabase-js';
+
+const origin = 'https://cdm360.in';
+const pageSize = 500;
+const maxUrls = 50_000;
+const staticRoutes = ['/', '/tourism', '/services', '/businesses', '/essential-services', '/jobs'];
+const publicRoutePath = /^\/(?:tourism|services|providers|businesses|essential-services|jobs)(?:\/[a-z0-9-]+)*$/;
+const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const listingSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*-[a-f0-9]{8}$/;
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function readPublicSupabaseConfig(source) {
+  const read = (name) => source.match(new RegExp(`${name}:\\s*'([^']*)'`))?.[1]?.trim() ?? '';
+  return { url: read('supabaseUrl'), key: read('supabasePublishableKey') };
+}
+
+async function fetchAll(queryFactory) {
+  const rows = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await queryFactory().range(from, from + pageSize - 1);
+    if (error) throw new Error(`Public SEO data query failed (${error.code ?? 'unknown'}).`);
+    const page = data ?? [];
+    rows.push(...page);
+    if (page.length < pageSize) return rows;
+    if (rows.length >= maxUrls) throw new Error('SEO artifact generation exceeded the 50,000 URL sitemap limit.');
+  }
+}
+
+function safeLastmod(value) {
+  if (typeof value !== 'string') return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.valueOf()) ? undefined : date.toISOString().slice(0, 10);
+}
+
+function escapeXml(value) {
+  return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
+}
+
+async function main() {
+  const environmentSource = await readFile(resolve('src/environments/environment.ts'), 'utf8');
+  const { url, key } = readPublicSupabaseConfig(environmentSource);
+  if (!url || !key) {
+    console.warn('SEO artifacts not refreshed: public Supabase configuration is unavailable; keeping the checked-in fallback.');
+    return;
+  }
+
+  const supabase = createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+  const categories = await fetchAll(() => supabase.from('service_categories')
+    .select('id,parent_id,slug,name_en,name_ta,updated_at')
+    .eq('is_active', true)
+    .order('slug'));
+  const listings = await fetchAll(() => supabase.from('service_listings')
+    .select('id,slug,category_id,updated_at,service_categories!inner(is_active),service_providers!inner(verification_status)')
+    .eq('status', 'published')
+    .eq('service_categories.is_active', true)
+    .eq('service_providers.verification_status', 'verified')
+    .not('slug', 'is', null)
+    .order('slug'));
+
+  const categoryById = new Map(categories.map((category) => [category.id, category]));
+  const publishedCategoryIds = new Set(listings.map((listing) => listing.category_id));
+  const categoriesWithPublicListings = new Set();
+  for (const id of publishedCategoryIds) {
+    let current = categoryById.get(id);
+    const seen = new Set();
+    while (current && !seen.has(current.id)) {
+      categoriesWithPublicListings.add(current.id);
+      seen.add(current.id);
+      current = current.parent_id ? categoryById.get(current.parent_id) : undefined;
+    }
+  }
+
+  const categoryRoutes = [];
+  const categoryLastmod = new Map();
+  const listingRoutes = [];
+  const listingLastmod = new Map();
+  const serviceCategoryIds = new Set(listings.map((listing) => listing.category_id));
+
+  for (const category of categories) {
+    if (!categoriesWithPublicListings.has(category.id) || !slugPattern.test(category.slug)) continue;
+    const path = `/services/category/${category.slug}`;
+    categoryRoutes.push(path);
+    const lastmod = safeLastmod(category.updated_at);
+    if (lastmod) categoryLastmod.set(path, lastmod);
+
+    if (category.parent_id && serviceCategoryIds.has(category.id)) {
+      const parent = categoryById.get(category.parent_id);
+      if (parent && slugPattern.test(parent.slug)) categoryRoutes.push(`/services/${parent.slug}/${category.slug}`);
+    }
+  }
+
+  for (const listing of listings) {
+    const path = listingSlugPattern.test(listing.slug)
+      ? `/services/${listing.slug}`
+      : uuidPattern.test(listing.id) ? `/providers/${listing.id}` : null;
+    if (!path) continue;
+    listingRoutes.push(path);
+    const lastmod = safeLastmod(listing.updated_at);
+    if (lastmod) listingLastmod.set(path, lastmod);
+  }
+
+  const routeSet = new Set([...staticRoutes, ...categoryRoutes, ...listingRoutes]);
+  const routes = [...routeSet].filter((path) =>
+    path === '/' || publicRoutePath.test(path),
+  ).sort((a, b) => a === '/' ? -1 : b === '/' ? 1 : a.localeCompare(b));
+
+  const sitemapUrls = routes.map((path) => {
+    const lastmod = listingLastmod.get(path) ?? categoryLastmod.get(path);
+    return `  <url><loc>${escapeXml(`${origin}${path}`)}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}</url>`;
+  });
+  const sitemap = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...sitemapUrls,
+    '</urlset>',
+    '',
+  ].join('\n');
+  const categoryLinks = categories
+    .filter((category) => categoriesWithPublicListings.has(category.id) && slugPattern.test(category.slug))
+    .map((category) => ({
+      path: `/services/category/${category.slug}`,
+      nameEnglish: category.name_en,
+      nameTamil: category.name_ta,
+    }));
+  const generatedLinks = [
+    '// Generated by scripts/generate-seo-artifacts.mjs from active categories with published, verified listings.',
+    'export interface SeoDirectoryLink { readonly path: string; readonly nameEnglish: string; readonly nameTamil: string; }',
+    `export const SEO_DIRECTORY_LINKS: readonly SeoDirectoryLink[] = ${JSON.stringify(categoryLinks, null, 2)};`,
+    '',
+  ].join('\n');
+
+  await Promise.all([
+    writeFile(resolve('src/prerender-routes.txt'), `${routes.join('\n')}\n`, 'utf8'),
+    writeFile(resolve('public/sitemap.xml'), sitemap, 'utf8'),
+    writeFile(resolve('src/app/core/services/seo-directory-links.generated.ts'), generatedLinks, 'utf8'),
+  ]);
+  console.log(`Generated ${routes.length} public prerender routes and sitemap URLs (active categories: ${categories.length}; published verified listings: ${listingRoutes.length}).`);
+}
+
+main().catch((error) => {
+  console.error(`SEO artifact refresh failed; checked-in artifacts were left unchanged. ${error instanceof Error ? error.message : 'Unknown error.'}`);
+  process.exitCode = 1;
+});

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { RouterLink } from '@angular/router';
 import { JobService, PublishedJob } from '../core/services/job.service';
 import { LanguageService } from '../core/services/language.service';
+import { SeoService } from '../core/services/seo.service';
 
 @Component({
   selector: 'app-jobs-page',
@@ -71,11 +72,18 @@ import { LanguageService } from '../core/services/language.service';
 export class JobsPageComponent implements OnInit {
   protected readonly i18n = inject(LanguageService);
   private readonly jobService = inject(JobService);
+  private readonly seo = inject(SeoService);
   protected readonly jobs = signal<readonly PublishedJob[]>([]);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
 
   async ngOnInit(): Promise<void> {
+    this.seo.update({
+      title: 'Jobs in Chidambaram | CDM 360',
+      description: 'Browse job opportunities shared with the Chidambaram community.',
+      path: '/jobs',
+      language: this.i18n.language(),
+    });
     try {
       this.jobs.set(await this.jobService.publishedJobs());
     } catch (error) {

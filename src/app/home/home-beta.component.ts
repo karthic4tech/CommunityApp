@@ -33,12 +33,12 @@ export class HomeBetaComponent implements OnInit, OnDestroy {
 
   // Use one original landscape image set at every viewport size.
   readonly heroSlides = [
-    '/assets/images/Welcome%20to%20Nam%20Chidambaram.png',
-    '/assets/images/Annamalai%20University%20Clock%20Tower%20Campus.png',
+    '/assets/images/Welcome%20to%20Nam%20Chidambaram.webp',
+    '/assets/images/Annamalai%20University%20Clock%20Tower%20Campus.webp',
     '/assets/images/Chidambaram%2C%20Built%20by%20Community.png',
-    '/assets/images/pichavaram-image-1.png',
-    '/assets/images/samiyarpettai-beach-1.png',
-    '/assets/images/hotel-image-lakshmi-villas.png'
+    '/assets/images/pichavaram-image-1.webp',
+    '/assets/images/samiyarpettai-beach-1.webp',
+    '/assets/images/hotel-image-lakshmi-villas.webp'
   ] as const;
 
   readonly heroSlideAlts = [

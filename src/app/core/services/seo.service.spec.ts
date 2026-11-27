@@ -47,4 +47,33 @@ describe('SeoService', () => {
     expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex,nofollow');
     expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://cdm360.in/account');
   });
+
+  it('replaces route JSON-LD and removes obsolete keyword metadata', () => {
+    const keywords = document.createElement('meta');
+    keywords.name = 'keywords';
+    keywords.content = 'obsolete';
+    document.head.appendChild(keywords);
+
+    seo.update({
+      title: 'Hotels in Chidambaram | CDM 360',
+      description: 'Published stay listings in Chidambaram.',
+      path: '/services/category/hotels',
+      language: 'en',
+      structuredData: seo.breadcrumbSchema([
+        { name: 'Home', path: '/' },
+        { name: 'Hotels', path: '/services/category/hotels' },
+      ]),
+    });
+
+    expect(document.querySelector('#cdm360-page-structured-data')?.textContent).toContain('BreadcrumbList');
+    expect(document.querySelector('meta[property="og:locale"]')?.getAttribute('content')).toBe('en_IN');
+    expect(document.querySelector('meta[name="keywords"]')).toBeNull();
+
+    seo.update({
+      title: 'CDM 360 | Nam Chidambaram',
+      description: 'Local services in Chidambaram.',
+      path: '/',
+    });
+    expect(document.querySelector('#cdm360-page-structured-data')).toBeNull();
+  });
 });

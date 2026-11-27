@@ -4,6 +4,7 @@ import { LodgingQuestionType } from '../core/models/lodging-inquiry';
 import { ServiceListing } from '../core/models/service-listing';
 import { LodgingInquiryService } from '../core/services/lodging-inquiry.service';
 import { LanguageService } from '../core/services/language.service';
+import { AnalyticsService } from '../core/services/analytics.service';
 
 const QUESTION_TYPES: readonly { value: LodgingQuestionType; english: string; tamil: string }[] = [
   { value: 'availability', english: 'Are rooms available for my dates?', tamil: 'எனது தேதிகளில் அறைகள் கிடைக்குமா?' },
@@ -64,6 +65,7 @@ const QUESTION_TYPES: readonly { value: LodgingQuestionType; english: string; ta
 export class LodgeInquiryComponent {
   readonly listing = input.required<ServiceListing>();
   protected readonly i18n = inject(LanguageService);
+  private readonly analytics = inject(AnalyticsService);
   private readonly inquiries = inject(LodgingInquiryService);
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('inquiryDialog');
@@ -128,6 +130,7 @@ export class LodgeInquiryComponent {
         message: value.message || null,
       });
       this.submitted.set(true);
+      this.analytics.track('hotel_enquiry_submitted');
     } catch (error) { this.errorMessage.set(error instanceof Error ? error.message : 'Unable to send your enquiry. Please try again.'); }
     finally { this.sending.set(false); }
   }

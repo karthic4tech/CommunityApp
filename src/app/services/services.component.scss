@@ -56,6 +56,11 @@ button:disabled { cursor:not-allowed; opacity:.58; }
 .featured-service-group h3 { margin:0; color:var(--cdm-navy); font-size:1rem; font-weight:740; }
 .featured-service-group > header a { display:inline-flex; align-items:center; gap:.35rem; flex:none; min-height:38px; color:var(--cdm-royal-blue); font-size:.78rem; font-weight:700; text-decoration:none; }
 .featured-service-group > header a:hover { text-decoration:underline; }
+.published-category-links { margin-top:1.25rem; padding:1rem; border:1px solid var(--cdm-border); border-radius:13px; background:#fff; }
+.published-category-links h2 { margin:0 0 .7rem; font-size:1rem; }
+.published-category-links ul { display:flex; flex-wrap:wrap; gap:.45rem; margin:0; padding:0; list-style:none; }
+.published-category-links a { display:inline-flex; align-items:center; min-height:40px; padding:.45rem .7rem; border:1px solid var(--cdm-border); border-radius:999px; color:var(--cdm-royal-blue); background:var(--cdm-page); font-size:.78rem; font-weight:650; text-decoration:none; }
+.published-category-links a:hover { border-color:var(--cdm-royal-blue); background:#fff; }
 .section-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
 .results-heading .eyebrow,.category-heading .eyebrow { margin-bottom:.35rem; }
 .category-heading > div > p:last-child { margin-top:.4rem; font-size:.9rem; }

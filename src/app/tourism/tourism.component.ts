@@ -120,7 +120,7 @@ interface TourismServiceAction {
 
         <section id="temple-guide" class="temple-feature" tabindex="-1" aria-labelledby="temple-guide-title">
           <div class="temple-feature-image-wrap">
-            <img class="temple-feature-image" ngSrc="/assets/images/chidambaram-hero2.png" width="1651" height="953" sizes="(max-width: 760px) 100vw, 50vw" loading="lazy" alt="Illustrative artwork inspired by Chidambaram temple tank and gopuram" />
+            <img class="temple-feature-image" ngSrc="/assets/images/chidambaram-hero2.webp" width="1651" height="953" sizes="(max-width: 760px) 100vw, 50vw" loading="lazy" alt="Illustrative artwork inspired by Chidambaram temple tank and gopuram" />
             <span class="image-caption">{{ i18n.language() === 'ta' ? 'விளக்கக் காட்சி' : 'Illustrative destination artwork' }}</span>
           </div>
           <div class="temple-feature-copy">
@@ -267,6 +267,10 @@ export class TourismComponent implements OnInit {
       description: 'Plan a Chidambaram visit with visitor guidance, nearby places, itinerary ideas and published local stay and dining listings.',
       path: '/tourism',
       language: this.i18n.language(),
+      structuredData: this.seo.breadcrumbSchema([
+        { name: 'Home', path: '/' },
+        { name: 'Tourism & Travel', path: '/tourism' },
+      ]),
     });
     void this.loadPublicProviderListings();
   }

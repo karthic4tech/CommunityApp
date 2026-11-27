@@ -1,40 +1,53 @@
 # CDM 360 SEO audit
 
-**Audit date:** 2026-11-23  
-**Repository inspected:** `C:\projects\CommunityApp` (the requested `C:\tmp\community-app` was not mounted)  
-**Production inspected:** `https://cdm360.in/`  
-**Scope note:** No production account, Supabase credentials or Google Search Console access were supplied.
+**Audit date:** 2026-11-27
+**Repository:** `C:\projects\CommunityApp`
+**Production:** `https://cdm360.in/`
+**Production deployment:** Not changed by this work.
 
-## Findings
+## Verified production baseline
 
-| Issue | Affected routes | Severity | Evidence | Recommended solution | Status |
-|---|---|---:|---|---|---|
-| Important pages are client-rendered only; source HTML is an empty `<app-root>` shell | `/`, `/tourism`, `/services`, category routes, detail routes | **Critical** | Live HTML returned for homepage, tourism, services and `/services/category/hotels` has the same title, no route-specific H1 or body text, and only an empty Angular root. `angular.json` configures `@angular/build:application` without server/prerender output. | Adopt prerender for stable public editorial routes and a Cloudflare-compatible rendering/generation strategy for Supabase-backed routes. Keep browser auth out of server execution. | Not fixed; deployment/runtime design requires a separate verified rollout. |
-| Invalid paths use the SPA fallback and render the generic shell instead of a useful 404 | Unknown paths | **High** | `wrangler.jsonc` sets `assets.not_found_handling` to `single-page-application`; the live invalid path returned the same shell as the homepage. This mode commonly masks missing route responses as the SPA document. | Serve a real 404 status from the edge while explicitly preserving supported deep links; verify with production HTTP status after deployment. | Client-side not-found page added. HTTP status remains hosting-dependent and is not fixed by Angular alone. |
-| SEO metadata is one static Tamil title and is not route-specific | All routes | **High** | `src/index.html` contains only `CDM360 | நம் சிதம்பரம்`; live route responses share it. No description, canonical, Open Graph or Twitter metadata is present in source HTML. | Centralize metadata updates and apply unique metadata from actual route data; render it in initial HTML for crawl-critical routes. | Runtime SEO service and metadata for home, tourism, services, categories, subcategories, listings and not-found added. Server HTML remains unchanged. |
-| No sitemap or robots file existed in the repository | Crawlable public routes | **High** | No files under `public/` before this change. Cloudflare static assets use `public` as Angular assets input. | Publish conservative canonical public URLs only and add sitemap reference in robots. Generate dynamic URL sets from published Supabase rows before including categories/listings. | Static robots and a small verified-route sitemap added; dynamic categories/listings intentionally omitted. |
-| Sitemap cannot currently reflect live published service listings | Category and individual listing routes | **High** | Categories/listings load from Supabase at runtime. No build-time data export or server endpoint exists. Directory code explicitly filters to published listings and verified providers. | Add a scheduled/edge sitemap generator that uses only public published, verified rows and real modification timestamps; paginate at 50,000 URLs per sitemap and use a sitemap index when needed. | Not implemented; no database migration made. |
-| Structured data was absent from the initial HTML | Organization, website, breadcrumbs and service detail pages | **Medium** | No JSON-LD or microdata was present in the live response or application SEO infrastructure during the audit. | Add only schema values supported by actual site/listing records, validate the rendered result, and do not add review/rating/price facts without source data. | Client-side Organization and WebSite JSON-LD added using site name, canonical origin, existing logo and supported languages. No local business, rating, contact or price schema is asserted. |
-| The app supports dynamic directory data but public category/detail HTTP status cannot reflect missing records in static hosting | `/services/category/:slug`, `/services/:categorySlug/:subcategorySlug`, `/services/:slug`, `/providers/:id` | **High** | Category and listing lookups occur in the browser after initial shell delivery. The detail component has an Angular not-found state but hosting returns the SPA document first. | Move public route resolution to prerender/edge SSR or use a generated public snapshot and edge 404 handling. Preserve RLS and public-field projections. | Audited; remains an architecture item. |
-| Directory and tourism listing content is not present in response HTML | `/tourism`, categories, details | **High** | Tourism categories, listings and details are fetched in component lifecycle hooks through Supabase. The live initial response contains none of this content. The service filters correctly for publication/provider verification once executed in the browser. | Render static factual guide content at build/prerender time and hydrate public listings from a bounded public data source; avoid duplicate Supabase loads. | Not implemented as server rendering. Existing public filtering remains untouched. |
-| No automated 404 route existed | Unknown client-side Angular route | **Medium** | `src/app/app.routes.ts` had no wildcard route. | Add accessible not-found UI with noindex; independently configure edge/server status. | Angular wildcard route and noindex page added. |
-| Robots exclusion is not a privacy boundary | Admin, auth, account and private submissions | **Medium** | Protected routes use existing Angular guards; static SPA hosting serves the same application shell for deep links. | Keep server/database authorization as the security boundary; use noindex to reduce search exposure only. | Existing guards unchanged; runtime noindex and robots exclusions added. |
-| External font stylesheet introduces third-party requests before text rendering | All routes | **Low** | `src/index.html` loads Google Fonts CSS; production response inlines large font-face CSS from Google Fonts. | Measure on representative mobile profiles; consider self-hosting a subset and reducing font weights only after visual validation. | Not changed; no before/after lab tooling available. |
-| No GA4 measurement configuration found | All routes and conversion events | **Medium** | Repository search found no GA tag, measurement ID or GA integration. Owner confirms GA4 is not configured. | Supply a real ID, privacy/consent policy and test in GA4 Realtime/DebugView before enabling analytics. | No ID invented and no tracking enabled. |
+Raw HTTP GETs were checked against production. These are pre-deployment results:
 
-## Routes and data notes
+| URL | HTTP / content type | Evidence |
+|---|---|---|
+| `/` | `200 text/html` | `webfetch` returned an empty `<app-root>` shell and the same static brand title as other routes. No route H1, description, canonical, or JSON-LD appears in the source HTML. |
+| `/services/category/hotels` | `200 text/html` | Same SPA shell; no category title, H1, or listings in the initial response. |
+| `/robots.txt` | `200 text/plain` | File is served correctly and points to the sitemap. It excludes private route families; these rules are not security controls. |
+| `/sitemap.xml` | `200 application/xml` | Valid sitemap, but only six URLs: home, tourism, services, businesses, essential services, and jobs. It omits published categories and service details. |
+| `/no-such-seo-route-987654` | `200 text/html` | Cloudflare SPA fallback serves the app shell for unknown URLs rather than returning a real HTTP 404. |
 
-- Route definitions use lazy-loaded components in `src/app/app.routes.ts`.
-- Public listing queries use `published` status, verified providers and active categories; contacts and media are database-filtered. See `ServiceDirectoryService`.
-- Category records are fetched from `service_categories`; public visibility depends on active state and RLS.
-- The live `/robots.txt` and `/sitemap.xml` checks returned the generic SPA document during the audit; neither was configured.
-- Initial response output was inspected via HTTP fetch. Route-level HTML and HTTP status could not be independently measured in an authenticated browser/lab because no browser performance runner is installed.
-- Live content availability, exact service URLs/slugs, modification timestamps, categories and verified listings were not assumed.
+The live source HTML, not a browser-rendered DOM, was inspected. Production still has the empty-root crawlability defect until the new build is deployed.
 
-## Rendering and hosting decision
+## Architecture and existing functionality
 
-The repository uses Cloudflare Workers Static Assets (`wrangler.jsonc`) with SPA fallback, not Angular SSR. Replacing it with SSR or blanket prerendering is not a safe isolated config change: public directory data is private-field-filtered through Supabase, authentication/storage are browser-oriented, dynamic service URLs are database-owned, and a static-only Worker currently relies on SPA fallback for deep links. A Cloudflare SSR worker/prerender rollout needs an explicit runtime, public-data snapshot/generation policy, cache invalidation, and protected-route regression plan. Therefore no incomplete SSR scaffolding was added.
+- `angular.json` uses the Angular application builder; routes are lazy loaded in `src/app/app.routes.ts`.
+- `wrangler.jsonc` deploys `dist/community-app/browser` as Cloudflare static assets with SPA not-found handling. There is no production SSR server configured.
+- `SeoService` already existed and updated client-side title, description, robots, canonical, Open Graph, Twitter card and Organization/WebSite JSON-LD. Several public route components already called it. Private route guards and Supabase public projections also existed.
+- Public category reads select active categories. Public directory reads filter published listings and verified providers and select public listing contacts/media. No service-role credential is present in the browser configuration.
+- Existing `/tourism` already contains destination information, official-source links, one- and two-day itinerary ideas, hotel/dining discovery and enquiry guidance. No separate language URL variants exist; English/Tamil is a client-side language choice.
+- Search Console and GA4 configuration were not found. No Google verification token or measurement ID was supplied.
 
-## Fix-first summary
+## Verified issues and risks
 
-Runtime metadata, a visible Angular 404 page, a conservative static sitemap and robots directives are implemented in this change. They improve client navigation and crawl hints but **do not solve the critical empty-source-HTML issue**. Search Console should not be used to claim that route content is crawlable until the rendering rollout is validated against raw HTTP responses.
+| Priority | Issue | Evidence / impact |
+|---|---|---|
+| Critical | Crawl-critical public routes are client-rendered on production. | Raw HTML contains an empty Angular root, even though route components later fetch Supabase data and update metadata. |
+| High | Current production sitemap omits dynamic public pages. | Only six static locations are present; the app has dynamic category and provider-detail routes. |
+| High | Unknown URLs return the SPA document with HTTP 200. | Wrangler uses `not_found_handling: "single-page-application"`. Angular can render a not-found page, but cannot change the already-sent static response status. |
+| Medium | Production source has no useful default description/canonical/social metadata. | The route-specific tags were added client-side and therefore are absent from the live response source. |
+| Medium | The directory has large source images. | The nine images selected for primary/tourism surfaces total 23.13 MiB as PNG. This is a byte-level observation, not an LCP measurement. |
+| Medium | The initial JavaScript/CSS bundle is already over the configured budget. | Baseline `npm run build`: 922.38 kB raw / 180.97 kB estimated transfer for initial files; multiple component style warnings. |
+| Medium | The app does not currently implement a cab quote flow or partner-confirmed booking state. | No matching cab enquiry/booking workflow was found in the route/services audit. Do not generate fake availability or confirmation events. |
+
+## Rendering decision
+
+Static prerendering was selected over a long-running SSR service. It fits the existing Cloudflare static-assets deployment, adds no paid hosting dependency, and produces regular files in the existing `dist/community-app/browser` assets directory. Only the public allowlist from `src/prerender-routes.txt` is rendered. Supabase data is read anonymously through the existing public/RLS-protected projections and serialized through Angular transfer state. Server rendering does not restore browser auth or fetch user roles.
+
+The unknown-route HTTP 404 limitation remains: the SPA fallback is needed for non-prerendered protected routes. Do not claim the 404 status defect is fixed.
+
+## Build-time public inventory snapshot
+
+During the local read-only generation run on 2026-11-27, the public Supabase query returned 255 active categories and 27 published listings with verified providers. The generator produced 86 sitemap/prerender URLs. These are a build-time snapshot, not a commitment that production data will remain unchanged.
+
+No Supabase row, migration, booking, review or admin record was modified.

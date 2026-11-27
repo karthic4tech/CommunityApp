@@ -12,6 +12,7 @@ import { ListingSummaryComponent } from './listing-summary/listing-summary.compo
 import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select.component';
 import { SearchableSelectOption } from '../shared/components/searchable-select/searchable-select.models';
 import { SeoService } from '../core/services/seo.service';
+import { SEO_DIRECTORY_LINKS } from '../core/services/seo-directory-links.generated';
 
 interface FeaturedServiceGroup {
   readonly categoryId: string;
@@ -30,6 +31,7 @@ interface FeaturedServiceGroup {
 })
 export class AllServicesComponent implements OnInit {
   protected readonly service = inject(ServiceCategoryService);
+  protected readonly seoDirectoryLinks = SEO_DIRECTORY_LINKS;
   protected readonly i18n = inject(LanguageService);
   private readonly seo = inject(SeoService);
   private readonly directory = inject(ServiceDirectoryService);
@@ -113,6 +115,21 @@ export class AllServicesComponent implements OnInit {
 
   constructor() {
     effect(() => {
+      const filtered = this.hasDirectoryFilters();
+      const language = this.i18n.language();
+      this.seo.update({
+        title: filtered
+          ? 'Search Local Services in Chidambaram | CDM 360'
+          : 'Local Services in Chidambaram | CDM 360',
+        description: filtered
+          ? 'Search published local services and providers in Chidambaram. Contact providers directly to confirm current details.'
+          : 'Browse published local services and verified providers in Chidambaram, Tamil Nadu.',
+        path: '/services',
+        robots: filtered ? 'noindex,follow' : 'index,follow',
+        language,
+      });
+    });
+    effect(() => {
       if (this.hasDirectoryFilters()) this.isServiceDiscoveryExpanded.set(false);
     });
     effect((onCleanup) => {
@@ -175,12 +192,6 @@ export class AllServicesComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.seo.update({
-      title: 'Local Services in Chidambaram | CDM 360',
-      description: 'Browse published local services and verified providers in Chidambaram, Tamil Nadu.',
-      path: '/services',
-      language: this.i18n.language(),
-    });
     void this.service.load();
     void this.ensureLocations().catch(() => this.locationsError.set(true));
   }

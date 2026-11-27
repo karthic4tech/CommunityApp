@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { SeoService } from '../core/services/seo.service';
 
 @Component({
@@ -26,12 +26,14 @@ import { SeoService } from '../core/services/seo.service';
 })
 export class NotFoundComponent implements OnInit {
   private readonly seo = inject(SeoService);
+  private readonly router = inject(Router);
 
   ngOnInit(): void {
+    const path = this.router.url.split(/[?#]/, 1)[0] || '/';
     this.seo.update({
       title: 'Page Not Found | CDM 360',
       description: 'The requested CDM 360 page could not be found.',
-      path: '/404',
+      path,
       robots: 'noindex,nofollow',
     });
   }

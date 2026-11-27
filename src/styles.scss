@@ -156,7 +156,7 @@ app-landing .nc-button { display:inline-flex; align-items:center; justify-conten
 app-landing .nc-button:hover { transform:translateY(-2px); background:var(--nc-orange-dark); }
 app-landing .nc-button-light { background:#fff; color:var(--nc-orange-dark); }
 app-landing .nc-hero { position:relative; min-height:370px; display:flex; align-items:center; padding:32px max(6.5%,calc((100vw - 1200px)/2)); isolation:isolate; }
-app-landing .nc-hero-photo { position:absolute; z-index:-2; inset:0; background:linear-gradient(90deg,#ffffff70,transparent 55%),url('/assets/images/chidambaram-hero.png') center 48%/cover no-repeat,linear-gradient(120deg,var(--cdm-page),var(--cdm-blue-soft) 55%,var(--cdm-page)); }
+app-landing .nc-hero-photo { position:absolute; z-index:-2; inset:0; background:linear-gradient(90deg,#ffffff70,transparent 55%),url('/assets/images/chidambaram-hero.webp') center 48%/cover no-repeat,linear-gradient(120deg,var(--cdm-page),var(--cdm-blue-soft) 55%,var(--cdm-page)); }
 app-landing .nc-hero::after { content:''; position:absolute; z-index:-1; inset:0; background:linear-gradient(90deg,var(--cdm-page) 0%,color-mix(in srgb, var(--cdm-page) 93%, transparent) 33%,color-mix(in srgb, var(--cdm-page) 38%, transparent) 52%,transparent 75%); }
 app-landing .nc-hero-copy { width:min(440px,54%); padding:28px 30px; background:#fff; border-radius:22px; box-shadow:0 12px 35px color-mix(in srgb, var(--cdm-navy) 13%, transparent); }
 app-landing .nc-hero-copy h1 { margin:0 0 12px; color:var(--cdm-navy); font-family:Georgia,'Times New Roman',serif; font-size:clamp(28px,3vw,43px); line-height:1.08; }

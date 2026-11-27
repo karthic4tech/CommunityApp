@@ -10,6 +10,7 @@ import { ListingSummaryComponent } from '../listing-summary/listing-summary.comp
 import { LodgeReviewsComponent } from '../lodge-reviews.component';
 import { LodgeInquiryComponent } from '../lodge-inquiry.component';
 import { SeoService } from '../../core/services/seo.service';
+import { AnalyticsService } from '../../core/services/analytics.service';
 
 @Component({
   selector: 'app-provider-detail',
@@ -77,6 +78,7 @@ export class ServiceDetailComponent implements OnInit {
   private readonly categoryService = inject(ServiceCategoryService);
   private readonly route = inject(ActivatedRoute);
   private readonly seo = inject(SeoService);
+  private readonly analytics = inject(AnalyticsService);
   private readonly params = toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
   protected readonly queryParams = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
   private readonly attempts = signal(0);
@@ -112,12 +114,49 @@ export class ServiceDetailComponent implements OnInit {
         this.listing.set(listing);
         if (listing) {
           const category = listing.service_categories?.name_en?.trim() || 'Local Service';
+          const categorySlug = listing.service_categories?.slug ?? '';
+          if (['hotels', 'lodge-stay'].includes(categorySlug)) this.analytics.track('hotel_listing_view');
+          const listingPath = listing.slug ? `/services/${listing.slug}` : `/providers/${listing.id}`;
+          const lodging = ['hotels', 'lodge-stay'].includes(categorySlug);
+          const restaurant = ['restaurants', 'vegetarian-restaurants', 'non-vegetarian-restaurants'].includes(categorySlug);
+          const providerSchema = {
+            '@type': lodging ? 'Hotel' : restaurant ? 'Restaurant' : 'Organization',
+            name: listing.service_providers.display_name,
+            ...(listing.service_providers.description ? { description: listing.service_providers.description } : {}),
+            url: `https://cdm360.in${listingPath}`,
+          };
+          const serviceSchema = {
+            '@context': 'https://schema.org',
+            '@type': 'Service',
+            name: listing.title,
+            description: listing.description,
+            serviceType: category,
+            url: `https://cdm360.in${listingPath}`,
+            inLanguage: this.i18n.language() === 'ta' ? 'ta-IN' : 'en-IN',
+            provider: providerSchema,
+            ...(listing.listing_locations.length
+              ? {
+                  areaServed: listing.listing_locations.flatMap(({ locations }) =>
+                    locations ? [{ '@type': 'Place', name: locations.name_en?.trim() || locations.name_ta }] : [],
+                  ),
+                }
+              : {}),
+          };
           this.seo.update({
             title: `${listing.title} – ${category} in Chidambaram | CDM 360`,
             description: listing.description?.trim()
               || `Public ${category.toLocaleLowerCase()} listing for ${listing.title} in Chidambaram. Contact the provider to confirm current details.`,
-            path: listing.slug ? `/services/${listing.slug}` : `/providers/${listing.id}`,
+            path: listingPath,
             language: this.i18n.language(),
+            structuredData: [
+              serviceSchema,
+              this.seo.breadcrumbSchema([
+                { name: 'Home', path: '/' },
+                { name: 'Services', path: '/services' },
+                ...(categorySlug ? [{ name: category, path: `/services/category/${categorySlug}` }] : []),
+                { name: listing.title, path: listingPath },
+              ]),
+            ],
           });
           void this.directory.related(listing.service_providers.id, listing.id)
             .then(related => { if (current) this.related.set(related); })

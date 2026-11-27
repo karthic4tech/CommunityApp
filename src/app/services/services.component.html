@@ -81,6 +81,17 @@
     </section>
   }
 
+  @if (!hasDirectoryFilters() && seoDirectoryLinks.length) {
+    <nav class="published-category-links" aria-labelledby="published-category-links-title">
+      <h2 id="published-category-links-title">{{ i18n.language() === 'ta' ? 'சேவை வகைகளைப் பாருங்கள்' : 'Browse published service categories' }}</h2>
+      <ul>
+        @for (link of seoDirectoryLinks; track link.path) {
+          <li><a [routerLink]="link.path">{{ i18n.language() === 'ta' ? link.nameTamil : link.nameEnglish }}</a></li>
+        }
+      </ul>
+    </nav>
+  }
+
   @if (hasDirectoryFilters()) {
     <section class="listing-results" aria-labelledby="listing-results-title" [attr.aria-busy]="listingsLoading()">
       <div class="section-heading results-heading">

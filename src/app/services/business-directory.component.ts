@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { LocalBrand } from '../core/models/local-brand';
 import { LanguageService } from '../core/services/language.service';
 import { LocalBrandService } from '../core/services/local-brand.service';
+import { SeoService } from '../core/services/seo.service';
 
 @Component({
   selector: 'app-business-directory',
@@ -68,12 +69,21 @@ import { LocalBrandService } from '../core/services/local-brand.service';
 })
 export class BusinessDirectoryComponent implements OnInit {
   protected readonly i18n = inject(LanguageService);
+  private readonly seo = inject(SeoService);
   private readonly brandsService = inject(LocalBrandService);
   protected readonly businesses = signal<LocalBrand[]>([]);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
 
-  ngOnInit(): void { void this.load(); }
+  ngOnInit(): void {
+    this.seo.update({
+      title: 'Local Businesses in Chidambaram | CDM 360',
+      description: 'Explore verified local businesses in Chidambaram with active published services.',
+      path: '/businesses',
+      language: this.i18n.language(),
+    });
+    void this.load();
+  }
 
   protected async load(): Promise<void> {
     this.loading.set(true);

@@ -1,4 +1,5 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Session, User } from '@supabase/supabase-js';
 import { environment } from '../../../environments/environment';
 import { SupabaseService } from '../services/supabase.service';
@@ -16,6 +17,7 @@ export interface SignUpResult {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly platformId = inject(PLATFORM_ID);
   private readonly supabase = inject(SupabaseService);
   private readonly sessionState = signal<Session | null>(null);
   private readonly rolesState = signal<readonly string[]>([]);
@@ -248,6 +250,11 @@ export class AuthService {
   }
 
   private async initialize(): Promise<void> {
+    // A public prerender must not restore a browser session or request user roles.
+    if (!isPlatformBrowser(this.platformId)) {
+      this.loadingState.set(false);
+      return;
+    }
     try {
       const { data, error } = await this.supabase.client.auth.getSession();
       if (error) throw error;

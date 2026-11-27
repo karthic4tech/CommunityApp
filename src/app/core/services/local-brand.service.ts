@@ -1,4 +1,5 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, PLATFORM_ID, PendingTasks, TransferState, inject, makeStateKey } from '@angular/core';
+import { isPlatformBrowser, isPlatformServer } from '@angular/common';
 import { LocalBrand } from '../models/local-brand';
 import { MediaService } from './media.service';
 import { SupabaseService } from './supabase.service';
@@ -46,6 +47,11 @@ const BUSINESS_COLUMNS = `id,display_name,provider_type,verification_status,is_f
 export class LocalBrandService {
   private readonly supabase = inject(SupabaseService);
   private readonly media = inject(MediaService);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly pendingTasks = inject(PendingTasks);
+  private readonly transferState = inject(TransferState);
+  private readonly publicBusinessesKey = makeStateKey<LocalBrand[]>('cdm360.public-business-directory.v1');
+  private publicBusinessesRequest?: Promise<LocalBrand[]>;
 
   /** Approved businesses with an active published listing and public logo, if available. */
   async featuredBusinesses(): Promise<LocalBrand[]> {
@@ -54,7 +60,18 @@ export class LocalBrandService {
 
   /** Eligible business rows available to administrators for featuring and ordering. */
   async eligibleBusinesses(): Promise<LocalBrand[]> {
-    return this.loadBusinesses(false);
+    if (this.publicBusinessesRequest) return this.publicBusinessesRequest;
+    if (isPlatformBrowser(this.platformId) && this.transferState.hasKey(this.publicBusinessesKey)) {
+      const transferred = this.transferState.get(this.publicBusinessesKey, []);
+      this.transferState.remove(this.publicBusinessesKey);
+      return transferred;
+    }
+    const finishTask = isPlatformServer(this.platformId) ? this.pendingTasks.add() : () => undefined;
+    this.publicBusinessesRequest = this.loadBusinesses(false).then((businesses) => {
+      if (isPlatformServer(this.platformId)) this.transferState.set(this.publicBusinessesKey, businesses);
+      return businesses;
+    }).finally(() => { finishTask(); this.publicBusinessesRequest = undefined; });
+    return this.publicBusinessesRequest;
   }
 
   async updateFeature(providerId: string, featured: boolean, order: number): Promise<void> {

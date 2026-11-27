@@ -6,6 +6,7 @@ import { DirectoryLocation, DirectoryPage, locationOptions, locationSearchOption
 import { isEssentialCategorySlug, ServiceCategory } from '../core/models/service-category';
 import { EssentialShortcut } from '../core/models/essential-service';
 import { EssentialServiceService } from '../core/services/essential-service.service';
+import { SeoService } from '../core/services/seo.service';
 import { LanguageService } from '../core/services/language.service';
 import { ServiceCategoryService } from '../core/services/service-category.service';
 import { ServiceDirectoryService } from '../core/services/service-directory.service';
@@ -103,7 +104,7 @@ import { SearchableSelectOption } from '../shared/components/searchable-select/s
         @if (categoriesLoading()) {
           <div class="loading-state" role="status"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span>{{ i18n.language() === 'ta' ? 'அத்தியாவசிய சேவைகள் ஏற்றப்படுகின்றன…' : 'Loading essential services…' }}</div>
         } @else if (errorMessage(); as message) {
-          <div class="state error-state"><p role="alert">{{ message }}</p><button type="button" class="secondary-button" (click)="load()">{{ i18n.text().retry }}</button></div>
+          <div class="state error-state"><p role="alert">{{ message }}</p><button type="button" class="secondary-button" (click)="load(true)">{{ i18n.text().retry }}</button></div>
         } @else if (shortcuts().length) {
           <div class="shortcut-grid">
             @for (shortcut of shortcuts(); track shortcut.id) {
@@ -213,6 +214,7 @@ import { SearchableSelectOption } from '../shared/components/searchable-select/s
 })
 export class EssentialServicesComponent implements OnInit {
   protected readonly i18n = inject(LanguageService);
+  private readonly seo = inject(SeoService);
   private readonly categoryService = inject(ServiceCategoryService);
   private readonly essentialService = inject(EssentialServiceService);
   private readonly directory = inject(ServiceDirectoryService);
@@ -276,6 +278,18 @@ export class EssentialServicesComponent implements OnInit {
   protected toggleDiscovery(): void { this.discoveryExpanded.update(expanded => !expanded); }
 
   constructor() {
+    effect(() => {
+      const filtered = this.searchMode();
+      this.seo.update({
+        title: filtered
+          ? 'Search Essential Services in Chidambaram | CDM 360'
+          : 'Essential Local Services in Chidambaram | CDM 360',
+        description: 'Browse locally curated essential services and published providers in Chidambaram, Tamil Nadu.',
+        path: '/essential-services',
+        robots: filtered ? 'noindex,follow' : 'index,follow',
+        language: this.i18n.language(),
+      });
+    });
     effect((onCleanup) => {
       const categories = this.essentialCategories();
       const locationsAreLoading = this.locationsLoading();
@@ -300,14 +314,16 @@ export class EssentialServicesComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void { void this.load(); }
+  ngOnInit(): void {
+    void this.load();
+  }
 
-  protected async load(): Promise<void> {
+  protected async load(forceRefresh = false): Promise<void> {
     this.categoriesLoading.set(true);
     this.errorMessage.set(null);
     try {
       const [categories, shortcuts] = await Promise.all([
-        this.categoryService.getEssentialCategories(true),
+        this.categoryService.getEssentialCategories(forceRefresh),
         this.essentialService.getEssentialShortcuts(),
       ]);
       this.essentialCategories.set(categories);

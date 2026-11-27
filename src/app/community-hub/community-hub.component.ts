@@ -82,7 +82,7 @@ interface HubSlide { readonly image: string; readonly alt: string; readonly eyeb
             </div>
             @if (searchMessage()) { <p class="message" role="alert">{{ searchMessage() }}</p> } @if (voiceMessage()) { <p class="message" role="status">{{ voiceMessage() }}</p> }
           </div>
-          <div class="hero__visual" aria-hidden="true"><div class="hero-frame hero-frame--back"></div><div class="hero-frame hero-frame--main"><img ngSrc="/assets/images/Home%20Services%20Professionals%20Banner.png" width="2172" height="724" priority alt="" /></div><span class="hero-note">LOCAL, BY DESIGN <i class="bi bi-arrow-up-right"></i></span></div>
+          <div class="hero__visual" aria-hidden="true"><div class="hero-frame hero-frame--back"></div><div class="hero-frame hero-frame--main"><img ngSrc="/assets/images/Home%20Services%20Professionals%20Banner.webp" width="2172" height="724" priority alt="" /></div><span class="hero-note">LOCAL, BY DESIGN <i class="bi bi-arrow-up-right"></i></span></div>
         </div>
       </section>
 
@@ -204,10 +204,10 @@ export class CommunityHubComponent implements OnInit, OnDestroy {
     description: category.description ?? 'Find trusted local options close to home.', items: category.subcategories.slice(0, 3),
   })));
   protected readonly slides: readonly HubSlide[] = [
-    { image: '/assets/images/Annamalai%20University%20Clock%20Tower%20Campus.png', alt: 'Annamalai University clock tower campus in Chidambaram', eyebrow: 'OUR TOWN', title: 'Annamalai University', link: '/services' },
-    { image: '/assets/images/Welcome%20to%20Nam%20Chidambaram.png', alt: 'Welcome to Nam Chidambaram', eyebrow: 'OUR TOWN, OUR PEOPLE', title: 'Discover what makes Chidambaram special.', link: '/services' },
-    { image: '/assets/images/pichavaram-image-1.png', alt: 'Pichavaram mangrove boat tour', eyebrow: 'LOCAL PLACES', title: 'Find more to explore around town.', link: '/businesses' },
-    { image: '/assets/images/hotel-image-lakshmi-villas.png', alt: 'Local stay in Chidambaram', eyebrow: 'LOCAL HOSPITALITY', title: 'Plan your next local experience.', link: '/services' },
+    { image: '/assets/images/Annamalai%20University%20Clock%20Tower%20Campus.webp', alt: 'Annamalai University clock tower campus in Chidambaram', eyebrow: 'OUR TOWN', title: 'Annamalai University', link: '/services' },
+    { image: '/assets/images/Welcome%20to%20Nam%20Chidambaram.webp', alt: 'Welcome to Nam Chidambaram', eyebrow: 'OUR TOWN, OUR PEOPLE', title: 'Discover what makes Chidambaram special.', link: '/services' },
+    { image: '/assets/images/pichavaram-image-1.webp', alt: 'Pichavaram mangrove boat tour', eyebrow: 'LOCAL PLACES', title: 'Find more to explore around town.', link: '/businesses' },
+    { image: '/assets/images/hotel-image-lakshmi-villas.webp', alt: 'Local stay in Chidambaram', eyebrow: 'LOCAL HOSPITALITY', title: 'Plan your next local experience.', link: '/services' },
   ];
   protected readonly slideIndex = signal(0);
   protected readonly currentSlide = computed(() => this.slides[this.slideIndex()]);
