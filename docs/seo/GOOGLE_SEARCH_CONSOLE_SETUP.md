@@ -16,7 +16,7 @@ Search Console is not configured or verified by this repository change. No verif
 1. Deploy the current generated static build before submission.
 2. In Search Console open **Sitemaps** and submit `https://cdm360.in/sitemap.xml`.
 3. Confirm the status is **Success** and the discovered URL count is plausible. “Submitted” does not mean “indexed.”
-4. After approved category/service publication, run the normal build/deployment pipeline; it regenerates the sitemap from public, RLS-filtered Supabase records. Recheck the sitemap status after release.
+4. The sitemap is a static six-URL allowlist and does not depend on listing data. If the approved landing-page set changes, update `scripts/sitemap-urls.mjs`, run `npm run seo:sitemap`, and deploy the new static file.
 
 ## Inspect important URLs
 
@@ -25,8 +25,7 @@ Use **URL inspection** → **Test live URL** for:
 - `https://cdm360.in/`
 - `https://cdm360.in/tourism`
 - `https://cdm360.in/services`
-- `https://cdm360.in/services/category/hotels` (if still present in the generated sitemap)
-- One current published/verified service URL from the sitemap
+- `https://cdm360.in/services/category/hotels` and one current published/verified service URL can also be inspected for crawlability, canonical and rendered content, but neither is intentionally included in the six-URL sitemap.
 
 Review the rendered HTML, canonical selection, robots state, crawlability and any resources Google could not load. Use this only after the new build is deployed; production currently returns the old empty SPA shell for public deep links.
 

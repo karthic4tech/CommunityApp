@@ -1,11 +1,11 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
+import { SITEMAP_URLS } from './sitemap-urls.mjs';
 
-const origin = 'https://cdm360.in';
 const pageSize = 500;
-const maxUrls = 50_000;
-const staticRoutes = ['/', '/tourism', '/services', '/businesses', '/essential-services', '/jobs'];
+const maxPublicRoutes = 50_000;
+const staticRoutes = SITEMAP_URLS.map((url) => new URL(url).pathname);
 const publicRoutePath = /^\/(?:tourism|services|providers|businesses|essential-services|jobs)(?:\/[a-z0-9-]+)*$/;
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const listingSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*-[a-f0-9]{8}$/;
@@ -24,19 +24,8 @@ async function fetchAll(queryFactory) {
     const page = data ?? [];
     rows.push(...page);
     if (page.length < pageSize) return rows;
-    if (rows.length >= maxUrls) throw new Error('SEO artifact generation exceeded the 50,000 URL sitemap limit.');
+    if (rows.length >= maxPublicRoutes) throw new Error('Prerender generation exceeded the 50,000 public route limit.');
   }
-}
-
-function safeLastmod(value) {
-  if (typeof value !== 'string') return undefined;
-  const date = new Date(value);
-  return Number.isNaN(date.valueOf()) ? undefined : date.toISOString().slice(0, 10);
-}
-
-function escapeXml(value) {
-  return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
 }
 
 async function main() {
@@ -51,11 +40,11 @@ async function main() {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
   const categories = await fetchAll(() => supabase.from('service_categories')
-    .select('id,parent_id,slug,name_en,name_ta,updated_at')
+    .select('id,parent_id,slug,name_en,name_ta')
     .eq('is_active', true)
     .order('slug'));
   const listings = await fetchAll(() => supabase.from('service_listings')
-    .select('id,slug,category_id,updated_at,service_categories!inner(is_active),service_providers!inner(verification_status)')
+    .select('id,slug,category_id,service_categories!inner(is_active),service_providers!inner(verification_status)')
     .eq('status', 'published')
     .eq('service_categories.is_active', true)
     .eq('service_providers.verification_status', 'verified')
@@ -76,17 +65,13 @@ async function main() {
   }
 
   const categoryRoutes = [];
-  const categoryLastmod = new Map();
   const listingRoutes = [];
-  const listingLastmod = new Map();
   const serviceCategoryIds = new Set(listings.map((listing) => listing.category_id));
 
   for (const category of categories) {
     if (!categoriesWithPublicListings.has(category.id) || !slugPattern.test(category.slug)) continue;
     const path = `/services/category/${category.slug}`;
     categoryRoutes.push(path);
-    const lastmod = safeLastmod(category.updated_at);
-    if (lastmod) categoryLastmod.set(path, lastmod);
 
     if (category.parent_id && serviceCategoryIds.has(category.id)) {
       const parent = categoryById.get(category.parent_id);
@@ -100,8 +85,6 @@ async function main() {
       : uuidPattern.test(listing.id) ? `/providers/${listing.id}` : null;
     if (!path) continue;
     listingRoutes.push(path);
-    const lastmod = safeLastmod(listing.updated_at);
-    if (lastmod) listingLastmod.set(path, lastmod);
   }
 
   const routeSet = new Set([...staticRoutes, ...categoryRoutes, ...listingRoutes]);
@@ -109,17 +92,6 @@ async function main() {
     path === '/' || publicRoutePath.test(path),
   ).sort((a, b) => a === '/' ? -1 : b === '/' ? 1 : a.localeCompare(b));
 
-  const sitemapUrls = routes.map((path) => {
-    const lastmod = listingLastmod.get(path) ?? categoryLastmod.get(path);
-    return `  <url><loc>${escapeXml(`${origin}${path}`)}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}</url>`;
-  });
-  const sitemap = [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...sitemapUrls,
-    '</urlset>',
-    '',
-  ].join('\n');
   const categoryLinks = categories
     .filter((category) => categoriesWithPublicListings.has(category.id) && slugPattern.test(category.slug))
     .map((category) => ({
@@ -136,10 +108,9 @@ async function main() {
 
   await Promise.all([
     writeFile(resolve('src/prerender-routes.txt'), `${routes.join('\n')}\n`, 'utf8'),
-    writeFile(resolve('public/sitemap.xml'), sitemap, 'utf8'),
     writeFile(resolve('src/app/core/services/seo-directory-links.generated.ts'), generatedLinks, 'utf8'),
   ]);
-  console.log(`Generated ${routes.length} public prerender routes and sitemap URLs (active categories: ${categories.length}; published verified listings: ${listingRoutes.length}).`);
+  console.log(`Generated ${routes.length} public prerender routes (active categories: ${categories.length}; published verified listings: ${listingRoutes.length}).`);
 }
 
 main().catch((error) => {

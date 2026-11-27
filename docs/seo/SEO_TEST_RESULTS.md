@@ -13,8 +13,9 @@
 | `npm test -- --watch=false` | **PASS** | 26 test files, 137 tests passed on the final test run. |
 | SEO service tests | **PASS** | Title/meta/canonical/JSON-LD/noindex and stale metadata/keywords behavior. |
 | GA4 tests | **PASS** | Disabled without an ID; explicit consent required; route pageview deduplication and query sanitization tested. |
-| Sitemap parse / dedupe | **PASS** | `public/sitemap.xml` parses as XML; 86 unique URLs, 60 data-backed `lastmod` values. |
-| Sitemap ↔ prerender consistency | **PASS** | Every sitemap URL in the generated snapshot has a corresponding static `index.html`; no duplicate paths. |
+| Sitemap parse / exact allowlist | **PASS** | `public/sitemap.xml` parses as XML and contains exactly the six requested landing URLs; no query, listing, category, priority, changefreq or lastmod values. |
+| Sitemap allowlist regression test | **PASS** | `npm run test:sitemap`: one test confirms the exact allowlist, six entries and no priority/changefreq/lastmod. |
+| Sitemap generation isolation | **PASS** | `npm run seo:sitemap` produces the static XML without loading Supabase. Sitemap URLs have corresponding static route files in the build. |
 | Private/draft exclusion | **PASS for generated snapshot** | Route list contains only stable public pages, active public categories with published/verified inventory and published/verified detail URLs. It contains no `/admin`, `/auth`, `/account`, submission, private booking or query/filter routes. |
 | Rendered HTML metadata | **PASS locally** | Home, tourism, services, category, service detail, businesses and essential services have distinct titles, descriptions, canonical URLs, H1s and JSON-LD in their generated files. |
 | Image conversion | **PASS** | Nine selected PNGs total 23.13 MiB; generated WebP set totals 2.64 MiB, an 89% byte reduction. Original PNGs were retained. |
@@ -26,9 +27,11 @@
 |---|---|---|
 | `/` | `200 text/html` | Old production HTML remains an empty Angular root shell. |
 | `/robots.txt` | `200 text/plain` | Current production robots file is readable and references the sitemap. |
-| `/sitemap.xml` | `200 application/xml` | Current production sitemap is valid but contains only six stable URLs. |
+| `/sitemap.xml` | `200 application/xml` | Current production still serves the previous dynamic category/listing sitemap; the local build produces the new exact six-URL sitemap. |
 | `/services/category/hotels` | `200 text/html` | Old production route response is the SPA shell, not prerendered HTML. |
 | `/no-such-seo-route-987654` | `200 text/html` | SPA fallback does not provide a real HTTP 404. |
+
+Direct production requests to the five non-root landing routes currently redirect to trailing-slash URLs (final response `200 text/html`). The new Wrangler `drop-trailing-slash` setting is local-only until deployment; verify that it removes these redirects and agrees with the no-slash canonicals after release.
 
 The status probes used `curl.exe`; the body was separately inspected with HTTP fetch. Local build artifacts do not change these live results until the owner deploys.
 
@@ -44,4 +47,4 @@ The status probes used `curl.exe`; the body was separately inspected with HTTP f
 
 ## Release gate
 
-After deployment, verify raw source HTML on home, tourism, one category and one published service; `/robots.txt` is `text/plain`; `/sitemap.xml` is valid XML and fetchable; routes hydrate without duplicate public Supabase calls; existing auth/admin/booking workflows still work; and unknown routes have an explicitly accepted status behavior.
+After deployment, verify raw source HTML on home, tourism, one category and one published service; `/robots.txt` is `text/plain`; `/sitemap.xml` is valid XML containing exactly the six allowlisted URLs; the landing pages use canonical no-trailing-slash URLs; routes hydrate without duplicate public Supabase calls; existing auth/admin/booking workflows still work; and unknown routes have an explicitly accepted status behavior.

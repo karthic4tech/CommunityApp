@@ -14,7 +14,7 @@ Raw HTTP GETs were checked against production. These are pre-deployment results:
 | `/` | `200 text/html` | `webfetch` returned an empty `<app-root>` shell and the same static brand title as other routes. No route H1, description, canonical, or JSON-LD appears in the source HTML. |
 | `/services/category/hotels` | `200 text/html` | Same SPA shell; no category title, H1, or listings in the initial response. |
 | `/robots.txt` | `200 text/plain` | File is served correctly and points to the sitemap. It excludes private route families; these rules are not security controls. |
-| `/sitemap.xml` | `200 application/xml` | Valid sitemap, but only six URLs: home, tourism, services, businesses, essential services, and jobs. It omits published categories and service details. |
+| `/sitemap.xml` | `200 application/xml` | Production still serves the prior dynamic sitemap with category and service-detail URLs. The local build now replaces it with the requested six landing-page URLs; this has not been deployed. |
 | `/no-such-seo-route-987654` | `200 text/html` | Cloudflare SPA fallback serves the app shell for unknown URLs rather than returning a real HTTP 404. |
 
 The live source HTML, not a browser-rendered DOM, was inspected. Production still has the empty-root crawlability defect until the new build is deployed.
@@ -33,7 +33,7 @@ The live source HTML, not a browser-rendered DOM, was inspected. Production stil
 | Priority | Issue | Evidence / impact |
 |---|---|---|
 | Critical | Crawl-critical public routes are client-rendered on production. | Raw HTML contains an empty Angular root, even though route components later fetch Supabase data and update metadata. |
-| High | Current production sitemap omits dynamic public pages. | Only six static locations are present; the app has dynamic category and provider-detail routes. |
+| High | Production's current sitemap is broader than the requested six-page allowlist. | The live XML still contains dynamic categories/listings from the previous generator; the local static sitemap is now exactly six URLs. |
 | High | Unknown URLs return the SPA document with HTTP 200. | Wrangler uses `not_found_handling: "single-page-application"`. Angular can render a not-found page, but cannot change the already-sent static response status. |
 | Medium | Production source has no useful default description/canonical/social metadata. | The route-specific tags were added client-side and therefore are absent from the live response source. |
 | Medium | The directory has large source images. | The nine images selected for primary/tourism surfaces total 23.13 MiB as PNG. This is a byte-level observation, not an LCP measurement. |
@@ -48,6 +48,6 @@ The unknown-route HTTP 404 limitation remains: the SPA fallback is needed for no
 
 ## Build-time public inventory snapshot
 
-During the local read-only generation run on 2026-11-27, the public Supabase query returned 255 active categories and 27 published listings with verified providers. The generator produced 86 sitemap/prerender URLs. These are a build-time snapshot, not a commitment that production data will remain unchanged.
+During the local read-only prerender generation run on 2026-11-27, public Supabase reads returned 255 active categories and 27 published listings with verified providers. They produced 86 prerender routes. The separate six-URL sitemap allowlist is static and makes no database requests. The inventory counts are a build-time snapshot, not a commitment that production data will remain unchanged.
 
 No Supabase row, migration, booking, review or admin record was modified.
