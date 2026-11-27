@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, ElementRef, afterRenderEffect, inject, input, output, viewChild } from '@angular/core';
+import { CurrencyPipe, DatePipe, DOCUMENT } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MarketplaceListing } from './marketplace.models';
+import { AnalyticsService } from '../core/services/analytics.service';
 
 @Component({
   selector: 'app-marketplace-listing-card',
@@ -9,7 +10,7 @@ import { MarketplaceListing } from './marketplace.models';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <article class="mp-card">
-      <a class="mp-card-link" [routerLink]="['/marketplace/item', listing().id, listing().slug]" [attr.aria-label]="'View ' + listing().title">
+      <a #listingLink class="mp-card-link" [routerLink]="['/marketplace/item', listing().id, listing().slug]" [attr.aria-label]="'View ' + listing().title" (click)="trackAdvertisementClick()">
         <div class="mp-card-image">
           @if (primaryImage(); as image) { <img [src]="image" [alt]="listing().images?.[0]?.alt_text || listing().title" loading="lazy" decoding="async"> }
           @else { <div class="mp-image-fallback" aria-hidden="true"><i class="bi bi-image"></i></div> }
@@ -49,7 +50,49 @@ import { MarketplaceListing } from './marketplace.models';
 export class MarketplaceListingCardComponent {
   readonly listing = input.required<MarketplaceListing>();
   readonly saved = input(false);
+  readonly advertisementPosition = input<number | null>(null);
   readonly favourite = output<string>();
+  private readonly document = inject(DOCUMENT);
+  private readonly analytics = inject(AnalyticsService);
+  private readonly listingLink = viewChild<ElementRef<HTMLAnchorElement>>('listingLink');
+
+  constructor() {
+    afterRenderEffect((onCleanup) => {
+      const position = this.advertisementPosition();
+      const listing = this.listing();
+      const consent = this.analytics.consent();
+      const element = this.listingLink()?.nativeElement;
+      const Observer = this.document.defaultView?.IntersectionObserver;
+      if (position === null || consent !== 'granted' || !element || !Observer) return;
+
+      let recorded = false;
+      const observer = new Observer((entries) => {
+        if (recorded || !entries.some(entry => entry.isIntersecting && entry.intersectionRatio >= 0.5)) return;
+        recorded = true;
+        observer.disconnect();
+        this.analytics.trackOnce('advertisement_impression', listing.id, {
+          advertisement_id: listing.id,
+          advertisement_position: position,
+          page_section: 'featured-deals',
+          content_language: 'en',
+        });
+      }, { threshold: 0.5 });
+      observer.observe(element);
+      onCleanup(() => observer.disconnect());
+    });
+  }
+
+  protected trackAdvertisementClick(): void {
+    const position = this.advertisementPosition();
+    if (position === null) return;
+    this.analytics.track('advertisement_click', {
+      advertisement_id: this.listing().id,
+      advertisement_position: position,
+      page_section: 'featured-deals',
+      content_language: 'en',
+    });
+  }
+
   protected primaryImage(): string | null {
     const images = this.listing().images ?? [];
     return images.find(image => image.is_primary)?.url ?? images[0]?.url ?? null;

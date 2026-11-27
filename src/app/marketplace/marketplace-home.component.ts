@@ -69,7 +69,7 @@ import { SearchableSelectComponent } from '../shared/components/searchable-selec
         <header class="mp-section-head"><div><p class="mp-eyebrow">HAND-PICKED FOR YOU</p><h2 id="mp-featured-title">Featured Deals</h2><p>Promoted listings from local sellers.</p></div></header>
         @if (featuredLoading()) { <p class="mp-state" role="status">Loading featured deals…</p> }
         @else if (featuredError()) { <p class="mp-state mp-error" role="alert">Featured deals could not be loaded.</p> }
-        @else if (featured().length) { <div class="mp-product-grid">@for (item of featured(); track item.id) { <app-marketplace-listing-card [listing]="item" [saved]="isSaved(item.id)" (favourite)="toggleFavourite($event)" /> }</div> }
+        @else if (featured().length) { <div class="mp-product-grid">@for (item of featured(); track item.id; let index = $index) { <app-marketplace-listing-card [listing]="item" [advertisementPosition]="index + 1" [saved]="isSaved(item.id)" (favourite)="toggleFavourite($event)" /> }</div> }
         @else { <p class="mp-state" role="status">No featured deals are available at the moment.</p> }
       </section>
 

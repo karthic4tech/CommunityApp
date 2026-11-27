@@ -26,7 +26,7 @@ The live source HTML, not a browser-rendered DOM, was inspected. Production stil
 - `SeoService` already existed and updated client-side title, description, robots, canonical, Open Graph, Twitter card and Organization/WebSite JSON-LD. Several public route components already called it. Private route guards and Supabase public projections also existed.
 - Public category reads select active categories. Public directory reads filter published listings and verified providers and select public listing contacts/media. No service-role credential is present in the browser configuration.
 - Existing `/tourism` already contains destination information, official-source links, one- and two-day itinerary ideas, hotel/dining discovery and enquiry guidance. No separate language URL variants exist; English/Tamil is a client-side language choice.
-- Search Console and GA4 configuration were not found. No Google verification token or measurement ID was supplied.
+- No Google verification token is stored in the repository. The owner reports Search Console verification and sitemap submission are complete. The supplied GA4/GTM IDs are configured in the app; remote container tags and live collection are not verified.
 
 ## Verified issues and risks
 

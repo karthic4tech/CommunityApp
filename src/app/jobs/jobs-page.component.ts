@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { JobService, PublishedJob } from '../core/services/job.service';
 import { LanguageService } from '../core/services/language.service';
 import { SeoService } from '../core/services/seo.service';
+import { AnalyticsService } from '../core/services/analytics.service';
 
 @Component({
   selector: 'app-jobs-page',
@@ -28,8 +29,8 @@ import { SeoService } from '../core/services/seo.service';
                 <p class="job-location"><i class="bi bi-geo-alt" aria-hidden="true"></i>{{ job.location }}</p>
                 <p class="job-description">{{ job.description }}</p>
                 <div class="job-contacts">
-                  @if (job.contact_phone) { <a [href]="'tel:' + job.contact_phone"><i class="bi bi-telephone" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'தொலைபேசியில் தொடர்புகொள்ள' : 'Call employer' }}</a> }
-                  @if (job.contact_email) { <a [href]="'mailto:' + job.contact_email"><i class="bi bi-envelope" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'மின்னஞ்சல் அனுப்புக' : 'Email employer' }}</a> }
+                  @if (job.contact_phone) { <a [href]="'tel:' + job.contact_phone" (click)="analytics.track('job_contact_click', { public_job_id: job.id, contact_method: 'phone', content_language: i18n.language() })"><i class="bi bi-telephone" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'தொலைபேசியில் தொடர்புகொள்ள' : 'Call employer' }}</a> }
+                  @if (job.contact_email) { <a [href]="'mailto:' + job.contact_email" (click)="analytics.track('job_contact_click', { public_job_id: job.id, contact_method: 'email', content_language: i18n.language() })"><i class="bi bi-envelope" aria-hidden="true"></i>{{ i18n.language() === 'ta' ? 'மின்னஞ்சல் அனுப்புக' : 'Email employer' }}</a> }
                 </div>
               </article>
             }
@@ -71,6 +72,7 @@ import { SeoService } from '../core/services/seo.service';
 })
 export class JobsPageComponent implements OnInit {
   protected readonly i18n = inject(LanguageService);
+  protected readonly analytics = inject(AnalyticsService);
   private readonly jobService = inject(JobService);
   private readonly seo = inject(SeoService);
   protected readonly jobs = signal<readonly PublishedJob[]>([]);
@@ -85,7 +87,14 @@ export class JobsPageComponent implements OnInit {
       language: this.i18n.language(),
     });
     try {
-      this.jobs.set(await this.jobService.publishedJobs());
+      const publishedJobs = await this.jobService.publishedJobs();
+      this.jobs.set(publishedJobs);
+      for (const job of publishedJobs) {
+        this.analytics.trackOnce('job_listing_view', job.id, {
+          public_job_id: job.id,
+          content_language: this.i18n.language(),
+        });
+      }
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Unable to load jobs.');
     } finally {

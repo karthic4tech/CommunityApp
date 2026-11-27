@@ -13,6 +13,7 @@ import { ServiceSubmissionService } from '../core/services/service-submission.se
 import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select.component';
 import { SearchableSelectOption, SearchableSelectValue } from '../shared/components/searchable-select/searchable-select.models';
 import { MediaUploadComponent } from '../shared/components/media-upload/media-upload.component';
+import { AnalyticsService } from '../core/services/analytics.service';
 
 type AdvancedContact = 'email' | 'website' | 'facebook' | 'instagram' | 'youtube';
 const indianWhatsAppValidator = (): ValidatorFn => (control: AbstractControl): ValidationErrors | null => {
@@ -319,6 +320,7 @@ const contactValidator = (type: AdvancedContact): ValidatorFn => (control: Abstr
 })
 export class SubmitServiceComponent implements OnInit {
   protected readonly auth = inject(AuthService);
+  private readonly analytics = inject(AnalyticsService);
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly categories = inject(ServiceCategoryService);
   private readonly directory = inject(ServiceDirectoryService);
@@ -471,6 +473,10 @@ export class SubmitServiceComponent implements OnInit {
       const creating = !this.existingId();
       const savedListingId = await (this.published() ? this.submissions.saveRevision(input) : this.submissions.save(input));
       if (creating) {
+        const categoryPath = findCategoryPathById(this.categories.categories(), raw.category_id);
+        this.analytics.track('service_registration_completed', {
+          service_category: categoryPath?.at(-1)?.slug,
+        });
         this.existingId.set(savedListingId);
         this.existingStatus.set('pending_review');
         this.businessDetailsExpanded.set(true);

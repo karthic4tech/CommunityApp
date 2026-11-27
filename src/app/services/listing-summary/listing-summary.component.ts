@@ -64,7 +64,7 @@ import { AnalyticsService } from '../../core/services/analytics.service';
               {{ contact.label }}<span class="contact-value">{{ contact.value }}</span>
             </button>
           } @else {
-            <a [href]="contact.href" (click)="analytics.track('service_contact_click')">
+            <a [href]="contact.href" (click)="trackContactClick(contact.type)">
               {{ contact.label }}<span class="contact-value">{{ contact.value }}</span>
             </a>
           }
@@ -79,9 +79,9 @@ import { AnalyticsService } from '../../core/services/analytics.service';
           <h2 [id]="'contact-options-title-' + listing().id">{{ i18n.language() === 'ta' ? 'தொடர்பு கொள்ளுங்கள்' : 'Contact this service' }}</h2>
           <p [id]="'contact-options-description-' + listing().id">{{ i18n.language() === 'ta' ? 'அழைக்கவா அல்லது WhatsApp மூலம் செய்தி அனுப்பவா?' : 'Would you like to call or message on WhatsApp?' }}</p>
           <div class="contact-dialog__actions">
-            <a class="contact-dialog__action" [href]="options.callHref" (click)="analytics.track('service_contact_click'); closeContactOptions()"><i class="bi bi-telephone" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'அழைக்க' : 'Call' }}</span><span class="contact-value">{{ options.phone }}</span></a>
+            <a class="contact-dialog__action" [href]="options.callHref" (click)="trackContactClick('phone'); closeContactOptions()"><i class="bi bi-telephone" aria-hidden="true"></i><span>{{ i18n.language() === 'ta' ? 'அழைக்க' : 'Call' }}</span><span class="contact-value">{{ options.phone }}</span></a>
             @if (options.whatsappHref) {
-              <a class="contact-dialog__action whatsapp-action" [href]="options.whatsappHref" target="_blank" rel="noopener noreferrer" (click)="analytics.track('service_contact_click'); closeContactOptions()"><i class="bi bi-whatsapp" aria-hidden="true"></i><span>WhatsApp</span><span class="contact-value">{{ options.whatsappPhone }}</span></a>
+              <a class="contact-dialog__action whatsapp-action" [href]="options.whatsappHref" target="_blank" rel="noopener noreferrer" (click)="trackContactClick('whatsapp'); closeContactOptions()"><i class="bi bi-whatsapp" aria-hidden="true"></i><span>WhatsApp</span><span class="contact-value">{{ options.whatsappPhone }}</span></a>
             }
           </div>
           <button type="button" class="contact-dialog__cancel" (click)="closeContactOptions()">{{ i18n.language() === 'ta' ? 'ரத்து' : 'Cancel' }}</button>
@@ -235,4 +235,16 @@ export class ListingSummaryComponent {
   }
   protected closeContactOptions(): void { this.contactDialog()?.nativeElement.close(); }
   protected onContactDialogClosed(): void { this.contactOptions.set(null); }
+
+  protected trackContactClick(type: ListingContact['contact_type']): void {
+    const contactMethod = type === 'phone' || type === 'whatsapp' || type === 'email' || type === 'website'
+      ? type
+      : 'other';
+    this.analytics.track('service_contact_click', {
+      public_listing_id: this.listing().id,
+      service_category: this.listing().service_categories?.slug,
+      contact_method: contactMethod,
+      content_language: this.i18n.language(),
+    });
+  }
 }

@@ -7,6 +7,7 @@ import { isEssentialCategorySlug, ServiceCategory } from '../core/models/service
 import { EssentialShortcut } from '../core/models/essential-service';
 import { EssentialServiceService } from '../core/services/essential-service.service';
 import { SeoService } from '../core/services/seo.service';
+import { AnalyticsService } from '../core/services/analytics.service';
 import { LanguageService } from '../core/services/language.service';
 import { ServiceCategoryService } from '../core/services/service-category.service';
 import { ServiceDirectoryService } from '../core/services/service-directory.service';
@@ -215,6 +216,7 @@ import { SearchableSelectOption } from '../shared/components/searchable-select/s
 export class EssentialServicesComponent implements OnInit {
   protected readonly i18n = inject(LanguageService);
   private readonly seo = inject(SeoService);
+  private readonly analytics = inject(AnalyticsService);
   private readonly categoryService = inject(ServiceCategoryService);
   private readonly essentialService = inject(EssentialServiceService);
   private readonly directory = inject(ServiceDirectoryService);
@@ -308,7 +310,16 @@ export class EssentialServicesComponent implements OnInit {
       this.listingsLoading.set(true);
       this.listingsError.set(false);
       void this.directory.searchEssential(categoryId || null, locationId || null, keyword, page)
-        .then(result => { if (current) this.listingResults.set(result); })
+        .then(result => {
+          if (!current) return;
+          this.listingResults.set(result);
+          if (this.searchMode()) {
+            this.analytics.trackOnce('service_search', `essential:${categoryId || 'all'}:${page}`, {
+              result_count: result.listings.length,
+              content_language: this.i18n.language(),
+            });
+          }
+        })
         .catch(() => { if (current) this.listingsError.set(true); })
         .finally(() => { if (current) this.listingsLoading.set(false); });
     });

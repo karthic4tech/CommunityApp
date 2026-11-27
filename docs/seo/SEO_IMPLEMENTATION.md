@@ -37,13 +37,13 @@ The generated service index adds crawlable links to active categories that curre
 
 Nine referenced large PNG assets were converted to WebP at quality 82 and the app references updated. The selected source image set decreased from **23.13 MiB to 2.64 MiB (89% smaller)**. Original PNGs remain in `public/assets/images` to avoid destructive asset removal and for compatibility with any un-audited references. `scripts/optimize-public-images.mjs` regenerates the WebP files when their source changes.
 
-The final production build's initial bundle is **965.37 kB raw / 194.22 kB estimated transfer**, compared with the **922.38 kB / 180.97 kB** baseline. The extra SSR/hydration/SEO code increased the initial bundle; it remains over the 550 kB configured warning budget. The image byte reduction is measured, but LCP/INP/CLS and CrUX field data were not measured in this environment.
+The final production build's initial bundle is **979.71 kB raw / 198.02 kB estimated transfer**, compared with the **922.38 kB / 180.97 kB** baseline. The SSR/hydration/SEO and analytics integration increased the initial bundle; it remains over the 550 kB configured warning budget. The image byte reduction is measured, but LCP/INP/CLS and CrUX field data were not measured in this environment.
 
 ## Analytics and conversions
 
-`AnalyticsService` is optional and disabled by default (`googleAnalyticsMeasurementId: ''`). It loads `gtag.js` only after a real ID is supplied and a consent UI explicitly calls `setConsent(true)`. Angular navigation produces sanitized, non-duplicated SPA page views with GA auto-pageview disabled. Hotel listing/enquiry and service contact events are wired; the hotel enquiry event fires only after the Supabase insert succeeds.
+GTM/GA4 is configured in the app using owner-supplied IDs and an explicit consent banner. The app loads only the GTM container (`GTM-5FG93SJC`) after consent on the production origin; GA4 is configured through GTM with `G-WWQX1NRF3W`. There is no direct `gtag.js` installation. Angular navigation produces sanitized, non-duplicated page views; contact/enquiry/registration events send only allowlisted values. See [the GTM/GA4 implementation and manual setup guide](../analytics/GA4_IMPLEMENTATION.md). The remote container has not been configured or published by this code change.
 
-No cab enquiry UI, advertisement click handler or partner-confirmed booking workflow was found. Those event names are available for future workflows, but are intentionally not emitted. `bookingConfirmed()` is an opt-in API requiring an authorized caller after customer and partner confirmation; it hashes its idempotency key locally, never sends the key to GA4, and is not wired to a nonexistent confirmation flow.
+No cab enquiry UI or advertisement impression/click component was found, so those events are not emitted. Registration conversion is tracked only after the backend accepts a new service submission. No customer details are included.
 
 ## Modified files
 

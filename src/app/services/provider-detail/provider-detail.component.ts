@@ -115,7 +115,15 @@ export class ServiceDetailComponent implements OnInit {
         if (listing) {
           const category = listing.service_categories?.name_en?.trim() || 'Local Service';
           const categorySlug = listing.service_categories?.slug ?? '';
-          if (['hotels', 'lodge-stay'].includes(categorySlug)) this.analytics.track('hotel_listing_view');
+          const listingAnalytics = {
+            public_listing_id: listing.id,
+            service_category: categorySlug,
+            content_language: this.i18n.language(),
+          } as const;
+          this.analytics.trackOnce('service_listing_view', listing.id, listingAnalytics);
+          if (['hotels', 'lodge-stay'].includes(categorySlug)) {
+            this.analytics.trackOnce('hotel_listing_view', listing.id, listingAnalytics);
+          }
           const listingPath = listing.slug ? `/services/${listing.slug}` : `/providers/${listing.id}`;
           const lodging = ['hotels', 'lodge-stay'].includes(categorySlug);
           const restaurant = ['restaurants', 'vegetarian-restaurants', 'non-vegetarian-restaurants'].includes(categorySlug);

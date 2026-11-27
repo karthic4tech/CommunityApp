@@ -5,11 +5,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SeoService } from './core/services/seo.service';
 import { AnalyticsService } from './core/services/analytics.service';
 import { LanguageService } from './core/services/language.service';
+import { AnalyticsConsentComponent } from './shared/components/analytics-consent.component';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, AnalyticsConsentComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
@@ -34,7 +35,7 @@ export class App {
     ).subscribe(event => {
       const path = event.urlAfterRedirects.split(/[?#]/, 1)[0] || '/';
       this.seo.setCanonicalPath(path);
-      this.analytics.pageView(path);
+      this.analytics.pageView(path, event.id);
     });
   }
 

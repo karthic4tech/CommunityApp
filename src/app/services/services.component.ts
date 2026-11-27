@@ -13,6 +13,7 @@ import { SearchableSelectComponent } from '../shared/components/searchable-selec
 import { SearchableSelectOption } from '../shared/components/searchable-select/searchable-select.models';
 import { SeoService } from '../core/services/seo.service';
 import { SEO_DIRECTORY_LINKS } from '../core/services/seo-directory-links.generated';
+import { AnalyticsService } from '../core/services/analytics.service';
 
 interface FeaturedServiceGroup {
   readonly categoryId: string;
@@ -31,6 +32,7 @@ interface FeaturedServiceGroup {
 })
 export class AllServicesComponent implements OnInit {
   protected readonly service = inject(ServiceCategoryService);
+  private readonly analytics = inject(AnalyticsService);
   protected readonly seoDirectoryLinks = SEO_DIRECTORY_LINKS;
   protected readonly i18n = inject(LanguageService);
   private readonly seo = inject(SeoService);
@@ -155,7 +157,14 @@ export class AllServicesComponent implements OnInit {
       void this.ensureLocations().then((locations) => {
         if (locationId && !locations.some((place) => place.id === locationId)) throw new Error('Invalid location filter.');
         return this.directory.search(categoryId || null, locationId || null, keyword, page);
-      }).then((result) => { if (current) this.listingResults.set(result); })
+      }).then((result) => {
+        if (!current) return;
+        this.listingResults.set(result);
+        this.analytics.trackOnce('service_search', `directory:${categoryId || 'all'}:${page}`, {
+          result_count: result.listings.length,
+          content_language: this.i18n.language(),
+        });
+      })
         .catch(() => { if (current) this.listingsError.set(true); })
         .finally(() => { if (current) this.listingsLoading.set(false); });
     });

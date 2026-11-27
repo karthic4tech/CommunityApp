@@ -130,7 +130,11 @@ export class LodgeInquiryComponent {
         message: value.message || null,
       });
       this.submitted.set(true);
-      this.analytics.track('hotel_enquiry_submitted');
+      this.analytics.track('hotel_enquiry_submitted', {
+        public_listing_id: this.listing().id,
+        service_category: this.listing().service_categories?.slug,
+        content_language: this.i18n.language(),
+      });
     } catch (error) { this.errorMessage.set(error instanceof Error ? error.message : 'Unable to send your enquiry. Please try again.'); }
     finally { this.sending.set(false); }
   }
