@@ -9,10 +9,10 @@
 | Check | Result | Evidence / caveat |
 |---|---|---|
 | `npm run build` | **PASS** | Builds 86 static routes. Uses public Supabase reads at build time. Angular emits `DEP0205` Node deprecation warnings and existing CSS/bundle budget warnings. |
-| Production initial bundle | **Warning** | 979.71 kB raw / 198.02 kB estimated transfer, up from 922.38 kB / 180.97 kB baseline. Initial budget remains 550 kB; service CSS is 12.54 kB against 12 kB. |
-| `npm test -- --watch=false` | **PASS** | 26 test files, 141 tests passed on the final test run. |
+| Production initial bundle | **Warning** | 980.69 kB raw / 198.22 kB estimated transfer, up from 922.38 kB / 180.97 kB baseline. Initial budget remains 550 kB; service CSS is 12.54 kB against 12 kB. |
+| `npm test -- --watch=false` | **PASS** | 26 test files, 143 tests passed on the final test run. |
 | SEO service tests | **PASS** | Title/meta/canonical/JSON-LD/noindex and stale metadata/keywords behavior. |
-| GTM/GA4 tests | **PASS** | Production/consent gating, single GTM loader, sanitized route pageviews, sensitive-route exclusions, safe registration conversion and deduplicated promotion events tested. |
+| GTM/GA4 tests | **PASS** | Production/consent gating, single GTM loader, sanitized six-page views, back-navigation deduplication, private-route gating, safe registration conversion and deduplicated promotion events tested. |
 | Sitemap parse / exact allowlist | **PASS** | `public/sitemap.xml` parses as XML and contains exactly the six requested landing URLs; no query, listing, category, priority, changefreq or lastmod values. |
 | Sitemap allowlist regression test | **PASS** | `npm run test:sitemap`: one test confirms the exact allowlist, six entries and no priority/changefreq/lastmod. |
 | Sitemap generation isolation | **PASS** | `npm run seo:sitemap` produces the static XML without loading Supabase. Sitemap URLs have corresponding static route files in the build. |

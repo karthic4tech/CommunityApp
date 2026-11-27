@@ -15,6 +15,7 @@ export type AnalyticsEvent =
   | 'job_listing_view'
   | 'job_contact_click'
   | 'service_registration_completed'
+  | 'business_registration_completed'
   | 'booking_confirmed';
 
 export type ContactMethod = 'phone' | 'whatsapp' | 'email' | 'website' | 'other';
@@ -84,6 +85,7 @@ export class AnalyticsService {
   private gtmInitialized = false;
   private currentPath = '/';
   private previousPublicPath: string | null = null;
+  private lastTrackedLandingPath: string | null = null;
   private currentNavigationId: number | null = null;
   private lastPageViewNavigationId: number | null = null;
 
@@ -111,34 +113,42 @@ export class AnalyticsService {
   pageView(url: string, navigationId: number): void {
     const rawPath = this.cleanPath(url);
     const isPublic = this.isAllowedPublicPath(rawPath);
-    if (isPublic && this.publicPageState() && this.currentPath !== rawPath) {
-      this.previousPublicPath = this.analyticsPath(this.currentPath);
-    }
     this.currentPath = rawPath;
     this.currentNavigationId = navigationId;
     this.publicPageState.set(isPublic);
     this.publicEventsThisNavigation.clear();
 
-    if (!isPublic || this.consent() !== 'granted' || this.lastPageViewNavigationId === navigationId) return;
-    this.ensureTagManager();
+    const consentGranted = this.consent() === 'granted';
+    const wasInitialized = this.gtmInitialized;
+    if (wasInitialized) this.pushRouteState(isPublic && consentGranted);
+    if (!isPublic || !consentGranted) return;
+    if (!wasInitialized) this.ensureTagManager();
+    if (!this.isPriorityPageViewPath(rawPath) || this.lastPageViewNavigationId === navigationId) return;
+
+    this.previousPublicPath = this.lastTrackedLandingPath ?? '/';
     this.lastPageViewNavigationId = navigationId;
 
     this.pushEvent('page_view');
     if (rawPath === '/tourism') this.pushEvent('tourism_page_view', { content_language: this.contentLanguage() });
     this.previousPublicPath = this.analyticsPath(rawPath);
+    this.lastTrackedLandingPath = this.analyticsPath(rawPath);
   }
 
   track(event: AnalyticsEvent, parameters: AnalyticsEventParameters = {}): void {
     if (!this.available() || this.consent() !== 'granted') return;
-    const privateRegistrationConversion = !this.isPublicPage() && event === 'service_registration_completed';
+    const privateRegistrationConversion = !this.isPublicPage()
+      && ['service_registration_completed', 'business_registration_completed'].includes(event);
     if (!this.isPublicPage() && !privateRegistrationConversion) return;
     this.ensureTagManager(privateRegistrationConversion);
+    if (privateRegistrationConversion) this.pushRouteState(true);
     this.pushEvent(event, this.sanitizeParameters(parameters));
+    if (privateRegistrationConversion) this.pushRouteState(false);
   }
 
   trackOnce(event: AnalyticsEvent, dedupeKey: string, parameters: AnalyticsEventParameters = {}): void {
     if (!this.available() || this.consent() !== 'granted'
-      || (!this.isPublicPage() && event !== 'service_registration_completed')) return;
+      || (!this.isPublicPage()
+        && !['service_registration_completed', 'business_registration_completed'].includes(event))) return;
     const key = `${this.currentNavigationId ?? -1}:${event}:${dedupeKey}`;
     if (this.publicEventsThisNavigation.has(key)) return;
     this.publicEventsThisNavigation.add(key);
@@ -158,10 +168,12 @@ export class AnalyticsService {
 
     if (granted) {
       this.ensureTagManager();
+      if (this.gtmInitialized) this.pushRouteState(this.isPublicPage());
       this.sendPageViewForCurrentNavigation();
     } else {
       this.lastPageViewNavigationId = null;
       this.pushConsentUpdate('denied');
+      if (this.gtmInitialized) this.pushRouteState(false);
     }
   }
 
@@ -239,12 +251,18 @@ export class AnalyticsService {
     return segments[0] === 'providers' && segments.length === 2 && UUID_PATTERN.test(segments[1]);
   }
 
+  private isPriorityPageViewPath(path: string): boolean {
+    return Object.hasOwn(LANDING_PAGE_TITLES, path);
+  }
+
   private analyticsPath(path: string): string {
     if (path === '/services/submit' || path.startsWith('/services/submit/')) return '/services';
-    if (path.startsWith('/services/category/')) return path;
-    if (/^\/services\/[^/]+\/[^/]+$/.test(path)) return path;
+    if (path.startsWith('/services/category/')) return '/services/category/:category';
+    if (/^\/services\/[^/]+\/[^/]+$/.test(path)) return '/services/:category/:subcategory';
     if (path.startsWith('/services/')) return '/services/:listing';
     if (path.startsWith('/providers/')) return '/providers/:listing';
+    if (path.startsWith('/marketplace/item/')) return '/marketplace/item/:listing';
+    if (path.startsWith('/marketplace/category/')) return '/marketplace/category/:category';
     return path;
   }
 
@@ -303,6 +321,7 @@ export class AnalyticsService {
 
   private sendPageViewForCurrentNavigation(): void {
     if (this.currentNavigationId === null || !this.isPublicPage()
+      || !this.isPriorityPageViewPath(this.currentPath)
       || this.lastPageViewNavigationId === this.currentNavigationId) return;
     this.pageView(this.currentPath, this.currentNavigationId);
   }
@@ -322,6 +341,7 @@ export class AnalyticsService {
     });
     this.pushConsentUpdate('granted');
     window.dataLayer.push(this.pageContext());
+    this.pushRouteState(this.isPublicPage() || allowPrivateRegistration);
 
     const existingScript = this.document.querySelector<HTMLScriptElement>(
       `script[data-cdm360-gtm],script[src*="googletagmanager.com/gtm.js?id=${this.config.tagManagerId}"]`,
@@ -357,6 +377,24 @@ export class AnalyticsService {
       event,
       ...this.pageContext(),
       ...parameters,
+    });
+  }
+
+  private pushRouteState(allowed: boolean): void {
+    const dataLayer = this.tagManagerWindow()?.dataLayer;
+    if (!dataLayer) return;
+    dataLayer.push({
+      event: 'cdm360_route_state',
+      analytics_route_allowed: allowed,
+      ...(allowed
+        ? this.pageContext()
+        : {
+            page_location: null,
+            page_path: null,
+            page_referrer: null,
+            page_title: null,
+            content_language: this.contentLanguage(),
+          }),
     });
   }
 

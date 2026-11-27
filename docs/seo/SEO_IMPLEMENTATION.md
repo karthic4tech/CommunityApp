@@ -37,7 +37,7 @@ The generated service index adds crawlable links to active categories that curre
 
 Nine referenced large PNG assets were converted to WebP at quality 82 and the app references updated. The selected source image set decreased from **23.13 MiB to 2.64 MiB (89% smaller)**. Original PNGs remain in `public/assets/images` to avoid destructive asset removal and for compatibility with any un-audited references. `scripts/optimize-public-images.mjs` regenerates the WebP files when their source changes.
 
-The final production build's initial bundle is **979.71 kB raw / 198.02 kB estimated transfer**, compared with the **922.38 kB / 180.97 kB** baseline. The SSR/hydration/SEO and analytics integration increased the initial bundle; it remains over the 550 kB configured warning budget. The image byte reduction is measured, but LCP/INP/CLS and CrUX field data were not measured in this environment.
+The final production build's initial bundle is **980.69 kB raw / 198.22 kB estimated transfer**, compared with the **922.38 kB / 180.97 kB** baseline. The SSR/hydration/SEO and analytics integration increased the initial bundle; it remains over the 550 kB configured warning budget. The image byte reduction is measured, but LCP/INP/CLS and CrUX field data were not measured in this environment.
 
 ## Analytics and conversions
 

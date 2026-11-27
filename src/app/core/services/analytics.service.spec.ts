@@ -99,6 +99,66 @@ describe('AnalyticsService', () => {
     expect(JSON.stringify(events)).not.toContain('booking');
   });
 
+  it('tracks initial, forward, and back navigations once per successful route transition', () => {
+    const analytics = setup();
+    analytics.pageView('/', 1);
+    analytics.setConsent(true);
+    analytics.pageView('/services', 2);
+    analytics.pageView('/businesses', 3);
+    analytics.pageView('/services', 4); // Browser back is a new NavigationEnd ID.
+    analytics.pageView('/services', 4); // Duplicate notification for the same ID.
+
+    const window = document.defaultView as (Window & { dataLayer?: unknown[] }) | null;
+    const pageViews = (window?.dataLayer ?? []).filter(
+      (entry): entry is Record<string, unknown> =>
+        typeof entry === 'object' && entry !== null && 'event' in entry && entry['event'] === 'page_view',
+    );
+    expect(pageViews).toHaveLength(4);
+    expect(pageViews.map(entry => entry['page_path'])).toEqual([
+      '/',
+      '/services',
+      '/businesses',
+      '/services',
+    ]);
+  });
+
+  it('limits page views to the six priority pages and gates event tags on safe public routes', () => {
+    const analytics = setup();
+    analytics.pageView('/services/category/electrical?query=private', 1);
+    analytics.setConsent(true);
+    analytics.track('service_contact_click', {
+      public_listing_id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
+      contact_method: 'phone',
+    });
+    analytics.pageView('/account?email=private@example.com', 2);
+    analytics.track('service_contact_click', {
+      public_listing_id: 'bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb',
+      contact_method: 'phone',
+    });
+
+    const window = document.defaultView as (Window & { dataLayer?: unknown[] }) | null;
+    const entries = window?.dataLayer ?? [];
+    const pageViews = entries.filter(
+      (entry): entry is Record<string, unknown> =>
+        typeof entry === 'object' && entry !== null && 'event' in entry && entry['event'] === 'page_view',
+    );
+    const contactEvents = entries.filter(
+      (entry): entry is Record<string, unknown> =>
+        typeof entry === 'object' && entry !== null && 'event' in entry && entry['event'] === 'service_contact_click',
+    );
+    const routeStates = entries.filter(
+      (entry): entry is Record<string, unknown> =>
+        typeof entry === 'object' && entry !== null && 'event' in entry && entry['event'] === 'cdm360_route_state',
+    );
+
+    expect(pageViews).toHaveLength(0);
+    expect(contactEvents).toHaveLength(1);
+    expect(contactEvents[0]?.['page_path']).toBe('/services/category/:category');
+    expect(routeStates.at(-1)?.['analytics_route_allowed']).toBe(false);
+    expect(JSON.stringify(entries)).not.toContain('private@example.com');
+    expect(JSON.stringify(entries)).not.toContain('query=private');
+  });
+
   it('does not load the container or record page views on sensitive routes', () => {
     const analytics = setup();
     analytics.pageView('/admin?token=secret', 1);
