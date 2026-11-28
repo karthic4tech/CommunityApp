@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { ServiceCategory } from '../core/models/service-category';
@@ -217,13 +217,24 @@ export class CommunityHubComponent implements OnInit, OnDestroy {
   private swipeStart: { x: number; y: number } | null = null;
   private recognition: SpeechRecognitionLike | null = null;
 
-  ngOnInit(): void {
-    this.seo.update({
-      title: 'Local Services & Businesses in Chidambaram | CDM 360',
-      description: 'Discover local services, businesses and community information in Chidambaram, Tamil Nadu.',
-      path: '/',
-      language: this.i18n.language(),
+  constructor() {
+    effect(() => {
+      const language = this.i18n.language();
+      const tamil = language === 'ta';
+      this.seo.update({
+        title: tamil
+          ? 'சிதம்பரத்தில் உள்ளூர் சேவைகள் மற்றும் வணிகங்கள் | நம் சிதம்பரம்'
+          : 'Local Services & Businesses in Chidambaram | CDM 360',
+        description: tamil
+          ? 'சிதம்பரத்தின் உள்ளூர் சேவைகள், சரிபார்க்கப்பட்ட வணிகங்கள் மற்றும் சமூகத் தகவல்களை அறியுங்கள்.'
+          : 'Discover local services, businesses and community information in Chidambaram, Tamil Nadu.',
+        path: '/',
+        language,
+      });
     });
+  }
+
+  ngOnInit(): void {
     void this.load();
     this.resumeCarousel();
   }

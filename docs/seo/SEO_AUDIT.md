@@ -51,3 +51,43 @@ The unknown-route HTTP 404 limitation remains: the SPA fallback is needed for no
 During the local read-only prerender generation run on 2026-11-27, public Supabase reads returned 255 active categories and 27 published listings with verified providers. They produced 86 prerender routes. The separate six-URL sitemap allowlist is static and makes no database requests. The inventory counts are a build-time snapshot, not a commitment that production data will remain unchanged.
 
 No Supabase row, migration, booking, review or admin record was modified.
+
+## Follow-up repository audit (2026-11-28)
+
+This follow-up inspected `package.json`/`package-lock.json`, Angular build and SSR configuration, client and server bootstrap, route guards, SEO/analytics services, tourism content, sitemap/robots generators, Cloudflare configuration, Supabase migration history, public data projections, admin routes, localization, images, and existing automated tests. The repository supplied to this session was `C:\projects\CommunityApp`; the requested `C:\tmp\community-app` directory does not exist here. The starting Git worktree was clean.
+
+### Baseline captured before changes
+
+- `npm test -- --watch=false`: **PASS**, 143 tests across 26 files.
+- `npm run build`: **PASS**, 86 prerendered routes; initial bundle 980.69 kB raw / 198.22 kB estimated transfer.
+- Existing Angular bundle/style budget warnings and Node `module.register()` deprecation warnings were present.
+- No production request, GTM workspace change, Supabase write, deployment, or Google account operation was performed in this follow-up.
+
+### Reusable architecture and actual schema
+
+- The app is Angular 21 standalone, lazy-routed, hydrated, and prerenders paths from `src/prerender-routes.txt`. `SeoService` already centralizes title, description, robots, canonical, Open Graph/Twitter, and singleton Organization/WebSite plus replaceable route JSON-LD.
+- `scripts/generate-seo-artifacts.mjs` already reads `service_categories` and `service_listings` with the public Supabase publishable key and anonymous RLS access; it builds prerender paths and category links. Published listings are constrained by active category and verified provider.
+- Existing relevant records have category `slug/is_active/updated_at`, listing `status/published_at/updated_at/slug`, provider `provider_type/verification_status/display_name`, and job `status/published_at/updated_at`. There is no job expiry column, individual job-detail route, or SEO editorial/tourism table in the inspected migrations.
+- Business cards currently resolve to an existing public service listing. There is no unique provider-profile slug or distinct `/businesses/:slug` profile route. Service listing slugs are database-generated with an ID suffix; existing database generation is ASCII-based and is not a Tamil transliteration system.
+- `/tourism` is an existing bilingual client-side page backed by `tourism-content.ts` and cited external sources. Two standalone source-checked tourism guide routes were added in this increment; there are no separately addressable `/ta/`/`/en/` equivalents.
+- The language switcher is client-side (`LanguageService`); there are no reciprocal hreflang URL pairs. Empty locale-prefixed pages would be misleading, so none are introduced.
+- Supabase RLS and existing admin guards/functions are in place. No SEO admin screen exists. No SEO-specific webhook, Cloudflare build hook, or checked-in CI workflow was found. `wrangler.jsonc` deploys static assets and SPA fallback; there is no production SSR server or dynamic sitemap endpoint.
+- `public/robots.txt` already names the canonical sitemap and disallows several private route families. It is not treated as an access-control mechanism.
+- The root/category/service page routes already have SSR/prerender-friendly content and TransferState-backed public reads. Raw production status observed in the earlier audit is separate from this local build; this follow-up does not refresh live HTTP evidence.
+
+### Gaps and risks confirmed
+
+1. Before this follow-up, `public/sitemap.xml` contained only the six static landing pages, while the generator had a separate eligible category/listing inventory. Listing updates appeared in prerender output only on a later build.
+2. Category children had both `/services/category/:slug` and `/services/:parent/:child` shapes. Runtime canonical metadata and generated internal links could disagree, risking duplicate indexable URLs.
+3. Published-but-thin/placeholder service rows could enter the sitemap merely because they had a routable slug.
+4. There is no business-provider profile URL, standalone job detail/expiry workflow, localized URL scheme, or editorial source-management UI. Additional tourism articles still require reviewed content, not route-name fabrication.
+5. Static hosting still serves SPA fallback HTML with HTTP 200 for unknown URLs. Fixing status codes without breaking direct loading of existing authenticated routes requires a hosting/edge routing design and deployment validation.
+6. Sitemap refresh is build-time. Automatic publication-triggered Cloudflare builds require a secured build hook/CI credential that is not configured in this repository.
+
+### Chosen implementation sequence
+
+1. Keep Angular prerendering and static Cloudflare assets; do not add a paid server or service-role key.
+2. Use one build-time public inventory to generate canonical category links, indexability paths, prerender paths, and a dynamic XML sitemap. Preserve the six established static URLs.
+3. Apply the generated indexability registry to category and service-detail robots metadata, retain legacy category routes as canonical aliases, and keep placeholder content out of indexable inventory.
+4. Add pure XML, route-policy, and generated-artifact tests.
+5. Document that publication-triggered regeneration, tourism article publishing, separate language URLs, business-profile schema, admin editing, and true HTTP 404 routing remain infrastructure/content follow-ups.

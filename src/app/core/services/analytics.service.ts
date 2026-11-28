@@ -278,7 +278,7 @@ export class AnalyticsService {
   }
 
   private contentLanguage(): ContentLanguage {
-    return this.document.documentElement.lang === 'ta' ? 'ta' : 'en';
+    return this.document.documentElement.lang.toLowerCase().startsWith('ta') ? 'ta' : 'en';
   }
 
   private sanitizeParameters(parameters: AnalyticsEventParameters): Readonly<Record<string, unknown>> {

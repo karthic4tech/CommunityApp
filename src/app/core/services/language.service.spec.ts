@@ -36,7 +36,7 @@ describe('LanguageService', () => {
     expect(service.language()).toBe('ta');
     service.setLanguage('en');
     expect(storage.setItem).toHaveBeenCalledWith('nam-chidambaram-language', 'en');
-    expect(document.documentElement.lang).toBe('en');
+    expect(document.documentElement.lang).toBe('en-IN');
     expect(service.text().categories).toBe('Service categories');
   });
 

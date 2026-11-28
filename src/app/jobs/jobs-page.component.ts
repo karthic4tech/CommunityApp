@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { JobService, PublishedJob } from '../core/services/job.service';
 import { LanguageService } from '../core/services/language.service';
@@ -79,13 +79,22 @@ export class JobsPageComponent implements OnInit {
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
 
-  async ngOnInit(): Promise<void> {
-    this.seo.update({
-      title: 'Jobs in Chidambaram | CDM 360',
-      description: 'Browse job opportunities shared with the Chidambaram community.',
-      path: '/jobs',
-      language: this.i18n.language(),
+  constructor() {
+    effect(() => {
+      const language = this.i18n.language();
+      const tamil = language === 'ta';
+      this.seo.update({
+        title: tamil ? 'சிதம்பரத்தில் வேலைவாய்ப்புகள் | நம் சிதம்பரம்' : 'Jobs in Chidambaram | CDM 360',
+        description: tamil
+          ? 'சிதம்பரம் சமூகத்திற்காக வெளியிடப்பட்ட உள்ளூர் வேலைவாய்ப்புகளைப் பாருங்கள்.'
+          : 'Browse job opportunities shared with the Chidambaram community.',
+        path: '/jobs',
+        language,
+      });
     });
+  }
+
+  async ngOnInit(): Promise<void> {
     try {
       const publishedJobs = await this.jobService.publishedJobs();
       this.jobs.set(publishedJobs);

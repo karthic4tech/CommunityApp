@@ -284,9 +284,11 @@ export class EssentialServicesComponent implements OnInit {
       const filtered = this.searchMode();
       this.seo.update({
         title: filtered
-          ? 'Search Essential Services in Chidambaram | CDM 360'
-          : 'Essential Local Services in Chidambaram | CDM 360',
-        description: 'Browse locally curated essential services and published providers in Chidambaram, Tamil Nadu.',
+          ? this.i18n.language() === 'ta' ? 'சிதம்பரத்தில் அத்தியாவசிய சேவைகளைத் தேடுங்கள் | நம் சிதம்பரம்' : 'Search Essential Services in Chidambaram | CDM 360'
+          : this.i18n.language() === 'ta' ? 'சிதம்பரத்தின் அத்தியாவசிய உள்ளூர் சேவைகள் | நம் சிதம்பரம்' : 'Essential Local Services in Chidambaram | CDM 360',
+        description: this.i18n.language() === 'ta'
+          ? 'சிதம்பரத்தில் வெளியிடப்பட்ட அத்தியாவசிய உள்ளூர் சேவைகள் மற்றும் வழங்குநர்களைப் பாருங்கள்.'
+          : 'Browse locally curated essential services and published providers in Chidambaram, Tamil Nadu.',
         path: '/essential-services',
         robots: filtered ? 'noindex,follow' : 'index,follow',
         language: this.i18n.language(),

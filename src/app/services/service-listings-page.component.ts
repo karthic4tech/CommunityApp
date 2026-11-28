@@ -7,6 +7,7 @@ import { LanguageService } from '../core/services/language.service';
 import { ServiceCategoryService } from '../core/services/service-category.service';
 import { ListingDirectoryComponent } from './listing-directory/listing-directory.component';
 import { SeoService } from '../core/services/seo.service';
+import { SEO_INDEXABLE_PATHS } from '../core/services/seo-indexable-paths.generated';
 
 interface CategorySelection {
   parent: ServiceCategory;
@@ -111,17 +112,40 @@ export class ServiceListingsPageComponent implements OnInit {
         return;
       }
       const language = this.i18n.language();
+      const canonicalPath = `/services/${selected.parent.slug}/${selected.subcategory.slug}`;
+      const isIndexable = SEO_INDEXABLE_PATHS.includes(canonicalPath);
+      const categoryName = language === 'ta'
+        ? selected.subcategory.nameTamil
+        : selected.subcategory.nameEnglish;
+      const breadcrumbLabels = language === 'ta'
+        ? {
+            home: 'முகப்பு',
+            services: 'சேவைகள்',
+            parent: selected.parent.nameTamil,
+            subcategory: selected.subcategory.nameTamil,
+          }
+        : {
+            home: 'Home',
+            services: 'Services',
+            parent: selected.parent.nameEnglish,
+            subcategory: selected.subcategory.nameEnglish,
+          };
       this.seo.update({
-        title: `${selected.subcategory.nameEnglish} in Chidambaram | CDM 360`,
-        description: selected.subcategory.description?.trim()
-          || `Browse published, verified ${selected.subcategory.nameEnglish} listings in Chidambaram. Contact providers to confirm details.`,
-        path: `/services/${selected.parent.slug}/${selected.subcategory.slug}`,
+        title: language === 'ta'
+          ? `${categoryName} | நம் சிதம்பரம்`
+          : `${categoryName} in Chidambaram | CDM 360`,
+        description: language === 'ta'
+          ? `சிதம்பரத்தில் ${categoryName} தொடர்பான வெளியிடப்பட்ட உள்ளூர் சேவைகளைப் பாருங்கள். விவரங்களை வழங்குநரிடம் உறுதிப்படுத்தவும்.`
+          : selected.subcategory.description?.trim()
+            || `Browse published, verified ${categoryName} listings in Chidambaram. Contact providers to confirm details.`,
+        path: canonicalPath,
+        robots: isIndexable ? 'index,follow' : 'noindex,follow',
         language,
         structuredData: this.seo.breadcrumbSchema([
-          { name: 'Home', path: '/' },
-          { name: 'Services', path: '/services' },
-          { name: selected.parent.nameEnglish, path: `/services/category/${selected.parent.slug}` },
-          { name: selected.subcategory.nameEnglish, path: `/services/${selected.parent.slug}/${selected.subcategory.slug}` },
+          { name: breadcrumbLabels.home, path: '/' },
+          { name: breadcrumbLabels.services, path: '/services' },
+          { name: breadcrumbLabels.parent, path: `/services/category/${selected.parent.slug}` },
+          { name: breadcrumbLabels.subcategory, path: canonicalPath },
         ]),
       });
     });

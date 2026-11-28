@@ -111,7 +111,7 @@ describe('Home and Services navigation', () => {
     element.querySelector<HTMLButtonElement>('button[lang="ta"]')?.click();
     harness.detectChanges();
     expect(element.querySelector('app-service-category-page h1')?.textContent).toBe('வீட்டு சேவைகள்');
-    expect(document.documentElement.lang).toBe('ta');
+    expect(document.documentElement.lang).toBe('ta-IN');
     expect(load).toHaveBeenCalledTimes(2);
   });
 

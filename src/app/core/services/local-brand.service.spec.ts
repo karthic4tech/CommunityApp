@@ -6,6 +6,7 @@ import { SupabaseService } from './supabase.service';
 
 const activeListing = {
   id: 'listing-new',
+  slug: 'local-brand-listing-9a1b2c3d',
   status: 'published',
   published_at: '2026-10-31T12:00:00Z',
   service_categories: { is_active: true },
@@ -76,5 +77,6 @@ describe('LocalBrandService', () => {
     expect(brands[0].logoUrl).toBeNull();
     expect(brands[1].logoUrl).toBe('https://cdn.example/cdm360-public-media/businesses/provider-1/logo.webp');
     expect(brands[1].listingId).toBe('listing-new');
+    expect(brands[1].listingSlug).toBe('local-brand-listing-9a1b2c3d');
   });
 });

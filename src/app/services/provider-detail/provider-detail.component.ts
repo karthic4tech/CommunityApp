@@ -11,6 +11,7 @@ import { LodgeReviewsComponent } from '../lodge-reviews.component';
 import { LodgeInquiryComponent } from '../lodge-inquiry.component';
 import { SeoService } from '../../core/services/seo.service';
 import { AnalyticsService } from '../../core/services/analytics.service';
+import { SEO_INDEXABLE_PATHS } from '../../core/services/seo-indexable-paths.generated';
 
 @Component({
   selector: 'app-provider-detail',
@@ -113,7 +114,6 @@ export class ServiceDetailComponent implements OnInit {
         if (!current) return;
         this.listing.set(listing);
         if (listing) {
-          const category = listing.service_categories?.name_en?.trim() || 'Local Service';
           const categorySlug = listing.service_categories?.slug ?? '';
           const listingAnalytics = {
             public_listing_id: listing.id,
@@ -124,54 +124,90 @@ export class ServiceDetailComponent implements OnInit {
           if (['hotels', 'lodge-stay'].includes(categorySlug)) {
             this.analytics.trackOnce('hotel_listing_view', listing.id, listingAnalytics);
           }
-          const listingPath = listing.slug ? `/services/${listing.slug}` : `/providers/${listing.id}`;
-          const lodging = ['hotels', 'lodge-stay'].includes(categorySlug);
-          const restaurant = ['restaurants', 'vegetarian-restaurants', 'non-vegetarian-restaurants'].includes(categorySlug);
-          const providerSchema = {
-            '@type': lodging ? 'Hotel' : restaurant ? 'Restaurant' : 'Organization',
-            name: listing.service_providers.display_name,
-            ...(listing.service_providers.description ? { description: listing.service_providers.description } : {}),
-            url: `https://cdm360.in${listingPath}`,
-          };
-          const serviceSchema = {
-            '@context': 'https://schema.org',
-            '@type': 'Service',
-            name: listing.title,
-            description: listing.description,
-            serviceType: category,
-            url: `https://cdm360.in${listingPath}`,
-            inLanguage: this.i18n.language() === 'ta' ? 'ta-IN' : 'en-IN',
-            provider: providerSchema,
-            ...(listing.listing_locations.length
-              ? {
-                  areaServed: listing.listing_locations.flatMap(({ locations }) =>
-                    locations ? [{ '@type': 'Place', name: locations.name_en?.trim() || locations.name_ta }] : [],
-                  ),
-                }
-              : {}),
-          };
-          this.seo.update({
-            title: `${listing.title} – ${category} in Chidambaram | CDM 360`,
-            description: listing.description?.trim()
-              || `Public ${category.toLocaleLowerCase()} listing for ${listing.title} in Chidambaram. Contact the provider to confirm current details.`,
-            path: listingPath,
-            language: this.i18n.language(),
-            structuredData: [
-              serviceSchema,
-              this.seo.breadcrumbSchema([
-                { name: 'Home', path: '/' },
-                { name: 'Services', path: '/services' },
-                ...(categorySlug ? [{ name: category, path: `/services/category/${categorySlug}` }] : []),
-                { name: listing.title, path: listingPath },
-              ]),
-            ],
-          });
           void this.directory.related(listing.service_providers.id, listing.id)
             .then(related => { if (current) this.related.set(related); })
             .catch(() => { /* Related services are optional; keep the detail usable. */ });
         } else this.seo.setNoIndex(slug ? `/services/${slug}` : `/providers/${id}`);
       }).catch(() => { if (current) this.error.set(true); })
         .finally(() => { if (current) this.loading.set(false); });
+    });
+    effect(() => {
+      const selected = this.listing();
+      if (selected) this.updateListingSeo(selected, this.i18n.language(), this.categoryPath());
+    });
+  }
+
+  private updateListingSeo(
+    listing: ServiceListing,
+    language: 'en' | 'ta',
+    categoryPath: readonly ServiceCategory[] | undefined,
+  ): void {
+    const slug = listing.slug ?? '';
+    const hasCanonicalSlug = /^[a-z0-9]+(?:-[a-z0-9]+)*-[a-f0-9]{8}$/.test(slug);
+    const listingPath = hasCanonicalSlug ? `/services/${slug}` : `/providers/${listing.id}`;
+    const isIndexable = SEO_INDEXABLE_PATHS.includes(listingPath);
+    const category = language === 'ta'
+      ? listing.service_categories?.name_ta?.trim() || 'உள்ளூர் சேவை'
+      : listing.service_categories?.name_en?.trim() || 'Local Service';
+    const categorySlug = listing.service_categories?.slug ?? '';
+    const lodging = ['hotels', 'lodge-stay'].includes(categorySlug);
+    const restaurant = ['restaurants', 'vegetarian-restaurants', 'non-vegetarian-restaurants'].includes(categorySlug);
+    const tradeService = categorySlug === 'electrician'
+      ? 'Electrician'
+      : ['auto-rickshaw-services', 'vehicle-mechanic-service', 'two-wheeler-repair'].includes(categorySlug)
+        ? 'AutoRepair'
+        : null;
+    const providerSchema = {
+      '@id': `https://cdm360.in${listingPath}#provider`,
+      '@type': lodging ? 'Hotel' : restaurant ? 'Restaurant' : tradeService ?? 'Organization',
+      name: listing.service_providers.display_name,
+      ...(listing.service_providers.description ? { description: listing.service_providers.description } : {}),
+      url: `https://cdm360.in${listingPath}`,
+    };
+    const serviceSchema = {
+      '@context': 'https://schema.org',
+      '@id': `https://cdm360.in${listingPath}#service`,
+      '@type': 'Service',
+      name: listing.title,
+      description: listing.description,
+      serviceType: category,
+      url: `https://cdm360.in${listingPath}`,
+      inLanguage: language === 'ta' ? 'ta-IN' : 'en-IN',
+      provider: providerSchema,
+      ...(listing.listing_locations.length
+        ? {
+            areaServed: listing.listing_locations.flatMap(({ locations }) =>
+              locations ? [{ '@type': 'Place', name: language === 'ta' ? locations.name_ta : locations.name_en?.trim() || locations.name_ta }] : [],
+            ),
+          }
+        : {}),
+    };
+    const categoryBreadcrumbs = (categoryPath ?? []).map((item, index, path) => ({
+      name: language === 'ta' ? item.nameTamil : item.nameEnglish,
+      path: index === 0
+        ? `/services/category/${item.slug}`
+        : `/services/${path[index - 1]?.slug}/${item.slug}`,
+    }));
+    this.seo.update({
+      title: language === 'ta'
+        ? `${listing.title} – ${category} | நம் சிதம்பரம்`
+        : `${listing.title} – ${category} in Chidambaram | CDM 360`,
+      description: language === 'ta'
+        ? `${listing.title} — சிதம்பரத்தில் வெளியிடப்பட்ட பொது சேவைப் பட்டியல். தற்போதைய விவரங்களை வழங்குநரிடம் உறுதிப்படுத்தவும்.`
+        : listing.description?.trim()
+          || `Public ${category.toLocaleLowerCase()} listing for ${listing.title} in Chidambaram. Contact the provider to confirm current details.`,
+      path: listingPath,
+      robots: isIndexable ? 'index,follow' : 'noindex,follow',
+      language,
+      structuredData: [
+        serviceSchema,
+        this.seo.breadcrumbSchema([
+          { name: language === 'ta' ? 'முகப்பு' : 'Home', path: '/' },
+          { name: language === 'ta' ? 'சேவைகள்' : 'Services', path: '/services' },
+          ...categoryBreadcrumbs,
+          { name: listing.title, path: listingPath },
+        ]),
+      ],
     });
   }
 

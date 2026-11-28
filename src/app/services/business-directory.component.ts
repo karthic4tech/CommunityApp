@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LocalBrand } from '../core/models/local-brand';
 import { LanguageService } from '../core/services/language.service';
@@ -28,7 +28,7 @@ import { SeoService } from '../core/services/seo.service';
       } @else {
         <div class="business-grid">
           @for (business of businesses(); track business.id) {
-            <a class="business-card" [routerLink]="['/providers', business.listingId]" [attr.aria-label]="(i18n.language() === 'ta' ? 'வணிக விவரங்களைத் திறக்கவும்: ' : 'Open business details: ') + business.displayName">
+            <a class="business-card" [routerLink]="business.listingSlug ? ['/services', business.listingSlug] : ['/providers', business.listingId]" [attr.aria-label]="(i18n.language() === 'ta' ? 'வணிக விவரங்களைத் திறக்கவும்: ' : 'Open business details: ') + business.displayName">
               <span class="logo-frame">
                 @if (business.logoUrl) {
                   <img [src]="business.logoUrl" [alt]="business.logoAlt" width="180" height="100" loading="lazy" decoding="async" />
@@ -75,13 +75,22 @@ export class BusinessDirectoryComponent implements OnInit {
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
 
-  ngOnInit(): void {
-    this.seo.update({
-      title: 'Local Businesses in Chidambaram | CDM 360',
-      description: 'Explore verified local businesses in Chidambaram with active published services.',
-      path: '/businesses',
-      language: this.i18n.language(),
+  constructor() {
+    effect(() => {
+      const language = this.i18n.language();
+      const tamil = language === 'ta';
+      this.seo.update({
+        title: tamil ? 'சிதம்பரத்தின் உள்ளூர் வணிகங்கள் | நம் சிதம்பரம்' : 'Local Businesses in Chidambaram | CDM 360',
+        description: tamil
+          ? 'செயலில் உள்ள வெளியிடப்பட்ட சேவைகளைக் கொண்ட சரிபார்க்கப்பட்ட சிதம்பரம் வணிகங்களைப் பாருங்கள்.'
+          : 'Explore verified local businesses in Chidambaram with active published services.',
+        path: '/businesses',
+        language,
+      });
     });
+  }
+
+  ngOnInit(): void {
     void this.load();
   }
 

@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, ElementRef, OnInit, afterRenderEffect, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ServiceCategory } from '../core/models/service-category';
+import { findCategoryPathById, ServiceCategory } from '../core/models/service-category';
 import { ServiceCategoryService } from '../core/services/service-category.service';
 import { LanguageService } from '../core/services/language.service';
 import { CategoryCardComponent } from '../home/category-card.component';
 import { findCategory } from '../core/models/service-listing';
 import { SeoService } from '../core/services/seo.service';
+import { SEO_INDEXABLE_PATHS } from '../core/services/seo-indexable-paths.generated';
 import { ListingDirectoryComponent } from './listing-directory/listing-directory.component';
 
 @Component({
@@ -129,16 +130,31 @@ export class ServiceCategoryPageComponent implements OnInit {
         return;
       }
       const language = this.i18n.language();
+      const categoryPath = findCategoryPathById(this.service.categories(), selected.id) ?? [selected];
+      const parentCategory = categoryPath.at(-2);
+      const canonicalPath = parentCategory
+        ? `/services/${parentCategory.slug}/${selected.slug}`
+        : `/services/category/${selected.slug}`;
+      const isIndexable = SEO_INDEXABLE_PATHS.includes(canonicalPath);
+      const title = language === 'ta'
+        ? `${selected.nameTamil} | நம் சிதம்பரம்`
+        : `${selected.nameEnglish} in Chidambaram | CDM 360`;
+      const breadcrumbLabels = language === 'ta'
+        ? { home: 'முகப்பு', services: 'சேவைகள்', category: selected.nameTamil }
+        : { home: 'Home', services: 'Services', category: selected.nameEnglish };
       this.seo.update({
-        title: `${selected.nameEnglish} in Chidambaram | CDM 360`,
-        description: selected.description?.trim()
-          || `Browse active ${selected.nameEnglish} categories and local services in Chidambaram.`,
-        path: `/services/category/${selected.slug}`,
+        title,
+        description: language === 'ta'
+          ? `சிதம்பரத்தில் ${selected.nameTamil} வகை உள்ளூர் சேவைகளைப் பாருங்கள்.`
+          : selected.description?.trim()
+            || `Browse active ${selected.nameEnglish} categories and local services in Chidambaram.`,
+        path: canonicalPath,
+        robots: isIndexable ? 'index,follow' : 'noindex,follow',
         language,
         structuredData: this.seo.breadcrumbSchema([
-          { name: 'Home', path: '/' },
-          { name: 'Services', path: '/services' },
-          { name: selected.nameEnglish, path: `/services/category/${selected.slug}` },
+          { name: breadcrumbLabels.home, path: '/' },
+          { name: breadcrumbLabels.services, path: '/services' },
+          { name: breadcrumbLabels.category, path: canonicalPath },
         ]),
       });
     });

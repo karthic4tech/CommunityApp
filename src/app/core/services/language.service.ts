@@ -63,7 +63,7 @@ export class LanguageService {
   }
 
   private updateDocument(): void {
-    this.document.documentElement.lang = this.language();
+    this.document.documentElement.lang = this.language() === 'ta' ? 'ta-IN' : 'en-IN';
   }
 
   private initialLanguage(): Language {

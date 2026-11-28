@@ -39,7 +39,7 @@ export class SeoService {
     const language = page.language ?? 'en';
 
     this.titleService.setTitle(title);
-    this.document.documentElement.lang = language;
+    this.document.documentElement.lang = language === 'ta' ? 'ta-IN' : 'en-IN';
     this.setMeta('name', 'description', description);
     this.setMeta('name', 'robots', page.robots ?? 'index,follow');
     this.setMeta('property', 'og:type', 'website');
@@ -70,7 +70,7 @@ export class SeoService {
 
   resetForNavigation(path: string, isPrivate: boolean): void {
     const cleanPath = this.normalizedPath(path);
-    const language = this.document.documentElement.lang === 'ta' ? 'ta' : 'en';
+    const language = this.document.documentElement.lang.toLowerCase().startsWith('ta') ? 'ta' : 'en';
     this.update({
       title: 'CDM 360 | Nam Chidambaram',
       description: 'Explore local services, businesses and visitor information in Chidambaram, Tamil Nadu.',
@@ -90,7 +90,7 @@ export class SeoService {
   }
 
   setLanguage(language: 'en' | 'ta'): void {
-    this.document.documentElement.lang = language;
+    this.document.documentElement.lang = language === 'ta' ? 'ta-IN' : 'en-IN';
     this.setMeta('property', 'og:locale', language === 'ta' ? 'ta_IN' : 'en_IN');
   }
 
@@ -187,7 +187,9 @@ export class SeoService {
     const element = this.document.getElementById(id) ?? this.document.createElement('script');
     element.id = id;
     element.setAttribute('type', 'application/ld+json');
-    element.textContent = JSON.stringify(value);
+    element.textContent = JSON.stringify(value).replace(/[<>&]/g, character =>
+      `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`,
+    );
     if (!element.isConnected) this.head.appendChild(element);
   }
 

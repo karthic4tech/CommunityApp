@@ -1,15 +1,18 @@
-import { writeFile } from 'node:fs/promises';
+import { rename, rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { SITEMAP_URLS } from './sitemap-urls.mjs';
+import { ADDITIONAL_SEO_PATHS, SITEMAP_URLS } from './sitemap-urls.mjs';
+import { buildSitemapXml } from './sitemap-builder.mjs';
 
-const entries = SITEMAP_URLS.map((url) => `  <url>\n    <loc>${url}</loc>\n  </url>`);
-const sitemap = [
-  '<?xml version="1.0" encoding="UTF-8"?>',
-  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-  ...entries,
-  '</urlset>',
-  '',
-].join('\n');
-
-await writeFile(resolve('public/sitemap.xml'), sitemap, 'utf8');
-console.log(`Wrote static sitemap with ${SITEMAP_URLS.length} approved landing pages.`);
+const sitemap = buildSitemapXml([
+  ...SITEMAP_URLS.map((url) => ({ path: new URL(url).pathname })),
+  ...ADDITIONAL_SEO_PATHS.map((path) => ({ path })),
+]);
+const outputPath = resolve('public/sitemap.xml');
+const temporaryPath = resolve(`.cdm360-static-sitemap-${process.pid}.tmp`);
+try {
+  await writeFile(temporaryPath, sitemap, 'utf8');
+  await rename(temporaryPath, outputPath);
+} finally {
+  await rm(temporaryPath, { force: true });
+}
+console.log(`Wrote static sitemap with ${SITEMAP_URLS.length} core pages and ${ADDITIONAL_SEO_PATHS.length} approved tourism guides.`);

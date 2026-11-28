@@ -22,6 +22,7 @@ interface BusinessLogoRow {
 
 interface BusinessListingRow {
   id: string;
+  slug: string | null;
   status: string;
   published_at: string | null;
   service_categories: { is_active: boolean } | null;
@@ -40,7 +41,7 @@ interface BusinessProviderRow {
 
 const PAGE_SIZE = 500;
 const BUSINESS_COLUMNS = `id,display_name,provider_type,verification_status,is_featured,feature_order,
-  service_listings!inner(id,status,published_at,service_categories!inner(is_active)),
+  service_listings!inner(id,slug,status,published_at,service_categories!inner(is_active)),
   provider_media(role,sort_order,is_primary,media_assets!inner(storage_path,bucket_name,visibility,media_type,upload_status,deleted_at,alt_text))`;
 
 @Injectable({ providedIn: 'root' })
@@ -158,6 +159,7 @@ export class LocalBrandService {
       featured: row.is_featured,
       featureOrder: row.feature_order,
       listingId: listing.id,
+      listingSlug: listing.slug,
       logoUrl,
       logoAlt: logo?.alt_text?.trim() || `${row.display_name} logo`,
     };

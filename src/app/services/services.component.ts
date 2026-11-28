@@ -121,11 +121,15 @@ export class AllServicesComponent implements OnInit {
       const language = this.i18n.language();
       this.seo.update({
         title: filtered
-          ? 'Search Local Services in Chidambaram | CDM 360'
-          : 'Local Services in Chidambaram | CDM 360',
+          ? language === 'ta' ? 'சிதம்பரத்தில் உள்ளூர் சேவைகளைத் தேடுங்கள் | நம் சிதம்பரம்' : 'Search Local Services in Chidambaram | CDM 360'
+          : language === 'ta' ? 'சிதம்பரத்தில் உள்ளூர் சேவைகள் | நம் சிதம்பரம்' : 'Local Services in Chidambaram | CDM 360',
         description: filtered
-          ? 'Search published local services and providers in Chidambaram. Contact providers directly to confirm current details.'
-          : 'Browse published local services and verified providers in Chidambaram, Tamil Nadu.',
+          ? language === 'ta'
+            ? 'சிதம்பரத்தில் வெளியிடப்பட்ட உள்ளூர் சேவைகளைத் தேடுங்கள். தற்போதைய விவரங்களை வழங்குநரிடம் உறுதிப்படுத்தவும்.'
+            : 'Search published local services and providers in Chidambaram. Contact providers directly to confirm current details.'
+          : language === 'ta'
+            ? 'சிதம்பரத்தில் வெளியிடப்பட்ட உள்ளூர் சேவைகள் மற்றும் சரிபார்க்கப்பட்ட வழங்குநர்களைப் பாருங்கள்.'
+            : 'Browse published local services and verified providers in Chidambaram, Tamil Nadu.',
         path: '/services',
         robots: filtered ? 'noindex,follow' : 'index,follow',
         language,

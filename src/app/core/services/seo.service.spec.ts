@@ -34,7 +34,7 @@ describe('SeoService', () => {
       .toBe('https://cdm360.in/services/category/hotels');
     expect(document.querySelector('meta[property="og:url"]')?.getAttribute('content'))
       .toBe('https://cdm360.in/services/category/hotels');
-    expect(document.documentElement.lang).toBe('en');
+    expect(document.documentElement.lang).toBe('en-IN');
     const structuredData = document.querySelector('#cdm360-global-structured-data');
     expect(structuredData?.getAttribute('type')).toBe('application/ld+json');
     expect(JSON.parse(structuredData?.textContent ?? '{}')).toMatchObject({
@@ -75,5 +75,20 @@ describe('SeoService', () => {
       path: '/',
     });
     expect(document.querySelector('#cdm360-page-structured-data')).toBeNull();
+  });
+
+  it('escapes script-closing text in JSON-LD while preserving its JSON value', () => {
+    const unsafeText = '</script><script>alert("x")</script>';
+    seo.update({
+      title: 'Public listing | CDM 360',
+      description: 'A public listing.',
+      path: '/services/example',
+      structuredData: { '@context': 'https://schema.org', '@type': 'Service', name: unsafeText },
+    });
+
+    const element = document.querySelector<HTMLScriptElement>('#cdm360-page-structured-data');
+    expect(element?.textContent).not.toContain('</script>');
+    expect(element?.querySelector('script')).toBeNull();
+    expect(JSON.parse(element?.textContent ?? '{}')['name']).toBe(unsafeText);
   });
 });

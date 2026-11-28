@@ -57,6 +57,7 @@ export const routes: Routes = [
       { path: 'help/:slug', loadComponent: () => import('./help/help-article.component').then((m) => m.HelpArticleComponent) },
       { path: 'essential-services', loadComponent: () => import('./services/essential-services.component').then((m) => m.EssentialServicesComponent) },
       { path: 'tourism', loadComponent: () => import('./tourism/tourism.component').then((m) => m.TourismComponent) },
+      { path: 'tourism/:slug', loadComponent: () => import('./tourism/tourism-guide.component').then((m) => m.TourismGuideComponent) },
       { path: 'services/category/:slug', loadComponent: () => import('./services/service-category-page.component').then((m) => m.ServiceCategoryComponent) },
       { path: 'services/:categorySlug/:subcategorySlug', loadComponent: () => import('./services/service-listings-page.component').then((m) => m.ServiceListingsPageComponent) },
       { path: 'services/:categorySlug', canMatch: [serviceCategorySlugGuard], loadComponent: () => import('./services/service-category-page.component').then((m) => m.ServiceCategoryComponent) },

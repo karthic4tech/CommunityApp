@@ -7,7 +7,7 @@
     "build": "npm run seo:images && npm run seo:sitemap && npm run seo:generate && ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "test:sitemap": "node --test scripts/generate-sitemap.test.mjs",
+    "test:sitemap": "node --test scripts/generate-sitemap.test.mjs scripts/sitemap-builder.test.mjs scripts/seo-indexability.test.mjs",
     "seo:generate": "node scripts/generate-seo-artifacts.mjs",
     "seo:images": "node scripts/optimize-public-images.mjs",
     "seo:sitemap": "node scripts/generate-sitemap.mjs"

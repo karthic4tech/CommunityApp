@@ -1,5 +1,5 @@
 import { CurrencyPipe, DOCUMENT, NgOptimizedImage } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ServiceCategory } from '../core/models/service-category';
 import { ServiceListing } from '../core/models/service-listing';
@@ -162,6 +162,11 @@ interface TourismServiceAction {
                   <p class="destination-kicker">{{ i18n.language() === 'ta' ? 'இடம் பார்க்க' : 'PLACE TO VISIT' }}</p>
                   <h3>{{ i18n.language() === 'ta' ? destination.titleTamil : destination.titleEnglish }}</h3>
                   <p>{{ i18n.language() === 'ta' ? destination.descriptionTamil : destination.descriptionEnglish }}</p>
+                  @if (destination.id === 'nataraja-temple') {
+                    <a class="text-link" routerLink="/tourism/nataraja-temple-guide">{{ i18n.language() === 'ta' ? 'கோவில் பயண வழிகாட்டி' : 'Read the temple visitor guide' }}<i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+                  } @else if (destination.id === 'pichavaram') {
+                    <a class="text-link" routerLink="/tourism/pichavaram-mangrove-forest">{{ i18n.language() === 'ta' ? 'பிச்சாவரம் பயண வழிகாட்டி' : 'Read the Pichavaram visitor guide' }}<i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+                  }
                   <small class="illustrative-note">
                     {{ i18n.language() === 'ta' ? 'விளக்கப் படம் · ஆதாரம்:' : 'Illustrative image · source:' }}
                     <a [href]="destination.sourceUrl" target="_blank" rel="noopener noreferrer">{{ destination.sourceLabel }}</a>
@@ -237,6 +242,27 @@ export class TourismComponent implements OnInit {
   protected readonly diningListings = signal<readonly ServiceListing[]>([]);
   protected readonly selectedListingSection = signal<'stays' | 'dining' | null>('stays');
 
+  constructor() {
+    effect(() => {
+      const language = this.i18n.language();
+      const tamil = language === 'ta';
+      this.seo.update({
+        title: tamil
+          ? 'சிதம்பரம் சுற்றுலா வழிகாட்டி, தங்குமிடங்கள் மற்றும் உள்ளூர் சேவைகள் | நம் சிதம்பரம்'
+          : 'Chidambaram Travel Guide, Stays & Local Services | CDM 360',
+        description: tamil
+          ? 'சிதம்பரம் வருகைக்கான வழிகாட்டுதல், அருகிலுள்ள இடங்கள், பயண யோசனைகள் மற்றும் வெளியிடப்பட்ட உள்ளூர் தங்குமிட, உணவகப் பட்டியல்களை அறியுங்கள்.'
+          : 'Plan a Chidambaram visit with visitor guidance, nearby places, itinerary ideas and published local stay and dining listings.',
+        path: '/tourism',
+        language,
+        structuredData: this.seo.breadcrumbSchema([
+          { name: tamil ? 'முகப்பு' : 'Home', path: '/' },
+          { name: tamil ? 'சுற்றுலா மற்றும் பயணம்' : 'Tourism & Travel', path: '/tourism' },
+        ]),
+      });
+    });
+  }
+
   protected readonly stayListingsPreview = computed(() => this.stayListings().slice(0, 3));
   protected readonly diningListingsPreview = computed(() => this.diningListings().slice(0, 3));
   protected readonly stayCategoryId = computed(() => this.categoryBySlug('lodge-stay')?.id ?? this.categoryBySlug('hotels')?.id ?? null);
@@ -262,16 +288,6 @@ export class TourismComponent implements OnInit {
   protected readonly templeSourceUrl = 'https://cuddalore.nic.in/tourist-places/';
 
   ngOnInit(): void {
-    this.seo.update({
-      title: 'Chidambaram Travel Guide, Stays & Local Services | CDM 360',
-      description: 'Plan a Chidambaram visit with visitor guidance, nearby places, itinerary ideas and published local stay and dining listings.',
-      path: '/tourism',
-      language: this.i18n.language(),
-      structuredData: this.seo.breadcrumbSchema([
-        { name: 'Home', path: '/' },
-        { name: 'Tourism & Travel', path: '/tourism' },
-      ]),
-    });
     void this.loadPublicProviderListings();
   }
 
